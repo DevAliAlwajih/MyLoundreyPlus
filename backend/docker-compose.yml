@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: MyLoundreyPlus_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 775547603
+      POSTGRES_DB: MyLoundreyPlus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # هذا السطر سيقوم بتشغيل ملف السكيما تلقائياً عند أول تشغيل للقاعدة
+      - ../MyLoundreyPlus.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:
