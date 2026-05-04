@@ -8,3 +8,11 @@
 2026-05-03 04:41:48 [info]: 🌐 Health: http://localhost:5000/health
 2026-05-03 04:46:13 [http]: ::1 - - [03/May/2026:01:46:13 +0000] "GET /health HTTP/1.1" 200 136 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
 2026-05-03 04:46:13 [http]: ::1 - - [03/May/2026:01:46:13 +0000] "GET /favicon.ico HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-04 04:07:04 [info]: ✅ PostgreSQL متصل — Mon May 04 2026 04:07:04 GMT+0300 (Moscow Standard Time)
+2026-05-04 04:07:04 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-04 04:07:04 [info]: 📖 البيئة: development
+2026-05-04 04:07:04 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-04 04:14:07 [info]: ✅ PostgreSQL متصل — Mon May 04 2026 04:14:07 GMT+0300 (Moscow Standard Time)
+2026-05-04 04:14:07 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-04 04:14:07 [info]: 📖 البيئة: development
+2026-05-04 04:14:07 [info]: 🌐 Health: http://localhost:5000/health
