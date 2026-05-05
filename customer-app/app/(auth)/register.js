@@ -3,24 +3,22 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../../src/constants/theme';
-import useAuthStore from '../../src/store/useAuthStore';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
-  const { isLoading } = useAuthStore();
   
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [language, setLanguage] = useState('AR');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleLogin = () => {
+  const handleRegister = () => {
     // Backend logic will be integrated here
     router.replace('/(tabs)');
-  };
-
-  const handleGoogleLogin = () => {
-    // Google Auth Logic
   };
 
   return (
@@ -30,28 +28,61 @@ export default function LoginScreen() {
     >
       {/* Top Navigation */}
       <View style={styles.topNav}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="moon-outline" size={24} color={COLORS.text} />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color={COLORS.text} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => setLanguage(language === 'AR' ? 'EN' : 'AR')}>
-          <Text style={styles.langText}>{language}</Text>
-        </TouchableOpacity>
+        <Text style={styles.navTitle}>إنشاء حساب جديد</Text>
+        <View style={{ width: 40 }} /> {/* Spacer */}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Logo & Greeting */}
-        <View style={styles.headerContainer}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="water" size={40} color={COLORS.surface} />
-          </View>
-          <Text style={styles.title}>مرحباً بعودتك!</Text>
-          <Text style={styles.subtitle}>الرجاء تسجيل الدخول للمتابعة</Text>
+        {/* Avatar Upload */}
+        <View style={styles.avatarContainer}>
+          <TouchableOpacity style={styles.avatarCircle}>
+            <Ionicons name="camera" size={32} color={COLORS.textLight} />
+            <View style={styles.avatarBadge}>
+              <Ionicons name="add" size={16} color={COLORS.surface} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Card Form */}
         <View style={styles.card}>
           
+          {/* Full Name Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>الاسم الكامل</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="الاسم الثلاثي"
+                placeholderTextColor={COLORS.textLight}
+                value={name}
+                onChangeText={setName}
+                textAlign="right"
+              />
+            </View>
+          </View>
+
+          {/* Phone Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>رقم الجوال (للتواصل)</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="call-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="05X XXX XXXX"
+                placeholderTextColor={COLORS.textLight}
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+                textAlign="right"
+              />
+            </View>
+          </View>
+
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>البريد الإلكتروني</Text>
@@ -90,14 +121,29 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>هل نسيت كلمة المرور؟</Text>
-          </TouchableOpacity>
+          {/* Confirm Password Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>تأكيد كلمة المرور</Text>
+            <View style={styles.inputWrapper}>
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.inputIcon}>
+                <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textLight} />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                placeholderTextColor={COLORS.textLight}
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                textAlign="right"
+              />
+              <Ionicons name="lock-closed-outline" size={20} color={COLORS.textLight} style={{marginLeft: 10}} />
+            </View>
+          </View>
 
-          {/* Login Button */}
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-            <Text style={styles.primaryButtonText}>تسجيل الدخول</Text>
+          {/* Register Button */}
+          <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
+            <Text style={styles.primaryButtonText}>إنشاء الحساب</Text>
           </TouchableOpacity>
 
           {/* Divider */}
@@ -108,18 +154,18 @@ export default function LoginScreen() {
           </View>
 
           {/* Google Button */}
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+          <TouchableOpacity style={styles.googleButton}>
             <Ionicons name="logo-google" size={20} color="#DB4437" />
-            <Text style={styles.googleButtonText}>الاستمرار بواسطة Google</Text>
+            <Text style={styles.googleButtonText}>التسجيل بواسطة Google</Text>
           </TouchableOpacity>
 
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>ليس لديك حساب؟ </Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-            <Text style={styles.footerLink}>إنشاء حساب جديد</Text>
+          <Text style={styles.footerText}>لديك حساب بالفعل؟ </Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.footerLink}>تسجيل الدخول</Text>
           </TouchableOpacity>
         </View>
 
@@ -136,11 +182,12 @@ const styles = StyleSheet.create({
   topNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: SIZES.padding,
     paddingTop: 60,
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
-  iconButton: {
+  backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -149,7 +196,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...SHADOWS.light,
   },
-  langText: {
+  navTitle: {
+    fontSize: SIZES.medium,
     fontWeight: 'bold',
     color: COLORS.text,
   },
@@ -158,30 +206,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.padding,
     paddingBottom: SIZES.padding,
   },
-  headerContainer: {
+  avatarContainer: {
     alignItems: 'center',
-    marginTop: SIZES.large,
-    marginBottom: SIZES.xxl,
-  },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...SHADOWS.medium,
     marginBottom: SIZES.large,
   },
-  title: {
-    fontSize: SIZES.extraLarge,
-    fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: SIZES.base,
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    ...SHADOWS.light,
   },
-  subtitle: {
-    fontSize: SIZES.font,
-    color: COLORS.textLight,
+  avatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.primary,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: COLORS.background,
   },
   card: {
     backgroundColor: COLORS.surface,
@@ -218,15 +268,6 @@ const styles = StyleSheet.create({
     fontSize: SIZES.font,
     color: COLORS.text,
   },
-  forgotPassword: {
-    alignSelf: 'flex-start',
-    marginBottom: SIZES.large,
-  },
-  forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: SIZES.small,
-    fontWeight: '600',
-  },
   primaryButton: {
     backgroundColor: COLORS.primary,
     height: 56,
@@ -234,6 +275,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...SHADOWS.medium,
+    marginTop: SIZES.base,
     marginBottom: SIZES.large,
   },
   primaryButtonText: {
