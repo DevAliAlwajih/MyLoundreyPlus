@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES, SHADOWS } from '../../src/constants/theme';
-import useAuthStore from '../../src/store/useAuthStore';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { isLoading } = useAuthStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState('AR');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Temporary routing to make buttons work for demonstration
   const handleLogin = () => {
-    // Backend logic will be integrated here
     router.replace('/(tabs)');
-  };
-
-  const handleGoogleLogin = () => {
-    // Google Auth Logic
   };
 
   return (
@@ -28,39 +22,38 @@ export default function LoginScreen() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Top Navigation */}
-      <View style={styles.topNav}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="moon-outline" size={24} color={COLORS.text} />
+      {/* Floating Action Buttons */}
+      <View style={styles.floatingNav}>
+        <TouchableOpacity style={styles.iconCircle} onPress={() => setIsDarkMode(!isDarkMode)}>
+          <Ionicons name={isDarkMode ? "sunny" : "moon"} size={22} color="#1E293B" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => setLanguage(language === 'AR' ? 'EN' : 'AR')}>
+        <TouchableOpacity style={styles.iconCircle} onPress={() => setLanguage(language === 'AR' ? 'EN' : 'AR')}>
           <Text style={styles.langText}>{language}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Logo & Greeting */}
-        <View style={styles.headerContainer}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="water" size={40} color={COLORS.surface} />
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <View style={styles.logoPlaceholder}>
+            <Ionicons name="water" size={45} color="#FFFFFF" />
           </View>
-          <Text style={styles.title}>مرحباً بعودتك!</Text>
-          <Text style={styles.subtitle}>الرجاء تسجيل الدخول للمتابعة</Text>
+          <Text style={styles.brandName}>مغسلتي بلس</Text>
+          <Text style={styles.welcomeText}>مرحباً بعودتك!</Text>
         </View>
 
-        {/* Card Form */}
-        <View style={styles.card}>
+        {/* Form Container (Card) */}
+        <View style={styles.formCard}>
           
           {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>البريد الإلكتروني</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+          <View style={styles.inputGroup}>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={22} color="#9CA3AF" style={styles.leftIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="example@mail.com"
-                placeholderTextColor={COLORS.textLight}
+                placeholder="البريد الإلكتروني"
+                placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
@@ -71,22 +64,21 @@ export default function LoginScreen() {
           </View>
 
           {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>كلمة المرور</Text>
-            <View style={styles.inputWrapper}>
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.inputIcon}>
-                <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textLight} />
+          <View style={styles.inputGroup}>
+            <View style={styles.inputContainer}>
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.leftIcon}>
+                <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={22} color="#9CA3AF" />
               </TouchableOpacity>
               <TextInput
                 style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor={COLORS.textLight}
+                placeholder="كلمة المرور"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
                 textAlign="right"
               />
-              <Ionicons name="lock-closed-outline" size={20} color={COLORS.textLight} style={{marginLeft: 10}} />
+              <Ionicons name="lock-closed-outline" size={22} color="#9CA3AF" style={styles.rightIcon} />
             </View>
           </View>
 
@@ -95,22 +87,22 @@ export default function LoginScreen() {
             <Text style={styles.forgotPasswordText}>هل نسيت كلمة المرور؟</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+          {/* Primary Login Button */}
+          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.8}>
             <Text style={styles.primaryButtonText}>تسجيل الدخول</Text>
           </TouchableOpacity>
 
           {/* Divider */}
-          <View style={styles.dividerContainer}>
+          <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>أو</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Google Button */}
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
-            <Text style={styles.googleButtonText}>الاستمرار بواسطة Google</Text>
+          {/* Google Auth Button */}
+          <TouchableOpacity style={styles.googleButton} onPress={handleLogin} activeOpacity={0.8}>
+            <Ionicons name="logo-google" size={22} color="#EA4335" />
+            <Text style={styles.googleButtonText}>تسجيل الدخول بواسطة Google</Text>
           </TouchableOpacity>
 
         </View>
@@ -118,7 +110,7 @@ export default function LoginScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>ليس لديك حساب؟ </Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+          <TouchableOpacity onPress={() => router.push('/(auth)/register')} activeOpacity={0.7}>
             <Text style={styles.footerLink}>إنشاء حساب جديد</Text>
           </TouchableOpacity>
         </View>
@@ -131,159 +123,181 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFC', // Very light, premium background
   },
-  topNav: {
+  floatingNav: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: SIZES.padding,
-    paddingTop: 60,
-    paddingBottom: 10,
+    zIndex: 10,
   },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.surface,
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.light,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   langText: {
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: '800',
+    color: '#1E293B',
+    fontSize: 14,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: SIZES.padding,
-    paddingBottom: SIZES.padding,
+    paddingTop: 120,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
   },
-  headerContainer: {
+  logoSection: {
     alignItems: 'center',
-    marginTop: SIZES.large,
-    marginBottom: SIZES.xxl,
+    marginBottom: 40,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.primary,
+  logoPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 30,
+    backgroundColor: '#0066FF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.medium,
-    marginBottom: SIZES.large,
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 10,
+    marginBottom: 16,
   },
-  title: {
-    fontSize: SIZES.extraLarge,
-    fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: SIZES.base,
+  brandName: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: SIZES.font,
-    color: COLORS.textLight,
+  welcomeText: {
+    fontSize: 18,
+    color: '#64748B',
+    fontWeight: '500',
   },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
-    ...SHADOWS.card,
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#94A3B8',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  inputGroup: {
+    marginBottom: 20,
   },
   inputContainer: {
-    marginBottom: SIZES.medium,
-  },
-  label: {
-    fontSize: SIZES.small,
-    fontWeight: '600',
-    color: COLORS.textLight,
-    marginBottom: SIZES.base,
-    textAlign: 'right',
-  },
-  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: SIZES.inputRadius,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 16,
+    height: 60,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: 'transparent',
-    height: 56,
-    paddingHorizontal: SIZES.medium,
-  },
-  inputIcon: {
-    marginRight: 10,
   },
   input: {
     flex: 1,
     height: '100%',
-    fontSize: SIZES.font,
-    color: COLORS.text,
+    fontSize: 16,
+    color: '#0F172A',
+    fontWeight: '500',
+    paddingHorizontal: 10,
+  },
+  leftIcon: {
+    marginRight: 8,
+  },
+  rightIcon: {
+    marginLeft: 8,
   },
   forgotPassword: {
     alignSelf: 'flex-start',
-    marginBottom: SIZES.large,
+    marginBottom: 28,
   },
   forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: SIZES.small,
-    fontWeight: '600',
+    color: '#0066FF',
+    fontSize: 14,
+    fontWeight: '700',
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
-    height: 56,
-    borderRadius: SIZES.inputRadius,
+    backgroundColor: '#0066FF',
+    height: 60,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.medium,
-    marginBottom: SIZES.large,
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+    marginBottom: 24,
   },
   primaryButtonText: {
-    color: COLORS.surface,
-    fontSize: SIZES.medium,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
-  dividerContainer: {
+  dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SIZES.large,
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: '#E2E8F0',
   },
   dividerText: {
-    marginHorizontal: SIZES.medium,
-    color: COLORS.textLight,
-    fontSize: SIZES.small,
+    marginHorizontal: 16,
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '600',
   },
   googleButton: {
     flexDirection: 'row',
-    backgroundColor: COLORS.googleBtn,
-    height: 56,
-    borderRadius: SIZES.inputRadius,
+    backgroundColor: '#FFFFFF',
+    height: 60,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   googleButtonText: {
-    color: COLORS.googleText,
-    fontSize: SIZES.font,
-    fontWeight: '600',
-    marginLeft: SIZES.medium,
+    color: '#334155',
+    fontSize: 15,
+    fontWeight: '700',
+    marginLeft: 12,
   },
   footer: {
     flexDirection: 'row-reverse',
     justifyContent: 'center',
-    marginTop: SIZES.xxl,
+    marginTop: 32,
+    alignItems: 'center',
   },
   footerText: {
-    color: COLORS.textLight,
-    fontSize: SIZES.font,
+    color: '#64748B',
+    fontSize: 15,
   },
   footerLink: {
-    color: COLORS.primary,
-    fontSize: SIZES.font,
+    color: '#0066FF',
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });
