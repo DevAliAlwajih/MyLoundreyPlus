@@ -31,9 +31,9 @@ export default function LoginScreen() {
 
   // Google Auth
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "YOUR_ANDROID_CLIENT_ID", // سيتم استبداله عند استخراج المعرفات
-    iosClientId: "YOUR_IOS_CLIENT_ID",
-    webClientId: "YOUR_WEB_CLIENT_ID",
+    androidClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
+    iosClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
+    webClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
   });
 
   useEffect(() => {
