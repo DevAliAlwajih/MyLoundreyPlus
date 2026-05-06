@@ -26,6 +26,9 @@ import adminRoutes        from './routes/admin.routes.js'
 const app = express()
 const PORT = process.env.PORT || 5000
 
+// ─── Static Files ─────────────────────────────────────────────────────────────
+app.use('/uploads', express.static('public/uploads'))
+
 // ─── Security & Middleware ────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {

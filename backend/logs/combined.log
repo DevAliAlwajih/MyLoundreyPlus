@@ -32,3 +32,16 @@
 2026-05-05 05:18:50 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
 2026-05-05 05:18:50 [info]: 📖 البيئة: development
 2026-05-05 05:18:50 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-06 18:15:06 [info]: ✅ PostgreSQL متصل — Wed May 06 2026 18:15:06 GMT+0300 (Moscow Standard Time)
+2026-05-06 18:15:06 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-06 18:15:06 [info]: 📖 البيئة: development
+2026-05-06 18:15:06 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-06 18:59:43 [info]: ✅ PostgreSQL متصل — Wed May 06 2026 18:59:43 GMT+0300 (Moscow Standard Time)
+2026-05-06 18:59:43 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-06 18:59:43 [info]: 📖 البيئة: development
+2026-05-06 18:59:43 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-06 19:00:37 [warn]: ⚠️ Firebase غير مُهيأ — الإشعارات لن تعمل:
+2026-05-06 19:00:37 [info]: ✅ PostgreSQL متصل — Wed May 06 2026 19:00:37 GMT+0300 (Moscow Standard Time)
+2026-05-06 19:00:37 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-06 19:00:37 [info]: 📖 البيئة: development
+2026-05-06 19:00:37 [info]: 🌐 Health: http://localhost:5000/health

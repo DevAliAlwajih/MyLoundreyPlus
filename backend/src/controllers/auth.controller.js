@@ -1,8 +1,13 @@
+import admin from 'firebase-admin'
+import { initFirebase } from '../config/firebase.js'
 import bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import QRCode from 'qrcode'
 import { query, withTransaction } from '../config/database.js'
 import { AppError, sendSuccess } from '../middleware/errorHandler.js'
+
+// Initialize Firebase
+initFirebase()
 import { generateTokenPair, verifyRefreshToken } from '../services/jwt.service.js'
 import { sendOTP, verifyOTP } from '../services/otp.service.js'
 import {
@@ -108,23 +113,28 @@ export async function register(req, res, next) {
     const currencyMap = { SA: 'SAR', AE: 'AED', KW: 'KWD', YE: 'YER' }
     const currency = currencyMap[country] || 'SAR'
 
+    // File handling
+    const avatarPath = req.file ? `/uploads/${req.file.filename}` : null
+    const baseUrl = process.env.BASE_URL || `http://${req.hostname}:${process.env.PORT || 5000}`
+    const avatarUrl = avatarPath ? `${baseUrl}${avatarPath}` : null
+
     const result = await withTransaction(async (client) => {
       // Create user — email column added
       const userResult = await client.query(
         `INSERT INTO users
-         (full_name, phone_number, email, unique_id, qr_code, password_hash, role, is_active, is_verified, country, currency)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE, $8, $9)
-         RETURNING id, full_name, phone_number, email, unique_id, qr_code, role, country, currency, created_at`,
-        [full_name, phone_number || null, email || null, uniqueId, qrCode, hashedPassword, role, country, currency]
+         (full_name, phone_number, email, unique_id, qr_code, avatar_url, password_hash, role, is_active, is_verified, country, currency)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, TRUE, $9, $10)
+         RETURNING id, full_name, phone_number, email, unique_id, qr_code, avatar_url, role, country, currency, created_at`,
+        [full_name, phone_number || null, email || null, uniqueId, qrCode, avatarUrl, hashedPassword, role, country, currency]
       )
       const user = userResult.rows[0]
 
       // If laundry, create laundry record
       if (role === 'laundry' && laundry_name) {
         await client.query(
-          `INSERT INTO laundries (owner_id, name, phone_number, country, status)
-           VALUES ($1, $2, $3, $4, 'pending')`,
-          [user.id, laundry_name, phone_number, country]
+          `INSERT INTO laundries (owner_id, name, phone_number, country, logo_url, status)
+           VALUES ($1, $2, $3, $4, $5, 'pending')`,
+          [user.id, laundry_name, phone_number, country, avatarUrl]
         )
       }
 
@@ -431,6 +441,58 @@ export async function getMe(req, res, next) {
 }
 
 // ─── POST /api/v1/auth/logout ─────────────────────────────────────────────────
+// ─── POST /api/v1/auth/google ────────────────────────────────────────────────
+export async function googleLogin(req, res, next) {
+  try {
+    const { token } = req.body
+    const deviceId = req.headers['x-device-id'] || uuidv4()
+
+    if (!token) throw new AppError('Google token مطلوب', 400)
+
+    let decodedToken
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token)
+    } catch (err) {
+      logger.error('❌ Google Token Verification Failed:', err.message)
+      throw new AppError('فشل التحقق من هوية جوجل. يرجى المحاولة مرة أخرى', 400)
+    }
+
+    const { email, name, picture, uid } = decodedToken
+
+    // Check if user exists
+    let result = await query('SELECT id, full_name, email, role, is_active FROM users WHERE email = $1', [email])
+    let user = result.rows[0]
+
+    if (!user) {
+      // Register new user from Google
+      const uniqueId = generateUniqueId('GUS')
+      // Generate placeholder phone to satisfy unique constraints if needed, though we dropped NOT NULL
+      const phonePlaceholder = `G-${uid.substring(0, 10)}`
+      
+      const insertResult = await query(
+        `INSERT INTO users (full_name, email, unique_id, avatar_url, role, is_active, is_verified, phone_number)
+         VALUES ($1, $2, $3, $4, 'customer', TRUE, TRUE, $5)
+         RETURNING id, full_name, email, role, is_active`,
+        [name || email.split('@')[0], email, uniqueId, picture, phonePlaceholder]
+      )
+      user = insertResult.rows[0]
+      logger.info(`🆕 مستخدم جديد عبر جوجل: ${email}`)
+    }
+
+    if (!user.is_active) throw new AppError('الحساب موقوف. يرجى التواصل مع الإدارة', 403)
+
+    const { accessToken, refreshToken } = generateTokenPair(user.id, user.role, deviceId)
+
+    return sendSuccess(res, {
+      user,
+      tokens: { accessToken, refreshToken },
+      deviceId,
+    }, 'تم تسجيل الدخول بواسطة Google بنجاح')
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function logout(req, res, next) {
   try {
     const deviceId = req.deviceId

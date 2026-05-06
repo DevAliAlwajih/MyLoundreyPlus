@@ -8,6 +8,20 @@ import {
 
 const router = Router()
 
+// GET /api/v1/users/by-unique-id/:uniqueId — For QR scanner (Laundry app)
+router.get('/by-unique-id/:uniqueId', authenticate, async (req, res, next) => {
+  try {
+    const { uniqueId } = req.params
+    const result = await query(
+      `SELECT id, full_name, phone_number, email, unique_id, qr_code, role, country
+       FROM users WHERE unique_id = $1 AND role = 'customer'`,
+      [uniqueId]
+    )
+    if (!result.rows[0]) throw new AppError('العميل غير موجود', 404)
+    return sendSuccess(res, result.rows[0])
+  } catch (err) { next(err) }
+})
+
 // GET /api/v1/users/:id/devices — Admin or self
 router.get('/:id/devices', authenticate, async (req, res, next) => {
   try {
