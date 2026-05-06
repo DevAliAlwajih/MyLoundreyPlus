@@ -56,7 +56,7 @@ function generateUniqueId(prefix = 'USR') {
 export async function register(req, res, next) {
   try {
     const {
-      full_name, phone_number, password, role = 'customer',
+      full_name, phone_number, email, password, role = 'customer',
       country = 'SA', laundry_name,
     } = req.body
 
@@ -66,17 +66,26 @@ export async function register(req, res, next) {
     const deviceModel = req.headers['x-device-model'] || null
     const fcmToken    = req.body.fcm_token || null
 
-    if (!full_name || !phone_number || !password) {
-      throw new AppError('الاسم ورقم الهاتف وكلمة المرور مطلوبة', 400)
+    if (!full_name || !password) {
+      throw new AppError('الاسم وكلمة المرور مطلوبان', 400)
+    }
+    if (!phone_number && !email) {
+      throw new AppError('البريد الإلكتروني أو رقم الهاتف مطلوب', 400)
+    }
+    if (password.length < 8) {
+      throw new AppError('كلمة المرور يجب أن تكون 8 أحرف على الأقل', 400)
+    }
+
+    // Check duplicate email
+    if (email) {
+      const existingEmail = await query('SELECT id FROM users WHERE email = $1', [email])
+      if (existingEmail.rows[0]) throw new AppError('البريد الإلكتروني مسجل مسبقاً', 409)
     }
 
     // Check duplicate phone
-    const existingUser = await query(
-      'SELECT id FROM users WHERE phone_number = $1',
-      [phone_number]
-    )
-    if (existingUser.rows[0]) {
-      throw new AppError('رقم الهاتف مسجل مسبقاً', 409)
+    if (phone_number) {
+      const existingPhone = await query('SELECT id FROM users WHERE phone_number = $1', [phone_number])
+      if (existingPhone.rows[0]) throw new AppError('رقم الهاتف مسجل مسبقاً', 409)
     }
 
     // Hash password
@@ -93,18 +102,20 @@ export async function register(req, res, next) {
     } while (attempts < 5)
 
     // Generate QR Code
-    const qrData = JSON.stringify({ uniqueId, phone: phone_number, type: role })
+    const qrData = JSON.stringify({ uniqueId, phone: phone_number || email, type: role })
     const qrCode = await QRCode.toDataURL(qrData)
 
+    const currencyMap = { SA: 'SAR', AE: 'AED', KW: 'KWD', YE: 'YER' }
+    const currency = currencyMap[country] || 'SAR'
+
     const result = await withTransaction(async (client) => {
-      // Create user
+      // Create user — email column added
       const userResult = await client.query(
         `INSERT INTO users
-         (full_name, phone_number, unique_id, qr_code, password_hash, role, is_active, is_verified, country, currency)
-         VALUES ($1, $2, $3, $4, $5, $6, TRUE, FALSE, $7, $8)
-         RETURNING id, full_name, phone_number, unique_id, qr_code, role, country, currency, created_at`,
-        [full_name, phone_number, uniqueId, qrCode, hashedPassword, role, country,
-         country === 'SA' ? 'SAR' : country === 'AE' ? 'AED' : country === 'KW' ? 'KWD' : country === 'YE' ? 'YER' : 'SAR']
+         (full_name, phone_number, email, unique_id, qr_code, password_hash, role, is_active, is_verified, country, currency)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, TRUE, $8, $9)
+         RETURNING id, full_name, phone_number, email, unique_id, qr_code, role, country, currency, created_at`,
+        [full_name, phone_number || null, email || null, uniqueId, qrCode, hashedPassword, role, country, currency]
       )
       const user = userResult.rows[0]
 
@@ -127,20 +138,15 @@ export async function register(req, res, next) {
       return user
     })
 
-    // Send OTP to verify phone
-    await sendOTP(phone_number)
-
     const { accessToken, refreshToken } = generateTokenPair(result.id, result.role, deviceId)
 
-    logger.info(`✅ مستخدم جديد: ${result.phone_number} (${result.role})`)
+    logger.info(`✅ مستخدم جديد: ${result.email || result.phone_number} (${result.role})`)
 
     return sendSuccess(res, {
       user: result,
-      accessToken,
-      refreshToken,
+      tokens: { accessToken, refreshToken },
       deviceId,
-      requiresOTP: true,
-    }, 'تم إنشاء الحساب. يرجى التحقق من رقم هاتفك عبر رمز OTP', 201)
+    }, 'تم إنشاء الحساب بنجاح', 201)
 
   } catch (err) {
     next(err)
@@ -150,7 +156,7 @@ export async function register(req, res, next) {
 // ─── POST /api/v1/auth/login ──────────────────────────────────────────────────
 export async function login(req, res, next) {
   try {
-    const { phone_number, password } = req.body
+    const { phone_number, email, password } = req.body
 
     const deviceId    = req.headers['x-device-id']    || uuidv4()
     const deviceType  = req.headers['x-device-type']  || 'unknown'
@@ -158,11 +164,12 @@ export async function login(req, res, next) {
     const deviceModel = req.headers['x-device-model'] || null
     const fcmToken    = req.body.fcm_token || null
 
-    if (!phone_number || !password) {
-      throw new AppError('رقم الهاتف وكلمة المرور مطلوبان', 400)
+    const identifier = email || phone_number
+    if (!identifier || !password) {
+      throw new AppError('البريد الإلكتروني أو رقم الهاتف وكلمة المرور مطلوبان', 400)
     }
 
-    const attemptKey = getAttemptKey(phone_number, deviceId)
+    const attemptKey = getAttemptKey(identifier, deviceId)
 
     // Check if device is blocked
     if (isBlocked(attemptKey)) {
@@ -172,11 +179,11 @@ export async function login(req, res, next) {
       )
     }
 
-    // Find user
-    const result = await query(
-      'SELECT id, full_name, phone_number, unique_id, qr_code, role, is_active, is_verified, password_hash, country, currency FROM users WHERE phone_number = $1',
-      [phone_number]
-    )
+    // Find user by email OR phone
+    const lookupQuery = email
+      ? 'SELECT id, full_name, phone_number, email, unique_id, qr_code, role, is_active, is_verified, password_hash, country, currency FROM users WHERE email = $1'
+      : 'SELECT id, full_name, phone_number, email, unique_id, qr_code, role, is_active, is_verified, password_hash, country, currency FROM users WHERE phone_number = $1'
+    const result = await query(lookupQuery, [identifier])
     const user = result.rows[0]
 
     // Wrong credentials
@@ -192,7 +199,7 @@ export async function login(req, res, next) {
       }
 
       throw new AppError(
-        `رقم الهاتف أو كلمة المرور غير صحيحة. المحاولات المتبقية: ${remaining}`,
+        `البيانات غير صحيحة. المحاولات المتبقية: ${remaining}`,
         401,
         { attemptsLeft: remaining }
       )
@@ -241,12 +248,11 @@ export async function login(req, res, next) {
     // Remove sensitive data
     delete user.password_hash
 
-    logger.info(`🔐 دخول: ${user.phone_number} من ${deviceType} (${deviceOS})`)
+    logger.info(`🔐 دخول: ${user.email || user.phone_number} من ${deviceType} (${deviceOS})`)
 
     return sendSuccess(res, {
       user,
-      accessToken,
-      refreshToken,
+      tokens: { accessToken, refreshToken },
       deviceId,
     }, 'تم تسجيل الدخول بنجاح')
 

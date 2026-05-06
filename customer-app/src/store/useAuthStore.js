@@ -1,73 +1,85 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import api from '../services/api';
+import api, { getDeviceInfo } from '../services/api';
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
   user: null,
   token: null,
   isLoading: false,
-  isSignout: false,
+  isReady: false,
   error: null,
 
-  // Load token on startup
+  // ─── Load saved session on app start ────────────────────────────
   bootstrapAsync: async () => {
-    let token;
     try {
-      token = await SecureStore.getItemAsync('accessToken');
+      const token = await SecureStore.getItemAsync('accessToken');
       if (token) {
-        // Optionally verify token or fetch user details here
+        // Try fetching current user with saved token
         const response = await api.get('/auth/me');
-        set({ user: response.data.data, token, isLoading: false });
+        set({ user: response.data.data, token, isReady: true });
         return;
       }
     } catch (e) {
-      // Restoring token failed
+      // Token expired or invalid — clear it
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('refreshToken');
     }
-    set({ isLoading: false, isSignout: true, token: null, user: null });
+    set({ isReady: true, token: null, user: null });
   },
 
-  // Login (Step 1: Request OTP)
-  requestOtp: async (phoneNumber) => {
+  // ─── LOGIN with email + password ────────────────────────────────
+  loginAsync: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      await api.post('/auth/login', { phone_number: phoneNumber });
-      set({ isLoading: false });
-      return true;
-    } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.message || 'فشل الاتصال' });
-      return false;
-    }
-  },
+      const response = await api.post('/auth/login', { email, password });
+      const { user, tokens, deviceId } = response.data.data;
 
-  // Verify OTP (Step 2: Login)
-  verifyOtp: async (phoneNumber, otp) => {
-    set({ isLoading: true, error: null });
-    try {
-      const response = await api.post('/auth/verify-otp', { phone_number: phoneNumber, otp });
-      const { user, tokens } = response.data.data;
-      
       await SecureStore.setItemAsync('accessToken', tokens.accessToken);
-      if (tokens.refreshToken) {
-        await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
-      }
-      
-      set({ user, token: tokens.accessToken, isLoading: false, isSignout: false });
-      return true;
-    } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.message || 'رمز التحقق غير صحيح' });
-      return false;
+      await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
+
+      set({ user, token: tokens.accessToken, isLoading: false, error: null });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'حدث خطأ، حاول مرة أخرى';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
     }
   },
 
-  logout: async () => {
+  // ─── REGISTER with email + password ─────────────────────────────
+  registerAsync: async ({ full_name, phone_number, email, password }) => {
+    set({ isLoading: true, error: null });
     try {
-      await api.post('/auth/logout');
-    } catch (e) {} // ignore if offline
-    
+      const response = await api.post('/auth/register', {
+        full_name,
+        phone_number: phone_number || undefined,
+        email,
+        password,
+        role: 'customer',
+      });
+      const { user, tokens } = response.data.data;
+
+      await SecureStore.setItemAsync('accessToken', tokens.accessToken);
+      await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
+
+      set({ user, token: tokens.accessToken, isLoading: false, error: null });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'فشل إنشاء الحساب';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  // ─── LOGOUT ─────────────────────────────────────────────────────
+  logout: async () => {
+    try { await api.post('/auth/logout'); } catch (_) {}
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
-    set({ user: null, token: null, isSignout: true });
+    set({ user: null, token: null, error: null });
   },
+
+  clearError: () => set({ error: null }),
 }));
 
 export default useAuthStore;
