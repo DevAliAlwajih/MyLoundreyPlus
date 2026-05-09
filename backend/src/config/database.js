@@ -27,12 +27,16 @@ export async function testConnection() {
     logger.info(`✅ PostgreSQL متصل — ${result.rows[0].time}`)
 
     // ─── Auto Migrations (One-time fixes) ─────────────────
-    // 1. Make phone_number nullable
-    await client.query('ALTER TABLE users ALTER COLUMN phone_number DROP NOT NULL;')
-    // 2. Ensure email column exists (just in case)
-    await client.query(`
-      DO $$
-      BEGIN
+    // التصحيح التلقائي لهيكل قاعدة البيانات
+    console.log('🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...');
+    
+    // 1. جعل رقم الهاتف اختيارياً (Nullable)
+    await pool.query('ALTER TABLE users ALTER COLUMN phone_number DROP NOT NULL');
+    
+    // 2. إضافة عمود email إذا لم يكن موجوداً
+    await pool.query(`
+      DO $$ 
+      BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email') THEN
           ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
         END IF;

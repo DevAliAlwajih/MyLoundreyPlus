@@ -13,6 +13,8 @@ import { translations } from '../../src/constants/i18n';
 import useLaundryStore from '../../src/store/useLaundryStore';
 import useSettingsStore from '../../src/store/useSettingsStore';
 
+import * as AuthSession from 'expo-auth-session';
+
 WebBrowser.maybeCompleteAuthSession();
 
 const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -29,17 +31,37 @@ export default function LoginScreen() {
   const [showPass, setShowPass] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Google Auth
+  // Switch to Native Redirect Scheme for better stability
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: 'laundryapp',
+    path: 'login',
+  });
+
+  // Google Auth Config
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
-    iosClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
-    webClientId: "688850861346-b2l4bc65d4r6m5vu6u0m5dt8j2avni2g.apps.googleusercontent.com",
+    androidClientId: "10119884249-n8141vg3ojfekrlp66h5p3g0oimpp1j6.apps.googleusercontent.com",
+    iosClientId: "10119884249-tlrsik65cddnbrircd6gj7gk76bolvlb.apps.googleusercontent.com",
+    webClientId: "10119884249-tlrsik65cddnbrircd6gj7gk76bolvlb.apps.googleusercontent.com",
+    redirectUri: redirectUri,
+    prompt: 'select_account',
   });
 
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      handleGoogleLogin(authentication.accessToken);
+    // Debugging: Log the generated Redirect URI
+    console.log("------------------------------------------");
+    console.log("📡 GOOGLE AUTH DEBUG INFO:");
+    console.log("🔗 Redirect URI:", redirectUri);
+    console.log("------------------------------------------");
+
+    if (response) {
+      console.log("📩 Google Auth Response (Result):", JSON.stringify(response, null, 2));
+      
+      if (response.type === 'success') {
+        const { authentication } = response;
+        handleGoogleLogin(authentication.accessToken);
+      } else if (response.type === 'error' || response.type === 'cancel') {
+        console.warn("⚠️ Auth was cancelled or failed:", response);
+      }
     }
   }, [response]);
 

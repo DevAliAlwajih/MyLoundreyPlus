@@ -41,7 +41,7 @@ export default function RegisterScreen() {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -87,8 +87,15 @@ export default function RegisterScreen() {
     if (logo) {
       const filename = logo.split('/').pop();
       const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image`;
-      formData.append('avatar', { uri: logo, name: filename, type });
+      const extension = match ? match[1] : 'jpg';
+      const type = `image/${extension}`;
+
+      // إرفاق الملف الحقيقي للمغسلة
+      formData.append('avatar', {
+        uri: Platform.OS === 'ios' ? logo.replace('file://', '') : logo,
+        name: filename,
+        type: type,
+      });
     }
 
     const result = await registerAsync(formData);

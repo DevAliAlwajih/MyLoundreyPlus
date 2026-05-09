@@ -159,6 +159,7 @@ export async function register(req, res, next) {
     }, 'تم إنشاء الحساب بنجاح', 201)
 
   } catch (err) {
+    console.error('❌ Registration Failure Details:', err);
     next(err)
   }
 }

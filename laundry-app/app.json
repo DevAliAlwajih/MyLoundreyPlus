@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "مغسلتي بلس - المغسلة",
-    "slug": "laundry-app",
+    "slug": "myloundreyplus",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "laundryapp",
@@ -17,10 +17,15 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.myloundreyplus.laundry",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0052CC"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -35,6 +40,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "310001ed-15ef-430c-a274-12e40883c781"
+      }
+    },
+    "owner": "devalialwajihs-organization"
   }
 }
