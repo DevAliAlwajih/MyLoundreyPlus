@@ -1,7 +1,8 @@
 import './Layout.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme, useAuth } from '../../App'
+import api from '../../services/api'
 import {
   LayoutDashboard, Store, Users, CreditCard, Megaphone,
   HeadphonesIcon, Settings, LogOut, Menu, X, Sun, Moon,
@@ -24,8 +25,28 @@ export default function Layout() {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [loadingNotifs, setLoadingNotifs] = useState(false)
 
   const label = (ar, en) => lang === 'ar' ? ar : en
+
+  useEffect(() => {
+    if (notifOpen) {
+      fetchNotifications()
+    }
+  }, [notifOpen])
+
+  const fetchNotifications = async () => {
+    setLoadingNotifs(true)
+    try {
+      const res = await api.get('/admin/dashboard-stats')
+      setNotifications(res.data.data.notifications || [])
+    } catch (err) {
+      console.error('Failed to fetch notifications', err)
+    } finally {
+      setLoadingNotifs(false)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -88,7 +109,7 @@ export default function Layout() {
             <div className="dropdown">
               <button className="btn btn-ghost btn-icon notif-btn" onClick={() => setNotifOpen(o => !o)}>
                 <Bell size={20} />
-                <span className="notif-badge">3</span>
+                {notifications.length > 0 && <span className="notif-badge">{notifications.length}</span>}
               </button>
               {notifOpen && (
                 <div className="dropdown-menu notif-menu" style={{ minWidth: 320 }}>
@@ -96,19 +117,21 @@ export default function Layout() {
                     <span className="fw-bold">{label('الإشعارات', 'Notifications')}</span>
                     <button className="btn btn-ghost fs-xs text-primary">{label('تحديد كمقروء', 'Mark all read')}</button>
                   </div>
-                  {[
-                    { title: label('مغسلة جديدة بانتظار التفعيل', 'New laundry awaiting activation'), time: label('منذ 5 دقائق', '5m ago'), type: 'info' },
-                    { title: label('اشتراك مغسلة النور ينتهي قريباً', 'Al-Noor laundry subscription expiring'), time: label('منذ 20 دقيقة', '20m ago'), type: 'warning' },
-                    { title: label('تذكرة دعم جديدة من عميل', 'New support ticket from customer'), time: label('منذ ساعة', '1h ago'), type: 'primary' },
-                  ].map((n, i) => (
-                    <div key={i} className="notif-item">
-                      <div className={`status-dot ${n.type === 'info' ? 'active' : n.type === 'warning' ? 'warning' : 'danger'}`} />
-                      <div className="flex-1">
-                        <div className="fs-sm fw-medium">{n.title}</div>
-                        <div className="fs-xs text-muted mt-4">{n.time}</div>
+                  {loadingNotifs ? (
+                    <div className="p-16 text-center fs-xs text-muted">جاري التحميل...</div>
+                  ) : notifications.length > 0 ? (
+                    notifications.map((n, i) => (
+                      <div key={i} className="notif-item">
+                        <div className={`status-dot ${n.type === 'info' ? 'active' : n.type === 'warning' ? 'warning' : 'danger'}`} />
+                        <div className="flex-1">
+                          <div className="fs-sm fw-medium">{n.title}</div>
+                          <div className="fs-xs text-muted mt-4">{n.message}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="p-16 text-center fs-xs text-muted">{label('لا توجد إشعارات حالياً', 'No notifications')}</div>
+                  )}
                 </div>
               )}
             </div>

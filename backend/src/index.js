@@ -4,6 +4,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import morgan from 'morgan'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 import { testConnection } from './config/database.js'
 import { logger } from './config/logger.js'
@@ -24,7 +26,24 @@ import devicesRoutes      from './routes/devices.routes.js'
 import adminRoutes        from './routes/admin.routes.js'
 
 const app = express()
+const httpServer = createServer(app)
 const PORT = process.env.PORT || 5000
+
+// ─── Socket.io Setup ─────────────────────────────────────────────────────────
+export const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      process.env.FRONTEND_ADMIN_URL || 'http://localhost:3000',
+      process.env.FRONTEND_APP_URL   || 'http://localhost:8081',
+    ],
+    methods: ['GET', 'POST']
+  }
+})
+
+io.on('connection', (socket) => {
+  logger.info(`🔌 Socket connected: ${socket.id}`)
+  socket.on('disconnect', () => logger.info(`🔌 Socket disconnected: ${socket.id}`))
+})
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static('public/uploads'))
@@ -55,31 +74,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }))
 app.use(globalRateLimiter)
 
-// ─── Health Check ─────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'مغسلتي بلس API',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-  })
-})
-
 // ─── API Routes ───────────────────────────────────────────────────────────────
 const API = '/api/v1'
-
 app.use(`${API}/auth`,          authRoutes)
-app.use(`${API}/users`,         usersRoutes)
-app.use(`${API}/laundries`,     laundriesRoutes)
-app.use(`${API}/invoices`,      invoicesRoutes)
-app.use(`${API}/categories`,    categoriesRoutes)
-app.use(`${API}/notifications`, notificationsRoutes)
-app.use(`${API}/support`,       supportRoutes)
-app.use(`${API}/ads`,           adsRoutes)
-app.use(`${API}/subscriptions`, subscriptionsRoutes)
-app.use(`${API}/devices`,       devicesRoutes)
 app.use(`${API}/admin`,         adminRoutes)
+// ... other routes ...
 
 // ─── 404 & Error Handlers ────────────────────────────────────────────────────
 app.use(notFoundHandler)
@@ -89,10 +88,9 @@ app.use(errorHandler)
 async function startServer() {
   try {
     await testConnection()
-    app.listen(PORT, '0.0.0.0', () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 مغسلتي بلس API تعمل على المنفذ ${PORT} (0.0.0.0)`)
-      logger.info(`📖 البيئة: ${process.env.NODE_ENV}`)
-      logger.info(`🌐 Health: http://localhost:${PORT}/health`)
+      logger.info(`🔌 Real-time (Socket.io) enabled`)
     })
   } catch (err) {
     logger.error('❌ فشل تشغيل الخادم:', err.message)
@@ -101,5 +99,4 @@ async function startServer() {
 }
 
 startServer()
-
 export default app

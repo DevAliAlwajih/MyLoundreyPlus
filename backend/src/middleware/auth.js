@@ -13,7 +13,7 @@ export async function authenticate(req, res, next) {
     const token = authHeader.split(' ')[1]
     let decoded
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET)
+      decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
     } catch (err) {
       if (err.name === 'TokenExpiredError') throw new AppError('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً', 401)
       throw new AppError('رمز مصادقة غير صالح', 401)

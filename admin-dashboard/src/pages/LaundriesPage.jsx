@@ -7,14 +7,7 @@ import {
   Smartphone, Tablet, Shield, Phone, Calendar
 } from 'lucide-react'
 
-const LAUNDRIES = [
-  { id: 1, name: 'مغسلة النور', owner: 'أحمد العتيبي', phone: '+966501234567', city: 'الرياض', status: 'active', plan: 'yearly', rating: 4.8, orders: 342, expiry: '2025-12-31', devices: [{ type: 'phone', os: 'iOS 17', last: 'منذ ساعة', active: true }, { type: 'tablet', os: 'iPadOS 17', last: 'منذ يوم', active: true }] },
-  { id: 2, name: 'مغسلة الربيع', owner: 'سالم القحطاني', phone: '+966507654321', city: 'جدة', status: 'active', plan: 'monthly', rating: 4.6, orders: 298, expiry: '2025-02-15', devices: [{ type: 'phone', os: 'Android 14', last: 'منذ 3 ساعات', active: true }] },
-  { id: 3, name: 'مغسلة البدر', owner: 'محمد الزهراني', phone: '+966509876543', city: 'الدمام', status: 'trial', plan: 'trial', rating: 4.1, orders: 67, expiry: '2025-02-01', devices: [{ type: 'phone', os: 'Android 13', last: 'منذ 5 دقائق', active: true }] },
-  { id: 4, name: 'مغسلة الأمين', owner: 'خالد السهلي', phone: '+966502345678', city: 'مكة', status: 'suspended', plan: 'monthly', rating: 3.9, orders: 156, expiry: '2025-01-01', devices: [] },
-  { id: 5, name: 'مغسلة الفجر', owner: 'عمر الغامدي', phone: '+966508765432', city: 'المدينة', status: 'pending', plan: 'trial', rating: 0, orders: 0, expiry: '2025-01-28', devices: [{ type: 'phone', os: 'iOS 16', last: 'منذ 10 دقائق', active: false }] },
-  { id: 6, name: 'مغسلة الوفاء', owner: 'فهد الشمري', phone: '+966503456789', city: 'تبوك', status: 'banned', plan: 'monthly', rating: 2.1, orders: 45, expiry: '2024-12-01', devices: [] },
-]
+import { io } from 'socket.io-client'
 
 const STATUS_MAP = {
   active:    { labelAr: 'نشط',          labelEn: 'Active',    badge: 'success' },
@@ -44,6 +37,16 @@ export default function LaundriesPage() {
 
   useEffect(() => {
     fetchLaundries()
+
+    // ─── Real-time Updates Setup ─────────────────────────
+    const socket = io('http://localhost:5000')
+    socket.on('admin_update', (data) => {
+      if (data.type === 'NEW_LAUNDRY' || data.type === 'LAUNDRY_STATUS_CHANGE') {
+        fetchLaundries() // Re-fetch data immediately
+      }
+    })
+
+    return () => socket.disconnect()
   }, [])
 
   const fetchLaundries = async () => {
@@ -78,10 +81,24 @@ export default function LaundriesPage() {
   }
 
   const filtered = laundries.filter(l => {
-    const matchSearch = l.name?.includes(search) || l.owner_name?.includes(search) || l.city?.includes(search)
+    const s = search.toLowerCase()
+    const matchSearch = l.name?.toLowerCase().includes(s) || 
+                       l.owner_name?.toLowerCase().includes(s) || 
+                       l.city?.toLowerCase().includes(s) ||
+                       l.phone_number?.includes(s)
     const matchStatus = filterStatus === 'all' || l.status === filterStatus
     return matchSearch && matchStatus
   })
+
+  const openDevices = (l) => {
+    setSelectedLaundry(l)
+    setShowDevicesModal(true)
+  }
+
+  const openDetails = (l) => {
+    setSelectedLaundry(l)
+    setShowModal(true)
+  }
 
   return (
     <div className="animate-fade">

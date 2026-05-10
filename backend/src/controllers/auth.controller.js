@@ -154,6 +154,14 @@ export async function register(req, res, next) {
 
     const { accessToken, refreshToken } = generateTokenPair(result.id, result.role, deviceId)
 
+    // ─── Real-time Update for Dashboard ─────────────────
+    import('../index.js').then(({ io }) => {
+      io.emit('admin_update', { type: 'NEW_USER', role: result.role })
+      if (result.role === 'laundry') {
+        io.emit('admin_update', { type: 'NEW_LAUNDRY', name: laundry_name })
+      }
+    })
+
     logger.info(`✅ مستخدم جديد: ${result.email || result.phone_number} (${result.role})`)
 
     return sendSuccess(res, {
@@ -232,7 +240,8 @@ export async function login(req, res, next) {
 
     let requiresApproval = false
 
-    if (isNew) {
+    // استثناء المدير من نظام حماية الأجهزة
+    if (isNew && user.role !== 'admin') {
       // New device — notify primary device owner
       await notifyNewDeviceLogin(user.id, { deviceType, deviceOS, deviceModel })
       requiresApproval = true
@@ -244,8 +253,8 @@ export async function login(req, res, next) {
       }, 'يتطلب موافقة الجهاز الافتراضي', 202)
     }
 
-    // Existing device — check if active
-    if (!device.is_active) {
+    // Existing device — check if active (only for non-admins)
+    if (!device.is_active && user.role !== 'admin') {
       throw new AppError(
         `هذا الجهاز غير مُفعَّل. يرجى الموافقة من جهازك الافتراضي أو التواصل مع الإدارة: ${process.env.SUPPORT_PHONE || '920000000'}`,
         403

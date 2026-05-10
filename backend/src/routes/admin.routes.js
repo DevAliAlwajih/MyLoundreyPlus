@@ -15,12 +15,14 @@ router.get('/dashboard-stats', async (req, res, next) => {
       revenueResult,
       countsResult,
       recentInvoicesResult,
-      laundryStatusResult
+      laundryStatusResult,
+      alertsResult,
+      notificationsResult,
+      chartDataResult
     ] = await Promise.all([
       query(`
         SELECT SUM(amount_paid) as total_revenue
         FROM subscriptions
-        WHERE is_active = TRUE
       `),
       query(`
         SELECT 
@@ -38,6 +40,31 @@ router.get('/dashboard-stats', async (req, res, next) => {
         SELECT status, COUNT(*) as count
         FROM laundries
         GROUP BY status
+      `),
+      // Real Alerts
+      query(`
+        SELECT 
+          (SELECT COUNT(*) FROM subscriptions WHERE end_date BETWEEN NOW() AND NOW() + INTERVAL '7 days') as expiring_soon,
+          (SELECT COUNT(*) FROM laundries WHERE status = 'pending') as pending_laundries,
+          (SELECT COUNT(*) FROM support_tickets WHERE status = 'open') as open_tickets
+      `),
+      // Recent Notifications
+      query(`
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      `, [req.user.id]),
+      // Chart Data (Last 6 Months)
+      query(`
+        SELECT 
+          TO_CHAR(date_trunc('month', created_at), 'Month') as month,
+          SUM(amount_paid) as revenue,
+          COUNT(*) as subscriptions
+        FROM subscriptions
+        GROUP BY date_trunc('month', created_at)
+        ORDER BY date_trunc('month', created_at) ASC
+        LIMIT 6
       `)
     ])
 
@@ -45,7 +72,10 @@ router.get('/dashboard-stats', async (req, res, next) => {
       revenue: revenueResult.rows[0]?.total_revenue || 0,
       counts: countsResult.rows[0],
       recentInvoices: recentInvoicesResult.rows,
-      laundryStatusDistribution: laundryStatusResult.rows
+      laundryStatusDistribution: laundryStatusResult.rows,
+      alerts: alertsResult.rows[0],
+      notifications: notificationsResult.rows,
+      chartData: chartDataResult.rows
     })
   } catch (err) { next(err) }
 })

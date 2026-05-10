@@ -54,3 +54,402 @@ SQL: SELECT l.*, u.full_name AS owner_name
        WHERE l.id = $1
 2026-05-09 20:15:53 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
 SQL: SELECT NOW()
+2026-05-09 22:28:24 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SQL: SELECT NOW()
+2026-05-09 22:30:02 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SQL: SELECT NOW()
+2026-05-09 22:48:08 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SQL: INSERT INTO users (full_name, email, password, role, is_active)
+       VALUES ($1, $2, $3, 'admin', TRUE)
+       ON CONFLICT (email) DO UPDATE 
+       SET password = EXCLUDED.password, role = 'admin', is_active = TRUE
+2026-05-10 03:38:26 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:38:26 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 03:38:26 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:38:26 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 03:39:17 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:39:17 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 03:39:17 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:39:17 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 03:58:37 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:58:37 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 03:58:37 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 03:58:37 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:01:39 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:01:39 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:01:39 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:01:39 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:01:50 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:01:50 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:01:50 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:01:50 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:01:54 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:01:54 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:02:03 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:02:03 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:02:03 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:02:03 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:31:51 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:31:51 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:31:52 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:31:52 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:31:52 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:31:52 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:33:29 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:33:29 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:33:29 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:33:29 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:36:24 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:36:24 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:36:24 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:36:24 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:37:42 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:37:42 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:37:42 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:37:42 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:29 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:29 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:30 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:30 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:32 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:32 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:33 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:33 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:33 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:33 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:33 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:33 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:51 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:51 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 04:44:51 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 04:44:51 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9

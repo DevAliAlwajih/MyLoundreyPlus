@@ -7,28 +7,7 @@ import {
   AlertTriangle, Lock, UserCheck
 } from 'lucide-react'
 
-const CUSTOMERS = [
-  { id: 1, name: 'أحمد محمد السالم', phone: '+966511111111', uniqueId: 'CUS0000001', country: 'SA', currency: 'SAR', joined: '2024-08-15', invoices: 24, debt: 0, active: true,
-    devices: [
-      { type: 'phone', os: 'iOS 17', model: 'iPhone 15', lastLogin: 'منذ ساعة', active: true, isPrimary: true },
-      { type: 'tablet', os: 'iPadOS 17', model: 'iPad Pro', lastLogin: 'منذ يومين', active: true, isPrimary: false },
-    ]
-  },
-  { id: 2, name: 'فاطمة عبدالله الزهراني', phone: '+966522222222', uniqueId: 'CUS0000002', country: 'SA', currency: 'SAR', joined: '2024-09-01', invoices: 18, debt: 75, active: true,
-    devices: [
-      { type: 'phone', os: 'Android 14', model: 'Samsung S24', lastLogin: 'منذ 30 دقيقة', active: true, isPrimary: true },
-    ]
-  },
-  { id: 3, name: 'محمد خالد العتيبي', phone: '+966533333333', uniqueId: 'CUS0000003', country: 'SA', currency: 'SAR', joined: '2024-10-12', invoices: 9, debt: 150, active: true,
-    devices: [
-      { type: 'phone', os: 'Android 13', model: 'Pixel 8', lastLogin: 'منذ 3 أيام', active: true, isPrimary: true },
-      { type: 'phone', os: 'iOS 16', model: 'iPhone 13', lastLogin: 'منذ أسبوع', active: false, isPrimary: false },
-    ]
-  },
-  { id: 4, name: 'سارة نايف القحطاني', phone: '+966544444444', uniqueId: 'CUS0000004', country: 'YE', currency: 'YER', joined: '2024-11-05', invoices: 5, debt: 0, active: false,
-    devices: []
-  },
-]
+import { io } from 'socket.io-client'
 
 export default function CustomersPage() {
   const { lang } = useTheme()
@@ -43,6 +22,16 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers()
+
+    // ─── Real-time Updates Setup ─────────────────────────
+    const socket = io('http://localhost:5000')
+    socket.on('admin_update', (data) => {
+      if (data.type === 'NEW_USER' || data.type === 'USER_STATUS_CHANGE') {
+        fetchCustomers()
+      }
+    })
+
+    return () => socket.disconnect()
   }, [])
 
   const fetchCustomers = async () => {
@@ -76,9 +65,12 @@ export default function CustomersPage() {
     }
   }
 
-  const filtered = customers.filter(c =>
-    c.full_name?.includes(search) || c.phone_number?.includes(search) || c.unique_id?.includes(search)
-  )
+  const filtered = customers.filter(c => {
+    const s = search.toLowerCase()
+    return c.full_name?.toLowerCase().includes(s) || 
+           c.phone_number?.includes(s) || 
+           c.unique_id?.toLowerCase().includes(s)
+  })
 
   return (
     <div className="animate-fade">

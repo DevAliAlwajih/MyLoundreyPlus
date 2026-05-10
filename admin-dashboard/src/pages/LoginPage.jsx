@@ -37,16 +37,25 @@ export default function LoginPage() {
         password,
       })
 
-      const { tokens, user } = response.data.data
+      // الـ Backend يرسل البيانات
+      console.log('DEBUG - Full API Response Data:', response.data);
+      
+      const result = response.data.data || response.data;
+      const user = result.user;
+      const tokens = result.tokens;
 
-      if (user.role !== 'admin') {
-        throw new Error('غير مصرح لك بالدخول كمدير')
+      console.log('DEBUG - Extracted User:', user);
+      console.log('DEBUG - Extracted Tokens:', tokens);
+
+      if (!user || user.role !== 'admin') {
+        console.error('DEBUG - Authorization Failed. Role:', user?.role);
+        throw new Error('غير مصرح لك بالدخول كمدير');
       }
 
       // تخزين التوكن
-      localStorage.setItem('adminToken', tokens.accessToken)
-      login(tokens.accessToken)
-      navigate('/')
+      localStorage.setItem('adminToken', tokens.accessToken);
+      login(tokens.accessToken);
+      navigate('/');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'فشل تسجيل الدخول'
       setError(msg)

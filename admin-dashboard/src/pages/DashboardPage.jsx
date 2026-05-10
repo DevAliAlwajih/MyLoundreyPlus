@@ -200,6 +200,20 @@ export default function DashboardPage() {
 
   const recentInvoices = stats?.recentInvoices || []
 
+  // Dynamic Alerts
+  const alerts = [
+    { type: 'warning', count: stats?.alerts?.expiring_soon, ar: 'مغسلة ستنتهي اشتراكاتها خلال 7 أيام', en: 'laundries expiring in 7 days' },
+    { type: 'info',    count: stats?.alerts?.pending_laundries, ar: 'مغاسل بانتظار التفعيل', en: 'laundries awaiting activation' },
+    { type: 'danger',  count: stats?.alerts?.open_tickets, ar: 'تذاكر دعم فني عاجلة', en: 'urgent support tickets' },
+  ].filter(a => a.count > 0)
+
+  // Dynamic Chart Data
+  const chartData = stats?.chartData?.map(c => ({
+    month: label(c.month, c.month),
+    revenue: parseFloat(c.revenue) || 0,
+    subscriptions: parseInt(c.subscriptions) || 0
+  })) || []
+
   return (
     <div className="animate-fade">
       {/* Page Header */}
@@ -218,10 +232,10 @@ export default function DashboardPage() {
 
       {/* Alerts */}
       <div className="flex flex-col gap-8 mb-24">
-        {ALERTS.map((a, i) => (
+        {alerts.map((a, i) => (
           <div key={i} className={`alert alert-${a.type}`}>
             <AlertTriangle size={16} />
-            {label(a.msgAr, a.msgEn)}
+            {a.count} {label(a.ar, a.en)}
           </div>
         ))}
       </div>
@@ -271,7 +285,7 @@ export default function DashboardPage() {
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={REVENUE_DATA}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="var(--primary-500)" stopOpacity={0.3} />
@@ -371,7 +385,7 @@ export default function DashboardPage() {
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={REVENUE_DATA} barSize={28}>
+              <BarChart data={chartData} barSize={28}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'Cairo' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />

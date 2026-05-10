@@ -27,7 +27,7 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'ar')
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('admin_token'))
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('adminToken'))
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -44,11 +44,11 @@ export default function App() {
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar')
 
   const login = (token) => {
-    localStorage.setItem('admin_token', token)
+    localStorage.setItem('adminToken', token)
     setIsAuthenticated(true)
   }
   const logout = () => {
-    localStorage.removeItem('admin_token')
+    localStorage.removeItem('adminToken')
     setIsAuthenticated(false)
   }
 
