@@ -4,12 +4,11 @@ import { Platform } from 'react-native';
 
 // ─── تغيير هذا لـ IP الشبكة المحلية الخاصة بك عند الاختبار على جهاز حقيقي ───
 // مثال: 'http://192.168.1.5:5000/api/v1'
-const BASE_URL = Platform.OS === 'android'
-  ? 'http://10.0.2.2:5000/api/v1'   // محاكي Android
-  : 'http://localhost:5000/api/v1';  // iOS Simulator / Web
+// وضع الـ Wi-Fi المستقر (تأكد أن الهاتف والكمبيوتر على نفس الشبكة)
+const BASE_URL = 'http://192.168.1.102:5000/api/v1';
 
-// معرف ثابت للجهاز (tablet POS) لتجنب طلب موافقة الجهاز
-const DEVICE_ID = 'laundry-pos-tablet-001';
+// معرف ثابت للجهاز (tablet POS) لتجنب طلب موافقة الجهاز (يجب أن يكون UUID صالح)
+const DEVICE_ID = '11111111-2222-3333-4444-555555555555';
 
 const api = axios.create({
   baseURL: BASE_URL,

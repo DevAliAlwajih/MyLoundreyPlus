@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useTheme } from '../App'
+import api from '../services/api'
 import { Droplets, Phone, Lock, Eye, EyeOff, Sun, Moon, Shield, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
@@ -8,7 +9,7 @@ export default function LoginPage() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -22,28 +23,34 @@ export default function LoginPage() {
       setError('تم تجاوز الحد المسموح من المحاولات. يرجى التواصل مع الإدارة.')
       return
     }
-    if (!phone || !password) {
-      setError('يرجى إدخال رقم الهاتف وكلمة المرور')
+    if (!email || !password) {
+      setError('يرجى إدخال البريد الإلكتروني وكلمة المرور')
       return
     }
     setLoading(true)
     setError('')
 
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1200))
+    try {
+      // الاتصال الحقيقي بالـ Backend
+      const response = await api.post('/auth/login', {
+        email,
+        password,
+      })
 
-    // Demo: admin / 1234
-    if (phone === '0500000001' && password === 'admin1234') {
-      login('demo_admin_token_xyz')
-      navigate('/')
-    } else {
-      const newAttempts = attempts + 1
-      setAttempts(newAttempts)
-      if (newAttempts >= MAX_ATTEMPTS) {
-        setError(`تم تجاوز ${MAX_ATTEMPTS} محاولات. يرجى التواصل مع الدعم: 920000000`)
-      } else {
-        setError(`رقم الهاتف أو كلمة المرور غير صحيحة. المحاولات المتبقية: ${MAX_ATTEMPTS - newAttempts}`)
+      const { tokens, user } = response.data.data
+
+      if (user.role !== 'admin') {
+        throw new Error('غير مصرح لك بالدخول كمدير')
       }
+
+      // تخزين التوكن
+      localStorage.setItem('adminToken', tokens.accessToken)
+      login(tokens.accessToken)
+      navigate('/')
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'فشل تسجيل الدخول'
+      setError(msg)
+      setAttempts(a => a + 1)
     }
     setLoading(false)
   }
@@ -118,19 +125,18 @@ export default function LoginPage() {
 
                 <div className="form-group">
                   <label className="form-label">
-                    رقم الهاتف <span className="required">*</span>
+                    البريد الإلكتروني <span className="required">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-group-addon"><Phone size={16} /></span>
                     <input
-                      id="phone"
-                      type="tel"
+                      id="email"
+                      type="email"
                       className="form-control ltr"
-                      placeholder="05XXXXXXXX"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      maxLength={15}
-                      autoComplete="tel"
+                      placeholder="admin@mgslty.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      autoComplete="email"
                       dir="ltr"
                     />
                   </div>
@@ -192,7 +198,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="login-demo text-muted fs-xs text-center mt-16">
-                  للتجربة: رقم <code>0500000001</code> / كلمة <code>admin1234</code>
+                  للتجربة: <code>admin@mgslty.com</code> / كلمة <code>admin123</code>
                 </p>
               </form>
             )}

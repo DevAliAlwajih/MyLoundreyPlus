@@ -40,7 +40,7 @@ const useAuthStore = create((set, get) => ({
       set({ user, token: tokens.accessToken, isLoading: false, error: null });
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'حدث خطأ، حاول مرة أخرى';
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'حدث خطأ، حاول مرة أخرى';
       set({ isLoading: false, error: message });
       return { success: false, error: message };
     }
@@ -65,7 +65,7 @@ const useAuthStore = create((set, get) => ({
       set({ user, token: tokens.accessToken, isLoading: false, error: null });
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'فشل إنشاء الحساب';
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'فشل إنشاء الحساب';
       set({ isLoading: false, error: message });
       return { success: false, error: message };
     }

@@ -2,3 +2,55 @@
 2026-05-03 04:23:44 [error]: ❌ فشل تشغيل الخادم:
 2026-05-03 04:28:25 [error]: ❌ فشل تشغيل الخادم:
 2026-05-03 04:36:55 [error]: ❌ فشل تشغيل الخادم:
+2026-05-09 16:12:19 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:12:46 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:12:52 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:13:08 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:14:13 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:151:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:16:13 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at login (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:257:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:16:16 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at login (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:257:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:34:58 [error]: خطأ في الاستعلام: invalid input syntax for type uuid: "my"
+SQL: SELECT l.*, u.full_name AS owner_name
+       FROM laundries l JOIN users u ON u.id = l.owner_id
+       WHERE l.id = $1
+2026-05-09 16:37:28 [error]: خطأ في الاستعلام: invalid input syntax for type uuid: "my"
+SQL: SELECT l.*, u.full_name AS owner_name
+       FROM laundries l JOIN users u ON u.id = l.owner_id
+       WHERE l.id = $1
+2026-05-09 20:15:53 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SQL: SELECT NOW()

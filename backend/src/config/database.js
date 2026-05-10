@@ -27,21 +27,34 @@ export async function testConnection() {
     logger.info(`✅ PostgreSQL متصل — ${result.rows[0].time}`)
 
     // ─── Auto Migrations (One-time fixes) ─────────────────
-    // التصحيح التلقائي لهيكل قاعدة البيانات
-    console.log('🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...');
+    logger.info('🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...');
     
-    // 1. جعل رقم الهاتف اختيارياً (Nullable)
-    await pool.query('ALTER TABLE users ALTER COLUMN phone_number DROP NOT NULL');
-    
-    // 2. إضافة عمود email إذا لم يكن موجوداً
-    await pool.query(`
+    await client.query(`
       DO $$ 
       BEGIN 
+        -- 1. جعل رقم الهاتف اختيارياً
+        ALTER TABLE users ALTER COLUMN phone_number DROP NOT NULL;
+
+        -- 2. إضافة عمود email
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='email') THEN
           ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
         END IF;
+
+        -- 3. إضافة عمود password_hash
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash') THEN
+          ALTER TABLE users ADD COLUMN password_hash TEXT;
+        END IF;
+
+        -- 4. إضافة عمود country و currency
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='country') THEN
+          ALTER TABLE users ADD COLUMN country VARCHAR(10) DEFAULT 'SA';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='currency') THEN
+          ALTER TABLE users ADD COLUMN currency VARCHAR(10) DEFAULT 'SAR';
+        END IF;
       END $$;
-    `)
+    `);
+
     logger.info('🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح')
   } catch (err) {
     logger.error('❌ فشل تحديث هيكل قاعدة البيانات:', err.message)

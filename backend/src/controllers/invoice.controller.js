@@ -351,3 +351,34 @@ export async function rateInvoice(req, res, next) {
     next(err)
   }
 }
+
+// ─── GET /api/v1/invoices/laundry/dashboard-stats ────────────────────────────
+export async function getDashboardStats(req, res, next) {
+  try {
+    const laundryResult = await query('SELECT id FROM laundries WHERE owner_id = $1', [req.user.id])
+    if (!laundryResult.rows[0]) throw new AppError('المغسلة غير موجودة', 404)
+    const laundryId = laundryResult.rows[0].id
+
+    const statsResult = await query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE) as total_today,
+        COUNT(*) FILTER (WHERE status = 'received') as received,
+        COUNT(*) FILTER (WHERE status = 'washing') as washing,
+        COUNT(*) FILTER (WHERE status = 'ready') as ready
+       FROM invoices
+       WHERE laundry_id = $1`,
+      [laundryId]
+    )
+
+    const stats = statsResult.rows[0]
+    
+    return sendSuccess(res, {
+      total: parseInt(stats.total_today || 0),
+      received: parseInt(stats.received || 0),
+      washing: parseInt(stats.washing || 0),
+      ready: parseInt(stats.ready || 0)
+    })
+  } catch (err) {
+    next(err)
+  }
+}

@@ -14,7 +14,10 @@ export default function DashboardScreen() {
   const { user } = useLaundryStore();
   const { invoices, stats, isLoading, fetchInvoices, updateStatus } = useInvoiceStore();
 
-  useEffect(() => { fetchInvoices({ limit: 20 }); }, []);
+  useEffect(() => { 
+    // جلب البيانات الحقيقية عند فتح الصفحة
+    fetchInvoices({ limit: 10 }); 
+  }, []);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -23,7 +26,8 @@ export default function DashboardScreen() {
     return 'مساء النور';
   };
 
-  const recentInvoices = invoices.slice(0, 10);
+  // عرض آخر 10 فواتير حقيقية فقط
+  const recentInvoices = invoices || [];
 
   return (
     <View style={styles.container}>
@@ -35,6 +39,7 @@ export default function DashboardScreen() {
         </View>
         <TouchableOpacity style={styles.notifBtn}>
           <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
+          {/* تظهر النقطة الحمراء فقط إذا كان هناك تنبيهات (يمكن ربطها لاحقاً) */}
           <View style={styles.notifBadge} />
         </TouchableOpacity>
       </View>
@@ -42,9 +47,15 @@ export default function DashboardScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => fetchInvoices({ limit: 20 })} colors={[COLORS.primary]} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={isLoading} 
+            onRefresh={() => fetchInvoices({ limit: 10 })} 
+            colors={[COLORS.primary]} 
+          />
+        }
       >
-        {/* Stats Row */}
+        {/* Stats Row - بيانات حقيقية من الـ Store */}
         <View style={styles.statsRow}>
           {[
             { label: 'إجمالي اليوم', value: stats.total, icon: 'receipt', color: COLORS.primary, bg: COLORS.primaryLight },
@@ -56,7 +67,7 @@ export default function DashboardScreen() {
               <View style={[styles.statIcon, { backgroundColor: s.color }]}>
                 <Ionicons name={s.icon} size={20} color="#fff" />
               </View>
-              <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
+              <Text style={[styles.statValue, { color: s.color }]}>{s.value || 0}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
           ))}
@@ -81,7 +92,7 @@ export default function DashboardScreen() {
               <Text style={styles.actionLabel}>فاتورة جديدة</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionCard}
-              onPress={() => fetchInvoices({ status: 'ready' })}>
+              onPress={() => router.push({ pathname: '/(tabs)/invoices', params: { status: 'ready' } })}>
               <View style={[styles.actionIcon, { backgroundColor: '#FFF7E6' }]}>
                 <Ionicons name="shirt" size={28} color={COLORS.warning} />
               </View>
@@ -90,7 +101,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Recent Invoices */}
+        {/* Recent Invoices - قائمة حقيقية من قاعدة البيانات */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>آخر الفواتير</Text>
@@ -99,10 +110,12 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
 
-          {recentInvoices.length === 0 ? (
+          {isLoading && recentInvoices.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: COLORS.textLight, marginTop: 20 }}>جاري التحميل...</Text>
+          ) : recentInvoices.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="receipt-outline" size={48} color={COLORS.border} />
-              <Text style={styles.emptyText}>لا توجد فواتير اليوم</Text>
+              <Text style={styles.emptyText}>لا توجد فواتير حقيقية مسجلة اليوم</Text>
             </View>
           ) : (
             recentInvoices.map((inv) => (
@@ -110,6 +123,10 @@ export default function DashboardScreen() {
             ))
           )}
         </View>
+      </ScrollView>
+    </View>
+  );
+}
       </ScrollView>
     </View>
   );

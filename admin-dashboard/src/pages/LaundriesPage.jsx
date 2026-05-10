@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../App'
+import api from '../services/api'
 import {
   Search, Plus, Filter, MoreVertical, Store, MapPin, Star,
   CheckCircle, XCircle, Clock, Ban, Eye, Edit, Trash2,
@@ -33,21 +34,54 @@ export default function LaundriesPage() {
   const { lang } = useTheme()
   const label = (ar, en) => lang === 'ar' ? ar : en
 
+  const [laundries, setLaundries] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedLaundry, setSelectedLaundry] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDevicesModal, setShowDevicesModal] = useState(false)
-  const [activeMenu, setActiveMenu] = useState(null)
 
-  const filtered = LAUNDRIES.filter(l => {
-    const matchSearch = l.name.includes(search) || l.owner.includes(search) || l.city.includes(search)
+  useEffect(() => {
+    fetchLaundries()
+  }, [])
+
+  const fetchLaundries = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/admin/laundries')
+      setLaundries(res.data.data)
+    } catch (err) {
+      console.error('Failed to fetch laundries', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      await api.patch(`/admin/laundries/${id}/status`, { status: newStatus })
+      fetchLaundries()
+    } catch (err) {
+      alert('فشل تحديث الحالة')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(label('هل أنت متأكد من حذف هذه المغسلة؟', 'Are you sure you want to delete this laundry?'))) return
+    try {
+      await api.delete(`/admin/laundries/${id}`)
+      fetchLaundries()
+    } catch (err) {
+      alert('فشل الحذف')
+    }
+  }
+
+  const filtered = laundries.filter(l => {
+    const matchSearch = l.name?.includes(search) || l.owner_name?.includes(search) || l.city?.includes(search)
     const matchStatus = filterStatus === 'all' || l.status === filterStatus
     return matchSearch && matchStatus
   })
-
-  const openDetails = (l) => { setSelectedLaundry(l); setShowModal(true) }
-  const openDevices = (l) => { setSelectedLaundry(l); setShowDevicesModal(true) }
 
   return (
     <div className="animate-fade">
@@ -111,35 +145,37 @@ export default function LaundriesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(l => (
+              {loading ? (
+                <tr><td colSpan="10" className="text-center py-20">{label('جاري التحميل...', 'Loading...')}</td></tr>
+              ) : filtered.map(l => (
                 <tr key={l.id}>
                   <td>
                     <div className="flex items-center gap-10">
                       <div className="avatar-placeholder" style={{ width: 38, height: 38, borderRadius: 10, fontSize: '0.85rem' }}>
-                        {l.name[4]}
+                        {l.name[0]}
                       </div>
                       <div>
                         <div className="fw-semi">{l.name}</div>
                         <div className="fs-xs text-muted flex items-center gap-4">
-                          <Phone size={11} /> {l.phone}
+                          <Phone size={11} /> {l.phone_number}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="fs-sm">{l.owner}</td>
+                  <td className="fs-sm">{l.owner_name}</td>
                   <td>
                     <div className="flex items-center gap-4 fs-sm text-muted">
-                      <MapPin size={13} /> {l.city}
+                      <MapPin size={13} /> {l.city || label('غير محدد', 'N/A')}
                     </div>
                   </td>
                   <td>
-                    <span className={`badge badge-${STATUS_MAP[l.status].badge}`}>
-                      {label(STATUS_MAP[l.status].labelAr, STATUS_MAP[l.status].labelEn)}
+                    <span className={`badge badge-${STATUS_MAP[l.status]?.badge || 'neutral'}`}>
+                      {label(STATUS_MAP[l.status]?.labelAr, STATUS_MAP[l.status]?.labelEn) || l.status}
                     </span>
                   </td>
                   <td>
-                    <span className={`badge badge-${PLAN_MAP[l.plan].badge}`}>
-                      {label(PLAN_MAP[l.plan].labelAr, PLAN_MAP[l.plan].labelEn)}
+                    <span className={`badge badge-${PLAN_MAP[l.plan]?.badge || 'neutral'}`}>
+                      {label(PLAN_MAP[l.plan]?.labelAr, PLAN_MAP[l.plan]?.labelEn) || l.plan || label('لا يوجد', 'None')}
                     </span>
                   </td>
                   <td>
@@ -150,21 +186,21 @@ export default function LaundriesPage() {
                       </div>
                     ) : <span className="text-muted fs-sm">—</span>}
                   </td>
-                  <td className="fw-semi">{l.orders}</td>
+                  <td className="fw-semi">{l.orders_count || 0}</td>
                   <td>
                     <button
                       className="btn btn-ghost btn-sm flex items-center gap-4"
                       onClick={() => openDevices(l)}
                     >
                       <Smartphone size={14} />
-                      <span className="fw-bold">{l.devices.length}</span>
+                      <span className="fw-bold">{l.devices?.length || 0}</span>
                     </button>
                   </td>
                   <td>
                     <div className="flex items-center gap-4 fs-sm">
                       <Calendar size={13} className="text-muted" />
-                      <span className={new Date(l.expiry) < new Date() ? 'text-danger' : 'text-muted'}>
-                        {l.expiry}
+                      <span className={new Date(l.subscription_expiry) < new Date() ? 'text-danger' : 'text-muted'}>
+                        {l.subscription_expiry ? new Date(l.subscription_expiry).toLocaleDateString() : '—'}
                       </span>
                     </div>
                   </td>
@@ -177,15 +213,15 @@ export default function LaundriesPage() {
                         <Edit size={15} />
                       </button>
                       {l.status === 'active' ? (
-                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--warning)' }} data-tooltip={label('تعطيل', 'Suspend')}>
+                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--warning)' }} onClick={() => handleUpdateStatus(l.id, 'suspended')} data-tooltip={label('تعطيل', 'Suspend')}>
                           <XCircle size={15} />
                         </button>
-                      ) : l.status === 'suspended' || l.status === 'pending' ? (
-                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--success)' }} data-tooltip={label('تفعيل', 'Activate')}>
+                      ) : (l.status === 'suspended' || l.status === 'pending') ? (
+                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--success)' }} onClick={() => handleUpdateStatus(l.id, 'active')} data-tooltip={label('تفعيل', 'Activate')}>
                           <CheckCircle size={15} />
                         </button>
                       ) : null}
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} data-tooltip={label('حذف', 'Delete')}>
+                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(l.id)} data-tooltip={label('حذف', 'Delete')}>
                         <Trash2 size={15} />
                       </button>
                     </div>

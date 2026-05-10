@@ -135,7 +135,14 @@ const useLaundryStore = create((set, get) => ({
       set({ user, token: tokens.accessToken, isLoading: false });
       return { success: true };
     } catch (err) {
-      const msg = err.response?.data?.message || 'فشل إنشاء الحساب';
+      let msg = err.response?.data?.message;
+      if (!msg) {
+        if (err.response?.data) {
+          msg = typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data);
+        } else {
+          msg = err.message || 'فشل إنشاء الحساب (لا يوجد اتصال بالخادم)';
+        }
+      }
       set({ isLoading: false, error: msg });
       return { success: false, error: msg };
     }

@@ -8,6 +8,16 @@ const useInvoiceStore = create((set, get) => ({
   isLoading:     false,
   error:         null,
 
+  // ─── Fetch summary stats for dashboard ─────────────────────────
+  fetchStats: async () => {
+    try {
+      const res = await api.get('/invoices/dashboard-stats');
+      set({ stats: res.data.data });
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats', err);
+    }
+  },
+
   // ─── Fetch all invoices for this laundry ────────────────────────
   fetchInvoices: async (filters = {}) => {
     set({ isLoading: true });
@@ -16,14 +26,8 @@ const useInvoiceStore = create((set, get) => ({
       const res = await api.get(`/invoices?${params}`);
       const invoices = res.data.data?.invoices || res.data.data || [];
       
-      // Compute quick stats
-      const stats = {
-        total:    invoices.length,
-        received: invoices.filter(i => i.status === 'received').length,
-        washing:  invoices.filter(i => i.status === 'washing' || i.status === 'drying').length,
-        ready:    invoices.filter(i => i.status === 'ready').length,
-      };
-      set({ invoices, stats, isLoading: false });
+      set({ invoices, isLoading: false });
+      get().fetchStats(); // Also update stats
     } catch (err) {
       set({ isLoading: false, error: 'فشل تحميل الفواتير' });
     }

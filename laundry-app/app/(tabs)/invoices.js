@@ -51,24 +51,33 @@ export default function InvoicesScreen() {
       Alert.alert('تنبيه', 'يرجى إدخال اسم العميل');
       return;
     }
-    const services = Object.entries(newForm.selectedServices)
+    const selectedItems = Object.entries(newForm.selectedServices)
       .filter(([, sel]) => sel)
-      .map(([id]) => id);
-    if (services.length === 0) {
+      .map(([id]) => {
+        const s = SERVICES.find(service => service.id === id);
+        return {
+          item_name: s.label,
+          unit_price: s.price,
+          quantity: 1
+        };
+      });
+
+    if (selectedItems.length === 0) {
       Alert.alert('تنبيه', 'يرجى اختيار خدمة واحدة على الأقل');
       return;
     }
+
     const result = await createInvoice({
-      customer_name: newForm.customerName,
-      customer_phone: newForm.customerPhone,
-      services,
-      total_amount: totalNew,
+      customer_identifier: newForm.customerPhone || newForm.customerName, // Backend needs identifier
+      items: selectedItems,
       notes: newForm.notes,
     });
+
     if (result.success) {
       setShowNewModal(false);
       setNewForm({ customerName: '', customerPhone: '', notes: '', selectedServices: {} });
       Alert.alert('تم', 'تم إنشاء الفاتورة بنجاح ✅');
+      fetchInvoices(); // Refresh the list and stats
     } else {
       Alert.alert('خطأ', result.error);
     }

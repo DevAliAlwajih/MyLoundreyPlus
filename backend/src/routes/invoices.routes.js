@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { authenticate, requireLaundry, requireCustomer } from '../middleware/auth.js'
 import {
   createInvoice, getInvoices, getInvoiceById,
-  updateInvoiceStatus, recordPayment, getDailyReport, rateInvoice,
+  updateInvoiceStatus, recordPayment, getDailyReport, 
+  rateInvoice, getDashboardStats,
 } from '../controllers/invoice.controller.js'
 import { query } from '../config/database.js'
 import { AppError, sendSuccess } from '../middleware/errorHandler.js'
@@ -22,6 +23,7 @@ router.post('/',                    requireLaundry, async (req, res, next) => {
 })
 
 router.get('/daily-report',         requireLaundry, getDailyReport)
+router.get('/dashboard-stats',      requireLaundry, getDashboardStats)
 router.patch('/:id/status',         requireLaundry, updateInvoiceStatus)
 router.post('/:id/payment',         requireLaundry, recordPayment)
 

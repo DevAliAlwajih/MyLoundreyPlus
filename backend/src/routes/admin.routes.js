@@ -50,4 +50,65 @@ router.get('/dashboard-stats', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ─── Laundries Management ────────────────────────────────────────────────────
+router.get('/laundries', async (req, res, next) => {
+  try {
+    const result = await query(`
+      SELECT l.*, u.full_name as owner_name, u.phone_number as owner_phone
+      FROM laundries l
+      LEFT JOIN users u ON u.id = l.owner_id
+      ORDER BY l.created_at DESC
+    `)
+    return sendSuccess(res, result.rows)
+  } catch (err) { next(err) }
+})
+
+router.patch('/laundries/:id/status', async (req, res, next) => {
+  try {
+    const { status } = req.body
+    const result = await query(
+      'UPDATE laundries SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [status, req.params.id]
+    )
+    return sendSuccess(res, result.rows[0], 'تم تحديث حالة المغسلة بنجاح')
+  } catch (err) { next(err) }
+})
+
+router.delete('/laundries/:id', async (req, res, next) => {
+  try {
+    await query('DELETE FROM laundries WHERE id = $1', [req.params.id])
+    return sendSuccess(res, null, 'تم حذف المغسلة بنجاح')
+  } catch (err) { next(err) }
+})
+
+// ─── Customers Management ────────────────────────────────────────────────────
+router.get('/customers', async (req, res, next) => {
+  try {
+    const result = await query(`
+      SELECT id, full_name, email, phone_number, is_active, created_at, country, currency
+      FROM users WHERE role = 'customer'
+      ORDER BY created_at DESC
+    `)
+    return sendSuccess(res, result.rows)
+  } catch (err) { next(err) }
+})
+
+router.patch('/customers/:id/status', async (req, res, next) => {
+  try {
+    const { is_active } = req.body
+    const result = await query(
+      'UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [is_active, req.params.id]
+    )
+    return sendSuccess(res, result.rows[0], 'تم تحديث حالة المستخدم بنجاح')
+  } catch (err) { next(err) }
+})
+
+router.delete('/customers/:id', async (req, res, next) => {
+  try {
+    await query('DELETE FROM users WHERE id = $1', [req.params.id])
+    return sendSuccess(res, null, 'تم حذف المستخدم بنجاح')
+  } catch (err) { next(err) }
+})
+
 export default router

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../App'
+import api from '../services/api'
 import {
   Search, Plus, Users, QrCode, Smartphone, Tablet, Phone,
   CheckCircle, XCircle, Eye, Edit, Trash2, ShieldOff, Shield,
@@ -33,13 +34,50 @@ export default function CustomersPage() {
   const { lang } = useTheme()
   const label = (ar, en) => lang === 'ar' ? ar : en
 
+  const [customers, setCustomers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [showDevicesModal, setShowDevicesModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
 
-  const filtered = CUSTOMERS.filter(c =>
-    c.name.includes(search) || c.phone.includes(search) || c.uniqueId.includes(search)
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/admin/customers')
+      setCustomers(res.data.data)
+    } catch (err) {
+      console.error('Failed to fetch customers', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateStatus = async (id, isActive) => {
+    try {
+      await api.patch(`/admin/customers/${id}/status`, { is_active: isActive })
+      fetchCustomers()
+    } catch (err) {
+      alert('فشل تحديث الحالة')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(label('هل أنت متأكد من حذف هذا المستخدم؟', 'Are you sure you want to delete this customer?'))) return
+    try {
+      await api.delete(`/admin/customers/${id}`)
+      fetchCustomers()
+    } catch (err) {
+      alert('فشل الحذف')
+    }
+  }
+
+  const filtered = customers.filter(c =>
+    c.full_name?.includes(search) || c.phone_number?.includes(search) || c.unique_id?.includes(search)
   )
 
   return (
@@ -85,25 +123,26 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(c => (
+              {loading ? (
+                <tr><td colSpan="8" className="text-center py-20">{label('جاري التحميل...', 'Loading...')}</td></tr>
+              ) : filtered.map(c => (
                 <tr key={c.id}>
                   <td>
                     <div className="flex items-center gap-10">
                       <div className="avatar-placeholder" style={{ width: 38, height: 38, borderRadius: 10, fontSize: '0.85rem' }}>
-                        {c.name[0]}
+                        {c.full_name[0]}
                       </div>
                       <div>
-                        <div className="fw-semi">{c.name}</div>
+                        <div className="fw-semi">{c.full_name}</div>
                         <div className="fs-xs text-muted flex items-center gap-4">
-                          <Phone size={11} /> {c.phone}
+                          <Phone size={11} /> {c.phone_number}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td>
                     <div className="flex items-center gap-6">
-                      <code style={{ fontSize: '0.8rem', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 6 }}>{c.uniqueId}</code>
-                      <QrCode size={14} className="text-muted" style={{ cursor: 'pointer' }} />
+                      <code style={{ fontSize: '0.8rem', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 6 }}>{c.unique_id || '—'}</code>
                     </div>
                   </td>
                   <td>
@@ -112,7 +151,7 @@ export default function CustomersPage() {
                       <span className="badge badge-neutral fs-xs">{c.currency}</span>
                     </div>
                   </td>
-                  <td className="fw-bold">{c.invoices}</td>
+                  <td className="fw-bold">{c.invoices_count || 0}</td>
                   <td>
                     {c.debt > 0
                       ? <span className="badge badge-danger">{c.debt} {c.currency}</span>
@@ -125,13 +164,13 @@ export default function CustomersPage() {
                       onClick={() => { setSelectedCustomer(c); setShowDevicesModal(true) }}
                     >
                       <Smartphone size={14} />
-                      <span className="fw-bold">{c.devices.length}</span>
+                      <span className="fw-bold">{c.devices?.length || 0}</span>
                     </button>
                   </td>
                   <td>
                     <div className="flex items-center gap-6">
-                      <span className={`status-dot ${c.active ? 'active' : 'inactive'}`} />
-                      <span className="fs-sm">{c.active ? label('نشط', 'Active') : label('موقوف', 'Suspended')}</span>
+                      <span className={`status-dot ${c.is_active ? 'active' : 'inactive'}`} />
+                      <span className="fs-sm">{c.is_active ? label('نشط', 'Active') : label('موقوف', 'Suspended')}</span>
                     </div>
                   </td>
                   <td>
@@ -140,10 +179,14 @@ export default function CustomersPage() {
                         <Eye size={15} />
                       </button>
                       <button className="btn btn-ghost btn-icon btn-sm"><Edit size={15} /></button>
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: c.active ? 'var(--warning)' : 'var(--success)' }}>
-                        {c.active ? <ShieldOff size={15} /> : <Shield size={15} />}
+                      <button className="btn btn-ghost btn-icon btn-sm" 
+                        onClick={() => handleUpdateStatus(c.id, !c.is_active)}
+                        style={{ color: c.is_active ? 'var(--warning)' : 'var(--success)' }}>
+                        {c.is_active ? <ShieldOff size={15} /> : <Shield size={15} />}
                       </button>
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }}>
+                      <button className="btn btn-ghost btn-icon btn-sm" 
+                        onClick={() => handleDelete(c.id)}
+                        style={{ color: 'var(--danger)' }}>
                         <Trash2 size={15} />
                       </button>
                     </div>

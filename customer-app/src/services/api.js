@@ -5,7 +5,8 @@ import Constants from 'expo-constants';
 
 // For local testing on emulator, use 10.0.2.2 for Android. For physical device, use your local IP.
 // Since backend is on port 5000:
-const API_URL = 'http://10.0.2.2:5000/api/v1'; 
+// استخدمنا الـ IP الخاص بشبكتك لكي يتمكن الهاتف من الاتصال بالكمبيوتر
+const API_URL = 'http://192.168.1.102:5000/api/v1'; 
 
 const api = axios.create({
   baseURL: API_URL,

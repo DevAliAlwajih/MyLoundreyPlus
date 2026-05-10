@@ -89,8 +89,8 @@ app.use(errorHandler)
 async function startServer() {
   try {
     await testConnection()
-    app.listen(PORT, () => {
-      logger.info(`🚀 مغسلتي بلس API تعمل على المنفذ ${PORT}`)
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 مغسلتي بلس API تعمل على المنفذ ${PORT} (0.0.0.0)`)
       logger.info(`📖 البيئة: ${process.env.NODE_ENV}`)
       logger.info(`🌐 Health: http://localhost:${PORT}/health`)
     })

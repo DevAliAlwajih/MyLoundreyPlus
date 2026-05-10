@@ -103,6 +103,8 @@ export default function RegisterScreen() {
       Alert.alert('✅ تم', 'تم إنشاء حساب المغسلة بنجاح!', [
         { text: 'ابدأ الآن', onPress: () => router.replace('/(tabs)/dashboard') },
       ]);
+    } else {
+      Alert.alert('❌ فشل التسجيل', result.error || 'حدث خطأ غير معروف.');
     }
   };
 

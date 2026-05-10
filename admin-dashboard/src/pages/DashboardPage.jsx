@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../App'
+import api from '../services/api'
 import {
   TrendingUp, Store, Users, FileText, ArrowUpRight,
   ArrowDownRight, Calendar, Download, RefreshCw,
@@ -117,7 +118,87 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function DashboardPage() {
   const { lang } = useTheme()
   const [period, setPeriod] = useState('month')
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
   const label = (ar, en) => lang === 'ar' ? ar : en
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/admin/dashboard-stats')
+      setStats(res.data.data)
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const kpis = [
+    {
+      id: 'revenue',
+      labelAr: 'إجمالي الإيرادات',
+      labelEn: 'Total Revenue',
+      valueAr: `${stats?.revenue || 0} ريال`,
+      valueEn: `SAR ${stats?.revenue || 0}`,
+      icon: DollarSign,
+      color: 'var(--primary-500)',
+      bg: 'var(--primary-50)',
+      up: true,
+      change: '+0%'
+    },
+    {
+      id: 'laundries',
+      labelAr: 'المغاسل النشطة',
+      labelEn: 'Active Laundries',
+      valueAr: stats?.counts?.active_laundries || '0',
+      valueEn: stats?.counts?.active_laundries || '0',
+      icon: Store,
+      color: 'var(--success)',
+      bg: 'var(--success-bg)',
+      up: true,
+      change: '+0'
+    },
+    {
+      id: 'customers',
+      labelAr: 'إجمالي العملاء',
+      labelEn: 'Total Customers',
+      valueAr: stats?.counts?.total_customers || '0',
+      valueEn: stats?.counts?.total_customers || '0',
+      icon: Users,
+      color: 'var(--gold)',
+      bg: 'var(--gold-light)',
+      up: true,
+      change: '+0'
+    },
+    {
+      id: 'invoices',
+      labelAr: 'فواتير اليوم',
+      labelEn: 'Today\'s Invoices',
+      valueAr: stats?.counts?.today_invoices || '0',
+      valueEn: stats?.counts?.today_invoices || '0',
+      icon: FileText,
+      color: 'var(--info)',
+      bg: 'var(--info-bg)',
+      up: false,
+      change: '0'
+    },
+  ]
+
+  const statusDistribution = stats?.laundryStatusDistribution?.map(s => ({
+    name: label(
+      s.status === 'active' ? 'نشط' : s.status === 'trial' ? 'تجريبي' : s.status === 'pending' ? 'بانتظار' : 'آخر',
+      s.status
+    ),
+    value: parseInt(s.count),
+    color: s.status === 'active' ? '#10B981' : s.status === 'trial' ? '#F59E0B' : '#3B82F6'
+  })) || []
+
+  const recentInvoices = stats?.recentInvoices || []
 
   return (
     <div className="animate-fade">
@@ -128,17 +209,9 @@ export default function DashboardPage() {
           <p className="page-subtitle">{label('نظرة عامة على أداء النظام', 'System performance overview')}</p>
         </div>
         <div className="flex gap-8">
-          <div className="flex items-center gap-4 fs-sm text-muted">
-            <Calendar size={16} />
-            <span>{label('آخر تحديث: الآن', 'Last updated: now')}</span>
-          </div>
-          <button className="btn btn-secondary btn-sm">
-            <RefreshCw size={15} />
+          <button className="btn btn-secondary btn-sm" onClick={fetchStats}>
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             {label('تحديث', 'Refresh')}
-          </button>
-          <button className="btn btn-primary btn-sm">
-            <Download size={15} />
-            {label('تصدير', 'Export')}
           </button>
         </div>
       </div>
@@ -155,7 +228,7 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-4 mb-24">
-        {KPIS.map(kpi => {
+        {kpis.map(kpi => {
           const Icon = kpi.icon
           return (
             <div key={kpi.id} className="card">
@@ -164,13 +237,9 @@ export default function DashboardPage() {
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: kpi.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color }}>
                     <Icon size={22} />
                   </div>
-                  <span className={`badge ${kpi.up ? 'badge-success' : 'badge-danger'}`}>
-                    {kpi.up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                    {kpi.up ? '+' : ''}{label(kpi.changeAr, kpi.changeEn).split(' ')[0]}
-                  </span>
                 </div>
                 <div className="fs-2xl fw-black mb-4" style={{ color: 'var(--text-primary)' }}>
-                  {label(kpi.valueAr, kpi.valueEn)}
+                  {loading ? '...' : label(kpi.valueAr, kpi.valueEn)}
                 </div>
                 <div className="fs-sm text-muted">{label(kpi.labelAr, kpi.labelEn)}</div>
               </div>
@@ -236,8 +305,8 @@ export default function DashboardPage() {
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={STATUS_DATA} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
-                  {STATUS_DATA.map((entry, index) => (
+                <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
+                  {statusDistribution.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
@@ -245,11 +314,11 @@ export default function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-col gap-8" style={{ width: '100%', marginTop: 8 }}>
-              {STATUS_DATA.map((s, i) => (
+              {statusDistribution.map((s, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-8">
                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                    <span className="fs-sm">{label(s.name, s.name)}</span>
+                    <span className="fs-sm">{s.name}</span>
                   </div>
                   <span className="fw-bold fs-sm">{s.value}</span>
                 </div>
@@ -260,51 +329,36 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {/* Top Laundries */}
+      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+        {/* Recent Invoices */}
         <div className="card">
           <div className="card-header">
-            <h3 className="fs-lg fw-bold">{label('أكثر المغاسل نشاطاً', 'Most Active Laundries')}</h3>
-            <span className="badge badge-primary">{label('هذا الشهر', 'This Month')}</span>
+            <h3 className="fs-lg fw-bold">{label('آخر الفواتير في النظام', 'Recent System Invoices')}</h3>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th>{label('رقم الفاتورة', 'Invoice #')}</th>
                   <th>{label('المغسلة', 'Laundry')}</th>
-                  <th>{label('الطلبات', 'Orders')}</th>
-                  <th>{label('الإيراد', 'Revenue')}</th>
-                  <th>{label('التقييم', 'Rating')}</th>
+                  <th>{label('المبلغ', 'Amount')}</th>
+                  <th>{label('الحالة', 'Status')}</th>
                 </tr>
               </thead>
               <tbody>
-                {TOP_LAUNDRIES.map((l, i) => (
+                {recentInvoices.map((inv, i) => (
                   <tr key={i}>
-                    <td className="text-muted fw-bold">{i + 1}</td>
+                    <td className="fw-bold">#{inv.invoice_number}</td>
+                    <td>{inv.laundry_name}</td>
+                    <td className="fw-semi text-success">{inv.total_amount} ريال</td>
                     <td>
-                      <div className="flex items-center gap-8">
-                        <div className="avatar-placeholder" style={{ width: 32, height: 32, fontSize: '0.75rem', borderRadius: 8 }}>
-                          {l.name[7]}
-                        </div>
-                        <div>
-                          <div className="fw-semi fs-sm">{l.name}</div>
-                          <span className={`badge badge-${l.status === 'active' ? 'success' : 'warning'}`} style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
-                            {label(l.status === 'active' ? 'نشط' : 'تجريبي', l.status)}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="fw-semi">{l.orders}</td>
-                    <td className="fw-semi text-success">{l.revenue.toLocaleString()}</td>
-                    <td>
-                      <div className="flex items-center gap-4">
-                        <Star size={13} fill="var(--gold)" color="var(--gold)" />
-                        <span className="fw-bold fs-sm">{l.rating}</span>
-                      </div>
+                      <span className={`badge badge-neutral`}>{inv.status}</span>
                     </td>
                   </tr>
                 ))}
+                {recentInvoices.length === 0 && !loading && (
+                  <tr><td colSpan="4" className="text-center py-20 text-muted">{label('لا توجد فواتير اليوم', 'No invoices today')}</td></tr>
+                )}
               </tbody>
             </table>
           </div>

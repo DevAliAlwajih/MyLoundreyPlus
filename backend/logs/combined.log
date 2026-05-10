@@ -93,3 +93,240 @@
 2026-05-09 03:48:50 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
 2026-05-09 03:48:50 [info]: 📖 البيئة: development
 2026-05-09 03:48:50 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 03:58:11 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 03:58:11 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 03:58:11 GMT+0300 (Moscow Standard Time)
+2026-05-09 03:58:11 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 03:58:11 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-09 03:58:11 [info]: 📖 البيئة: development
+2026-05-09 03:58:12 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 04:07:45 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 04:07:45 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 04:07:45 GMT+0300 (Moscow Standard Time)
+2026-05-09 04:07:45 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 04:07:45 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-09 04:07:45 [info]: 📖 البيئة: development
+2026-05-09 04:07:45 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 04:18:09 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 04:18:09 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 04:18:09 GMT+0300 (Moscow Standard Time)
+2026-05-09 04:18:09 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 04:18:09 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000
+2026-05-09 04:18:09 [info]: 📖 البيئة: development
+2026-05-09 04:18:09 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 04:28:28 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 04:28:28 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 04:28:28 GMT+0300 (Moscow Standard Time)
+2026-05-09 04:28:29 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 04:28:29 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 04:28:29 [info]: 📖 البيئة: development
+2026-05-09 04:28:29 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 16:12:19 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:12:19 [http]: 192.168.1.102 - - [09/May/2026:13:12:19 +0000] "POST /api/v1/auth/register HTTP/1.1" 500 637 "-" "okhttp/4.12.0"
+2026-05-09 16:12:39 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 16:12:39 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 16:12:39 GMT+0300 (Moscow Standard Time)
+2026-05-09 16:12:40 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 16:12:40 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 16:12:40 [info]: 📖 البيئة: development
+2026-05-09 16:12:40 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 16:12:46 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:12:46 [http]: 192.168.1.102 - - [09/May/2026:13:12:46 +0000] "POST /api/v1/auth/register HTTP/1.1" 500 637 "-" "okhttp/4.12.0"
+2026-05-09 16:12:52 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:12:52 [http]: 192.168.1.102 - - [09/May/2026:13:12:52 +0000] "POST /api/v1/auth/register HTTP/1.1" 500 637 "-" "okhttp/4.12.0"
+2026-05-09 16:13:08 [error]: error: column "password_hash" of relation "users" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg\lib\client.js:631:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:123:26
+    at async withTransaction (file:///D:/MyLoundreyPlus/backend/src/config/database.js:74:20)
+    at async register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:121:20)
+2026-05-09 16:13:08 [http]: 192.168.1.102 - - [09/May/2026:13:13:08 +0000] "POST /api/v1/auth/register HTTP/1.1" 500 637 "-" "okhttp/4.12.0"
+2026-05-09 16:14:04 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 16:14:04 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 16:14:04 GMT+0300 (Moscow Standard Time)
+2026-05-09 16:14:04 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 16:14:04 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 16:14:04 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 16:14:04 [info]: 📖 البيئة: development
+2026-05-09 16:14:04 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 16:14:13 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at register (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:151:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:14:13 [http]: 192.168.1.102 - - [09/May/2026:13:14:13 +0000] "POST /api/v1/auth/register HTTP/1.1" 500 645 "-" "okhttp/4.12.0"
+2026-05-09 16:14:32 [http]: 192.168.1.102 - - [09/May/2026:13:14:32 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 124 "-" "okhttp/4.12.0"
+2026-05-09 16:14:49 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 16:14:49 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 16:14:49 GMT+0300 (Moscow Standard Time)
+2026-05-09 16:14:49 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 16:14:49 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 16:14:49 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 16:14:49 [info]: 📖 البيئة: development
+2026-05-09 16:14:49 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 16:14:51 [http]: 192.168.1.102 - - [09/May/2026:13:14:51 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 124 "-" "okhttp/4.12.0"
+2026-05-09 16:15:19 [http]: 192.168.1.102 - - [09/May/2026:13:15:19 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 124 "-" "okhttp/4.12.0"
+2026-05-09 16:15:22 [http]: 192.168.1.102 - - [09/May/2026:13:15:22 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 124 "-" "okhttp/4.12.0"
+2026-05-09 16:15:37 [http]: 192.168.1.102 - - [09/May/2026:13:15:37 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 110 "-" "okhttp/4.12.0"
+2026-05-09 16:15:51 [http]: 192.168.1.102 - - [09/May/2026:13:15:51 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:16:13 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at login (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:257:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:16:13 [http]: 192.168.1.102 - - [09/May/2026:13:16:13 +0000] "POST /api/v1/auth/login HTTP/1.1" 500 642 "-" "okhttp/4.12.0"
+2026-05-09 16:16:16 [error]: Error: secretOrPrivateKey must have a value
+    at module.exports [as sign] (D:\MyLoundreyPlus\backend\node_modules\jsonwebtoken\sign.js:111:20)
+    at generateAccessToken (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:10:14)
+    at generateTokenPair (file:///D:/MyLoundreyPlus/backend/src/services/jwt.service.js:33:19)
+    at login (file:///D:/MyLoundreyPlus/backend/src/controllers/auth.controller.js:257:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-05-09 16:16:16 [http]: 192.168.1.102 - - [09/May/2026:13:16:16 +0000] "POST /api/v1/auth/login HTTP/1.1" 500 642 "-" "okhttp/4.12.0"
+2026-05-09 16:19:19 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 16:19:19 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 16:19:19 GMT+0300 (Moscow Standard Time)
+2026-05-09 16:19:19 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 16:19:19 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 16:19:19 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 16:19:19 [info]: 📖 البيئة: development
+2026-05-09 16:19:19 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 16:34:58 [info]: 🔐 دخول: dev.alialwajih@gmail.com من tablet (android)
+2026-05-09 16:34:58 [http]: 192.168.1.102 - - [09/May/2026:13:34:58 +0000] "POST /api/v1/auth/login HTTP/1.1" 200 - "-" "okhttp/4.12.0"
+2026-05-09 16:34:58 [error]: خطأ في الاستعلام: invalid input syntax for type uuid: "my"
+SQL: SELECT l.*, u.full_name AS owner_name
+       FROM laundries l JOIN users u ON u.id = l.owner_id
+       WHERE l.id = $1
+2026-05-09 16:34:58 [http]: 192.168.1.102 - - [09/May/2026:13:34:58 +0000] "GET /api/v1/laundries/my HTTP/1.1" 400 93 "-" "okhttp/4.12.0"
+2026-05-09 16:34:59 [http]: 192.168.1.102 - - [09/May/2026:13:34:59 +0000] "GET /api/v1/invoices?limit=20 HTTP/1.1" 401 104 "-" "okhttp/4.12.0"
+2026-05-09 16:35:09 [http]: 192.168.1.102 - - [09/May/2026:13:35:09 +0000] "GET /api/v1/invoices?limit=50 HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:35:50 [http]: 192.168.1.102 - - [09/May/2026:13:35:50 +0000] "POST /api/v1/invoices HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:35:57 [http]: 192.168.1.102 - - [09/May/2026:13:35:57 +0000] "POST /api/v1/invoices HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:36:45 [http]: 192.168.1.102 - - [09/May/2026:13:36:45 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:36:46 [http]: 192.168.1.102 - - [09/May/2026:13:36:46 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:37:16 [http]: 192.168.1.102 - - [09/May/2026:13:37:16 +0000] "POST /api/v1/auth/logout HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:37:28 [info]: 🔐 دخول: dev.alialwajih@gmail.com من tablet (android)
+2026-05-09 16:37:28 [http]: 192.168.1.102 - - [09/May/2026:13:37:28 +0000] "POST /api/v1/auth/login HTTP/1.1" 200 - "-" "okhttp/4.12.0"
+2026-05-09 16:37:28 [error]: خطأ في الاستعلام: invalid input syntax for type uuid: "my"
+SQL: SELECT l.*, u.full_name AS owner_name
+       FROM laundries l JOIN users u ON u.id = l.owner_id
+       WHERE l.id = $1
+2026-05-09 16:37:28 [http]: 192.168.1.102 - - [09/May/2026:13:37:28 +0000] "GET /api/v1/laundries/my HTTP/1.1" 400 93 "-" "okhttp/4.12.0"
+2026-05-09 16:37:28 [http]: 192.168.1.102 - - [09/May/2026:13:37:28 +0000] "GET /api/v1/invoices?limit=20 HTTP/1.1" 401 104 "-" "okhttp/4.12.0"
+2026-05-09 16:45:24 [http]: 192.168.1.102 - - [09/May/2026:13:45:24 +0000] "GET /api/v1/invoices?limit=50 HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:45:31 [http]: 192.168.1.102 - - [09/May/2026:13:45:31 +0000] "POST /api/v1/auth/logout HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 16:46:33 [http]: 192.168.1.102 - - [09/May/2026:13:46:33 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:46:47 [http]: 192.168.1.102 - - [09/May/2026:13:46:47 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:47:03 [http]: 192.168.1.102 - - [09/May/2026:13:47:03 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:47:13 [http]: 192.168.1.102 - - [09/May/2026:13:47:13 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:47:24 [http]: 192.168.1.102 - - [09/May/2026:13:47:24 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:47:28 [http]: 192.168.1.102 - - [09/May/2026:13:47:28 +0000] "POST /api/v1/auth/register HTTP/1.1" 409 111 "-" "okhttp/4.12.0"
+2026-05-09 16:48:45 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 16:48:45 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 16:48:45 GMT+0300 (Moscow Standard Time)
+2026-05-09 16:48:45 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 16:48:45 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 16:48:46 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 16:48:46 [info]: 📖 البيئة: development
+2026-05-09 16:48:46 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 17:06:15 [info]: ✅ مستخدم جديد: alialwajeeh.dev@gmail.com (laundry)
+2026-05-09 17:06:15 [http]: 192.168.1.102 - - [09/May/2026:14:06:15 +0000] "POST /api/v1/auth/register HTTP/1.1" 201 - "-" "okhttp/4.12.0"
+2026-05-09 17:06:15 [http]: 192.168.1.102 - - [09/May/2026:14:06:15 +0000] "GET /api/v1/invoices?limit=20 HTTP/1.1" 401 104 "-" "okhttp/4.12.0"
+2026-05-09 17:14:19 [http]: 192.168.1.102 - - [09/May/2026:14:14:19 +0000] "GET /api/v1/invoices?limit=50 HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:14:36 [http]: 192.168.1.102 - - [09/May/2026:14:14:36 +0000] "POST /api/v1/invoices HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:14:47 [http]: 192.168.1.102 - - [09/May/2026:14:14:47 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:14:48 [http]: 192.168.1.102 - - [09/May/2026:14:14:48 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:14:49 [http]: 192.168.1.102 - - [09/May/2026:14:14:49 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:14:49 [http]: 192.168.1.102 - - [09/May/2026:14:14:49 +0000] "GET /api/v1/invoices?status=ready HTTP/1.1" 401 115 "-" "okhttp/4.12.0"
+2026-05-09 17:48:04 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 17:48:04 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 17:48:04 GMT+0300 (Moscow Standard Time)
+2026-05-09 17:48:04 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 17:48:05 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 17:48:05 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 17:48:05 [info]: 📖 البيئة: development
+2026-05-09 17:48:05 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 17:49:52 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 17:49:52 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 17:49:52 GMT+0300 (Moscow Standard Time)
+2026-05-09 17:49:52 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 17:49:52 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 17:49:52 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 17:49:52 [info]: 📖 البيئة: development
+2026-05-09 17:49:52 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 17:50:03 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 17:50:03 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 17:50:03 GMT+0300 (Moscow Standard Time)
+2026-05-09 17:50:03 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 17:50:03 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 17:50:03 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 17:50:03 [info]: 📖 البيئة: development
+2026-05-09 17:50:03 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 18:15:09 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 18:15:09 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 18:15:09 GMT+0300 (Moscow Standard Time)
+2026-05-09 18:15:09 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 18:15:09 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 18:15:09 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 18:15:09 [info]: 📖 البيئة: development
+2026-05-09 18:15:09 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 18:20:47 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 18:20:47 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 18:20:47 GMT+0300 (Moscow Standard Time)
+2026-05-09 18:20:47 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 18:20:47 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 18:20:47 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 18:20:47 [info]: 📖 البيئة: development
+2026-05-09 18:20:47 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 18:24:42 [http]: 127.0.0.1 - - [09/May/2026:15:24:42 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:24:42 [http]: 127.0.0.1 - - [09/May/2026:15:24:42 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:24:45 [http]: 127.0.0.1 - - [09/May/2026:15:24:45 +0000] "GET /api/v1/admin/laundries HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:24:45 [http]: 127.0.0.1 - - [09/May/2026:15:24:45 +0000] "GET /api/v1/admin/laundries HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:24:47 [http]: 127.0.0.1 - - [09/May/2026:15:24:47 +0000] "GET /api/v1/admin/customers HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:24:47 [http]: 127.0.0.1 - - [09/May/2026:15:24:47 +0000] "GET /api/v1/admin/customers HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:25:56 [http]: 127.0.0.1 - - [09/May/2026:15:25:56 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 18:25:56 [http]: 127.0.0.1 - - [09/May/2026:15:25:56 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 401 115 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 20:01:22 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 20:01:22 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 20:01:22 GMT+0300 (Moscow Standard Time)
+2026-05-09 20:01:22 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 20:01:22 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 20:01:22 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 20:01:22 [info]: 📖 البيئة: development
+2026-05-09 20:01:22 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 20:02:40 [http]: 127.0.0.1 - - [09/May/2026:17:02:40 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 143 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 20:04:37 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 20:04:37 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 20:04:37 GMT+0300 (Moscow Standard Time)
+2026-05-09 20:04:37 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 20:04:37 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 20:04:37 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 20:04:37 [info]: 📖 البيئة: development
+2026-05-09 20:04:37 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 20:06:07 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 20:06:07 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 20:06:07 GMT+0300 (Moscow Standard Time)
+2026-05-09 20:06:07 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 20:06:07 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 20:06:07 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 20:06:07 [info]: 📖 البيئة: development
+2026-05-09 20:06:07 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 20:07:26 [http]: 127.0.0.1 - - [09/May/2026:17:07:26 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 143 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 20:08:22 [http]: 127.0.0.1 - - [09/May/2026:17:08:22 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 143 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 20:08:25 [http]: 127.0.0.1 - - [09/May/2026:17:08:25 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 143 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-09 20:10:24 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 20:10:24 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 20:10:24 GMT+0300 (Moscow Standard Time)
+2026-05-09 20:10:24 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 20:10:24 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 20:10:24 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 20:10:24 [info]: 📖 البيئة: development
+2026-05-09 20:10:24 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 20:15:53 [error]: خطأ في الاستعلام: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SQL: SELECT NOW()
+2026-05-09 20:16:47 [info]: ✅ Firebase Admin SDK متصل
+2026-05-09 20:16:47 [info]: ✅ PostgreSQL متصل — Sat May 09 2026 20:16:47 GMT+0300 (Moscow Standard Time)
+2026-05-09 20:16:47 [info]: 🛠️ جاري فحص وتحديث هيكل قاعدة البيانات...
+2026-05-09 20:16:47 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
+2026-05-09 20:16:47 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
+2026-05-09 20:16:47 [info]: 📖 البيئة: development
+2026-05-09 20:16:47 [info]: 🌐 Health: http://localhost:5000/health
+2026-05-09 20:17:35 [http]: 127.0.0.1 - - [09/May/2026:17:17:35 +0000] "POST /api/v1/auth/login HTTP/1.1" 401 143 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"

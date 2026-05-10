@@ -138,10 +138,14 @@ export async function register(req, res, next) {
         )
       }
 
-      // Register device (auto-activate first device, set as primary)
+      // Register or Update device (auto-activate for POS)
       await client.query(
         `INSERT INTO user_devices (id, user_id, device_type, device_os, device_model, fcm_token, is_active, is_primary, last_login_at)
-         VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, NOW())`,
+         VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, NOW())
+         ON CONFLICT (id) DO UPDATE SET 
+            user_id = EXCLUDED.user_id,
+            last_login_at = NOW(),
+            is_active = TRUE`,
         [deviceId, user.id, deviceType, deviceOS, deviceModel, fcmToken]
       )
 
