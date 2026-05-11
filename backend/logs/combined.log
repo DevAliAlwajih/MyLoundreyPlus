@@ -926,3 +926,31 @@ SQL:
 2026-05-10 18:23:48 [info]: 🛠️ تم فحص وتحديث هيكل قاعدة البيانات بنجاح
 2026-05-10 18:23:48 [info]: 🚀 مغسلتي بلس API تعمل على المنفذ 5000 (0.0.0.0)
 2026-05-10 18:23:48 [info]: 🔌 Real-time (Socket.io) enabled
+2026-05-10 18:24:38 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 18:24:38 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 18:24:38 [http]: 127.0.0.1 - - [10/May/2026:15:24:38 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 500 522 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+2026-05-10 18:24:38 [error]: خطأ في الاستعلام: column "message" does not exist
+SQL: 
+        SELECT id, title, message, created_at, type
+        FROM notifications
+        WHERE user_id = $1 OR user_id IS NULL
+        ORDER BY created_at DESC LIMIT 5
+      
+2026-05-10 18:24:38 [error]: error: column "message" does not exist
+    at D:\MyLoundreyPlus\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async query (file:///D:/MyLoundreyPlus/backend/src/config/database.js:70:20)
+    at async Promise.all (index 5)
+    at async file:///D:/MyLoundreyPlus/backend/src/routes/admin.routes.js:22:9
+2026-05-10 18:24:38 [http]: 127.0.0.1 - - [10/May/2026:15:24:38 +0000] "GET /api/v1/admin/dashboard-stats HTTP/1.1" 500 522 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
