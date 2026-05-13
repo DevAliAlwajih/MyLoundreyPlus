@@ -1,0 +1,407 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  fullName          String             @map("full_name") @db.VarChar(100)
+  phoneNumber       String?            @unique @map("phone_number") @db.VarChar(20)
+  uniqueId          String             @unique @map("unique_id") @db.VarChar(12)
+  qrCode            String?            @map("qr_code")
+  avatarUrl         String?            @map("avatar_url")
+  role              user_role          @default(customer)
+  isActive          Boolean            @default(true) @map("is_active")
+  isVerified        Boolean            @default(false) @map("is_verified")
+  lastLoginAt       DateTime?          @map("last_login_at") @db.Timestamptz(6)
+  deviceToken       String?            @map("device_token")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  email             String?            @unique @db.VarChar(255)
+  password_hash     String?
+  country           String?            @default("SA") @db.VarChar(10)
+  currency          String?            @default("SAR") @db.VarChar(10)
+  ads               Ad[]
+  invoiceStatusLogs InvoiceStatusLog[]
+  invoices          Invoice[]
+  laundries         Laundry[]
+  notifications     Notification[]
+  promoCodes        PromoCode[]
+  ratings           Rating[]
+  subscriptions     Subscription[]     @relation("CreatedBy")
+  resolvedTickets   SupportTicket[]    @relation("ResolvedBy")
+  supportTickets    SupportTicket[]
+  userDevices       UserDevice[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([isActive], map: "idx_users_is_active")
+  @@index([phoneNumber], map: "idx_users_phone")
+  @@index([role], map: "idx_users_role")
+  @@index([uniqueId], map: "idx_users_unique_id")
+  @@map("users")
+}
+
+model Laundry {
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ownerId       String         @map("owner_id") @db.Uuid
+  name          String         @db.VarChar(150)
+  phoneNumber   String         @map("phone_number") @db.VarChar(20)
+  address       String?
+  city          String?        @db.VarChar(100)
+  country       String?        @default("SA") @db.VarChar(10)
+  latitude      Decimal?       @db.Decimal(10, 8)
+  longitude     Decimal?       @db.Decimal(11, 8)
+  workingHours  Json?          @map("working_hours")
+  logoUrl       String?        @map("logo_url")
+  status        laundry_status @default(pending)
+  ratingAvg     Decimal?       @default(0.00) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount   Int?           @default(0) @map("rating_count")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  categories    Category[]
+  invoices      Invoice[]
+  owner         User           @relation(fields: [ownerId], references: [id], onUpdate: NoAction)
+  laundryPrices LaundryPrice[]
+  promotions    Promotion[]
+  ratings       Rating[]
+  subscriptions Subscription[]
+
+  @@index([latitude, longitude], map: "idx_laundries_location")
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_laundries_name_trgm", type: Gin)
+  @@index([ownerId], map: "idx_laundries_owner")
+  @@index([ratingAvg(sort: Desc)], map: "idx_laundries_rating")
+  @@index([status], map: "idx_laundries_status")
+  @@map("laundries")
+}
+
+model UserDevice {
+  id          String    @id @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  deviceType  String?   @map("device_type") @db.VarChar(50)
+  deviceOs    String?   @map("device_os") @db.VarChar(50)
+  deviceModel String?   @map("device_model") @db.VarChar(100)
+  fcmToken    String?   @map("fcm_token")
+  isActive    Boolean   @default(false) @map("is_active")
+  isPrimary   Boolean   @default(false) @map("is_primary")
+  lastLoginAt DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, isActive], map: "idx_user_devices_user")
+  @@map("user_devices")
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  nameAr        String         @map("name_ar") @db.VarChar(100)
+  nameEn        String         @map("name_en") @db.VarChar(100)
+  durationDays  Int            @map("duration_days")
+  priceSar      Decimal        @map("price_sar") @db.Decimal(10, 2)
+  features      Json?
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id            String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  laundryId     String           @map("laundry_id") @db.Uuid
+  planId        String           @map("plan_id") @db.Uuid
+  amountPaid    Decimal          @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  paymentMethod String?          @default("manual") @map("payment_method") @db.VarChar(50)
+  promoCode     String?          @map("promo_code") @db.VarChar(50)
+  startDate     DateTime         @default(dbgenerated("CURRENT_DATE")) @map("start_date") @db.Date
+  endDate       DateTime         @map("end_date") @db.Date
+  isActive      Boolean          @default(true) @map("is_active")
+  notes         String?
+  createdBy     String?          @map("created_by") @db.Uuid
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  creator       User?            @relation("CreatedBy", fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  laundry       Laundry          @relation(fields: [laundryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id], onUpdate: NoAction)
+
+  @@index([isActive, endDate], map: "idx_subscriptions_active")
+  @@index([endDate], map: "idx_subscriptions_end_date")
+  @@index([laundryId], map: "idx_subscriptions_laundry")
+  @@map("subscriptions")
+}
+
+model Category {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  laundryId String   @map("laundry_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  laundry   Laundry  @relation(fields: [laundryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  items     Item[]
+
+  @@unique([laundryId, name])
+  @@index([laundryId, sortOrder], map: "idx_categories_laundry")
+  @@map("categories")
+}
+
+model Item {
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  categoryId    String         @map("category_id") @db.Uuid
+  nameAr        String         @map("name_ar") @db.VarChar(150)
+  nameEn        String         @map("name_en") @db.VarChar(150)
+  basePrice     Decimal        @map("base_price") @db.Decimal(8, 2)
+  sortOrder     Int            @default(0) @map("sort_order")
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  invoiceItems  InvoiceItem[]
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  laundryPrices LaundryPrice[]
+
+  @@index([categoryId], map: "idx_items_category")
+  @@map("items")
+}
+
+model LaundryPrice {
+  laundryId   String   @map("laundry_id") @db.Uuid
+  itemId      String   @map("item_id") @db.Uuid
+  price       Decimal  @db.Decimal(8, 2)
+  isAvailable Boolean  @default(true) @map("is_available")
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  laundry     Laundry  @relation(fields: [laundryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([laundryId, itemId])
+  @@map("laundry_prices")
+}
+
+model Invoice {
+  id            String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceNumber String             @unique @map("invoice_number") @db.VarChar(20)
+  laundryId     String             @map("laundry_id") @db.Uuid
+  customerId    String             @map("customer_id") @db.Uuid
+  status        invoice_status     @default(received)
+  paymentType   payment_type       @default(cash) @map("payment_type")
+  subtotal      Decimal            @default(0.00) @db.Decimal(10, 2)
+  discount      Decimal            @default(0.00) @db.Decimal(10, 2)
+  totalAmount   Decimal            @default(0.00) @map("total_amount") @db.Decimal(10, 2)
+  paidAmount    Decimal            @default(0.00) @map("paid_amount") @db.Decimal(10, 2)
+  dueAmount     Decimal?           @default(dbgenerated("(total_amount - paid_amount)")) @map("due_amount") @db.Decimal(10, 2)
+  notes         String?
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  completedAt   DateTime?          @map("completed_at") @db.Timestamptz(6)
+  items         InvoiceItem[]
+  statusLogs    InvoiceStatusLog[]
+  customer      User               @relation(fields: [customerId], references: [id], onUpdate: NoAction)
+  laundry       Laundry            @relation(fields: [laundryId], references: [id], onUpdate: NoAction)
+  rating        Rating?
+
+  @@index([customerId, createdAt(sort: Desc)], map: "idx_invoices_customer")
+  @@index([laundryId, createdAt(sort: Desc)], map: "idx_invoices_laundry")
+  @@index([invoiceNumber], map: "idx_invoices_number")
+  @@index([paymentType], map: "idx_invoices_payment")
+  @@index([status], map: "idx_invoices_status")
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceId String   @map("invoice_id") @db.Uuid
+  itemId    String?  @map("item_id") @db.Uuid
+  itemName  String   @map("item_name") @db.VarChar(150)
+  unitPrice Decimal  @map("unit_price") @db.Decimal(8, 2)
+  quantity  Int      @default(1)
+  subtotal  Decimal? @default(dbgenerated("(unit_price * (quantity)::numeric)")) @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  item      Item?    @relation(fields: [itemId], references: [id], onUpdate: NoAction)
+
+  @@index([invoiceId], map: "idx_invoice_items_invoice")
+  @@map("invoice_items")
+}
+
+model InvoiceStatusLog {
+  id        String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceId String          @map("invoice_id") @db.Uuid
+  changedBy String          @map("changed_by") @db.Uuid
+  oldStatus invoice_status? @map("old_status")
+  newStatus invoice_status  @map("new_status")
+  note      String?
+  changedAt DateTime        @default(now()) @map("changed_at") @db.Timestamptz(6)
+  user      User            @relation(fields: [changedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invoice   Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([invoiceId, changedAt(sort: Desc)], map: "idx_status_log_invoice")
+  @@map("invoice_status_log")
+}
+
+model Rating {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  invoiceId  String   @unique @map("invoice_id") @db.Uuid
+  customerId String   @map("customer_id") @db.Uuid
+  laundryId  String   @map("laundry_id") @db.Uuid
+  stars      Int      @db.SmallInt
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  laundry    Laundry  @relation(fields: [laundryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([invoiceId, customerId])
+  @@index([customerId], map: "idx_ratings_customer")
+  @@index([laundryId, createdAt(sort: Desc)], map: "idx_ratings_laundry")
+  @@map("ratings")
+}
+
+model Promotion {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  laundryId   String    @map("laundry_id") @db.Uuid
+  title       String    @db.VarChar(200)
+  description String?
+  imageUrl    String?   @map("image_url")
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  laundry     Laundry   @relation(fields: [laundryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([laundryId, isActive], map: "idx_promotions_laundry")
+  @@map("promotions")
+}
+
+model Ad {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title          String    @db.VarChar(200)
+  mediaUrls      Json      @map("media_urls")
+  bodyText       String?   @map("body_text")
+  linkUrl        String?   @map("link_url")
+  targetAudience ad_target @default(all) @map("target_audience")
+  sortOrder      Int?      @default(0) @map("sort_order")
+  startDate      DateTime? @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  isActive       Boolean   @default(true) @map("is_active")
+  createdBy      String?   @map("created_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  creator        User?     @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([isActive, targetAudience, sortOrder], map: "idx_ads_active")
+  @@map("ads")
+}
+
+model SupportTicket {
+  id         String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  userType   ticket_user_type @map("user_type")
+  subject    String           @db.VarChar(200)
+  message    String
+  adminReply String?          @map("admin_reply")
+  status     ticket_status    @default(open)
+  resolvedBy String?          @map("resolved_by") @db.Uuid
+  resolvedAt DateTime?        @map("resolved_at") @db.Timestamptz(6)
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  resolver   User?            @relation("ResolvedBy", fields: [resolvedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_tickets_status")
+  @@index([userId], map: "idx_tickets_user")
+  @@map("support_tickets")
+}
+
+model Notification {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String   @db.VarChar(200)
+  body        String
+  type        String?  @db.VarChar(50)
+  referenceId String?  @map("reference_id") @db.Uuid
+  isRead      Boolean  @default(false) @map("is_read")
+  sentAt      DateTime @default(now()) @map("sent_at") @db.Timestamptz(6)
+  users       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([referenceId], map: "idx_notif_ref")
+  @@index([userId, isRead, sentAt(sort: Desc)], map: "idx_notif_user")
+  @@map("notifications")
+}
+
+model PromoCode {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  code          String    @unique @db.VarChar(50)
+  description   String?
+  discountType  String    @map("discount_type") @db.VarChar(10)
+  discountValue Decimal   @map("discount_value") @db.Decimal(10, 2)
+  maxUses       Int?      @map("max_uses")
+  usedCount     Int       @default(0) @map("used_count")
+  validFrom     DateTime? @map("valid_from") @db.Date
+  validUntil    DateTime? @map("valid_until") @db.Date
+  isActive      Boolean   @default(true) @map("is_active")
+  createdBy     String?   @map("created_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  creator       User?     @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([validFrom, validUntil], map: "idx_promo_dates")
+  @@map("promo_codes")
+}
+
+enum ad_target {
+  all
+  customers
+  laundries
+}
+
+enum invoice_status {
+  draft
+  received
+  washing
+  ironing
+  ready
+  completed
+  cancelled
+}
+
+enum laundry_status {
+  pending
+  trial
+  active
+  suspended
+  banned
+}
+
+enum payment_type {
+  cash
+  card
+  deferred
+}
+
+enum subscription_plan {
+  trial
+  monthly
+  yearly
+}
+
+enum ticket_status {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum ticket_user_type {
+  customer
+  laundry
+}
+
+enum user_role {
+  customer
+  laundry
+  admin
+}
