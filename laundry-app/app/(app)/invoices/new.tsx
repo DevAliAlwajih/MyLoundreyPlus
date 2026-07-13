@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, I18nManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useInvoiceStore, PaymentType } from '../../../stores/invoiceStore';
@@ -533,6 +533,8 @@ export default function NewInvoiceScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* إخفاء شريط التبويبات في شاشة إنشاء الفاتورة */}
+      <Tabs.Screen options={{ tabBarStyle: { display: 'none' } }} />
       <KeyboardAvoidingView style={styles.flex1} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>

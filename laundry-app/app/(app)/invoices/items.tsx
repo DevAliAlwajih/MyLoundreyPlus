@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useCatalogMenu, useDeleteCatalogItem, useDeleteCategory, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
@@ -80,6 +80,8 @@ export default function CatalogItemsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* إخفاء شريط التبويبات في شاشة قائمة الأسعار */}
+      <Tabs.Screen options={{ tabBarStyle: { display: 'none' } }} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#333" />

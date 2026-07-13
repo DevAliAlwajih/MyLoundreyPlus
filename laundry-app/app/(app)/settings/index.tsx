@@ -113,6 +113,11 @@ export default function SettingsScreen() {
             icon="bar-chart-outline" 
             title={t('settings.reports')} 
             onPress={() => router.push('/(app)/reports')} 
+          />
+          <SettingsRow 
+            icon="megaphone-outline" 
+            title={t('settings.promotions')} 
+            onPress={() => router.push('/(app)/promotions')} 
             isLast
           />
         </SettingsSection>

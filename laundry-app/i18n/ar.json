@@ -1,4 +1,21 @@
 {
+  "nav": {
+    "home": "الرئيسية",
+    "invoices": "الفواتير",
+    "conversations": "المحادثات",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "greeting": "أهلاً",
+    "todayRevenue": "إيرادات اليوم",
+    "processingInvoices": "فواتير قيد التجهيز",
+    "pendingBookings": "حجوزات بانتظار الرد",
+    "quickAccess": "وصول سريع",
+    "recentInvoices": "أحدث الفواتير",
+    "viewAll": "عرض الكل",
+    "noInvoices": "لا توجد فواتير بعد",
+    "adBadge": "إعلان"
+  },
   "common": {
     "or": "أو",
     "comingSoon": "قريباً",
@@ -422,6 +439,7 @@
   },
   "settings": {
     "title": "الإعدادات",
+    "promotions": "العروض والخصومات",
     "business": "إدارة المغسلة",
     "profile": "بيانات المغسلة",
     "workingHours": "ساعات العمل",

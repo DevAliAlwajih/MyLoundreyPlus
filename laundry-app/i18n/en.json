@@ -1,4 +1,21 @@
 {
+  "nav": {
+    "home": "Home",
+    "invoices": "Invoices",
+    "conversations": "Chats",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "greeting": "Hello",
+    "todayRevenue": "Today's Revenue",
+    "processingInvoices": "Processing Invoices",
+    "pendingBookings": "Bookings Awaiting Reply",
+    "quickAccess": "Quick Access",
+    "recentInvoices": "Recent Invoices",
+    "viewAll": "View All",
+    "noInvoices": "No invoices yet",
+    "adBadge": "Ad"
+  },
   "common": {
     "or": "or",
     "comingSoon": "Coming Soon",
@@ -421,6 +438,7 @@
   },
   "settings": {
     "title": "Settings",
+    "promotions": "Promotions & Discounts",
     "business": "Business Management",
     "profile": "Laundry Profile",
     "workingHours": "Working Hours",
