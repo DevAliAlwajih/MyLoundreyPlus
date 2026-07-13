@@ -127,10 +127,6 @@ export default function DashboardScreen() {
     </View>
   );
 }
-      </ScrollView>
-    </View>
-  );
-}
 
 function InvoiceCard({ invoice, onStatusChange }) {
   const statusInfo = STATUS[invoice.status] || STATUS.received;

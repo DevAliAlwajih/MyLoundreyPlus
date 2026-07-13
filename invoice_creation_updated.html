@@ -1,0 +1,218 @@
+<div style="background: var(--surface-0); font-family: var(--font-sans); direction: rtl; max-width: 420px; margin: 0 auto;">
+
+  <div style="background: #1a5fa8; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+    <i class="ti ti-x" style="color: white; font-size: 20px;"></i>
+    <span style="color: white; font-size: 17px; font-weight: 500; flex: 1; text-align: center;">فاتورة جديدة</span>
+    <div style="width: 20px;"></div>
+  </div>
+
+  <!-- A: معلومات العميل -->
+  <div style="padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border);">
+    <p style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">أ — معلومات العميل</p>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+      <button style="flex: 1; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: var(--radius); padding: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+        <i class="ti ti-qrcode" style="color: var(--text-accent); font-size: 16px;"></i>
+        <span style="font-size: 13px; color: var(--text-accent);">مسح QR</span>
+      </button>
+      <button style="flex: 1; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+        <i class="ti ti-id-badge" style="color: var(--text-secondary); font-size: 16px;"></i>
+        <span style="font-size: 13px; color: var(--text-secondary);">إدخال معرّف</span>
+      </button>
+    </div>
+
+    <div style="background: var(--bg-success); border: 0.5px solid var(--border-success); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+      <i class="ti ti-circle-check" style="color: var(--text-success); font-size: 16px;"></i>
+      <span style="font-size: 13px; color: var(--text-success);">عميل مسجل — تم تعبئة البيانات تلقائياً</span>
+      <i class="ti ti-x" style="color: var(--text-success); font-size: 14px; margin-right: auto; cursor: pointer;"></i>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="text" value="علي محمد الوجيه" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-accent); font-size: 14px; text-align: right; background: var(--bg-accent); color: var(--text-primary);" />
+      <div style="display: flex; gap: 8px;">
+        <input type="text" value="+967 775547603" style="flex: 1; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border-accent); font-size: 14px; text-align: right; background: var(--bg-accent); color: var(--text-primary);" />
+        <input type="text" placeholder="الموقع (اختياري)" style="flex: 1; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 14px; text-align: right; background: var(--surface-2);" />
+      </div>
+    </div>
+    <p style="font-size: 11px; color: var(--text-muted); margin: 6px 0 0; text-align: right;">البيانات قابلة للتعديل</p>
+  </div>
+
+  <!-- B: اختيار القسم -->
+  <div style="padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border);">
+    <p style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin: 0 0 10px;">ب — اختيار القسم</p>
+    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 8px;">اختر قسماً أو أكثر — عند الطباعة يظهر المحدد فقط</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <label style="display: flex; align-items: center; gap: 8px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: var(--radius); padding: 10px 12px; cursor: pointer;">
+        <div style="width: 18px; height: 18px; background: #1a5fa8; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="ti ti-check" style="color: white; font-size: 12px;"></i>
+        </div>
+        <span style="font-size: 14px; color: var(--text-primary);">رجالي</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 8px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: var(--radius); padding: 10px 12px; cursor: pointer;">
+        <div style="width: 18px; height: 18px; background: #1a5fa8; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="ti ti-check" style="color: white; font-size: 12px;"></i>
+        </div>
+        <span style="font-size: 14px; color: var(--text-primary);">نسائي</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 8px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer;">
+        <div style="width: 18px; height: 18px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: 4px; flex-shrink: 0;"></div>
+        <span style="font-size: 14px; color: var(--text-primary);">ولادي</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 8px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer;">
+        <div style="width: 18px; height: 18px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: 4px; flex-shrink: 0;"></div>
+        <span style="font-size: 14px; color: var(--text-primary);">مفروشات</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- C: اختيار الأصناف -->
+  <div style="padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border);">
+    <p style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin: 0 0 8px;">ج — اختيار الأصناف</p>
+    <input type="text" placeholder="بحث عن صنف..." style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 14px; text-align: right; margin-bottom: 10px; background: var(--surface-2);" />
+
+    <!-- قسم رجالي -->
+    <div style="background: var(--surface-2); border-radius: 12px; border: 0.5px solid var(--border); margin-bottom: 8px; overflow: hidden;">
+      <div style="padding: 9px 12px; background: var(--surface-1); border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">رجالي</span>
+        <i class="ti ti-chevron-down" style="color: var(--text-muted); font-size: 15px;"></i>
+      </div>
+
+      <div style="padding: 10px 12px; border-bottom: 0.5px solid var(--border); border-right: 3px solid #1a5fa8;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">ثوب أبيض</span>
+          <span style="font-size: 13px; color: #1a5fa8; font-weight: 500;">12.00 ر.س</span>
+        </div>
+        <div style="display: flex; gap: 4px; margin-bottom: 7px;">
+          <div style="background: #1a5fa8; border-radius: 4px; padding: 3px 7px; font-size: 11px; color: white;">غسيل+كوي</div>
+          <div style="background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-secondary);">غسيل فقط</div>
+          <div style="background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-secondary);">كوي فقط</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 12px; color: var(--text-muted);">السعر:</span>
+          <input type="text" value="12.00" style="width: 65px; padding: 4px 8px; border-radius: 4px; border: 0.5px solid var(--border); font-size: 13px; text-align: center; background: var(--surface-2);" />
+          <span style="font-size: 12px; color: var(--text-muted);">ر.س</span>
+          <div style="margin-right: auto; display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="ti ti-minus" style="font-size: 13px; color: var(--text-primary);"></i>
+            </div>
+            <span style="font-size: 16px; font-weight: 500; min-width: 22px; text-align: center; color: var(--text-primary);">2</span>
+            <div style="width: 28px; height: 28px; background: #1a5fa8; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="ti ti-plus" style="font-size: 13px; color: white;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 14px; color: var(--text-primary);">قميص</span>
+          <span style="font-size: 13px; color: var(--text-muted);">4.00 ر.س</span>
+        </div>
+        <div style="display: flex; gap: 4px; margin-bottom: 7px;">
+          <div style="background: #1a5fa8; border-radius: 4px; padding: 3px 7px; font-size: 11px; color: white;">غسيل+كوي</div>
+          <div style="background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-secondary);">غسيل فقط</div>
+          <div style="background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-secondary);">كوي فقط</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 12px; color: var(--text-muted);">السعر:</span>
+          <input type="text" value="4.00" style="width: 65px; padding: 4px 8px; border-radius: 4px; border: 0.5px solid var(--border); font-size: 13px; text-align: center; background: var(--surface-2);" />
+          <span style="font-size: 12px; color: var(--text-muted);">ر.س</span>
+          <div style="margin-right: auto; display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="ti ti-minus" style="font-size: 13px; color: var(--text-muted);"></i>
+            </div>
+            <span style="font-size: 16px; font-weight: 500; min-width: 22px; text-align: center; color: var(--text-muted);">0</span>
+            <div style="width: 28px; height: 28px; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <i class="ti ti-plus" style="font-size: 13px; color: var(--text-primary);"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم نسائي -->
+    <div style="background: var(--surface-2); border-radius: 12px; border: 0.5px solid var(--border); overflow: hidden;">
+      <div style="padding: 9px 12px; background: var(--surface-1); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">نسائي</span>
+        <i class="ti ti-chevron-left" style="color: var(--text-muted); font-size: 15px;"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: طرق الدفع + المستعجل -->
+  <div style="padding: 12px 16px; background: var(--surface-2); border-bottom: 0.5px solid var(--border);">
+    <p style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin: 0 0 8px;">د — طرق الدفع</p>
+    <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+      <div style="flex: 1; background: #1a5fa8; border-radius: var(--radius); padding: 8px; text-align: center; font-size: 13px; color: white; font-weight: 500; cursor: pointer;">نقدي</div>
+      <div style="flex: 1; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px; text-align: center; font-size: 13px; color: var(--text-primary); cursor: pointer;">شبكة</div>
+      <div style="flex: 1; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px; text-align: center; font-size: 13px; color: var(--text-primary); cursor: pointer;">آجل</div>
+      <div style="flex: 1; background: var(--surface-0); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px; text-align: center; font-size: 12px; color: var(--text-muted); cursor: not-allowed;">
+        إلكتروني <i class="ti ti-lock" style="font-size: 10px;"></i>
+      </div>
+    </div>
+
+    <div style="background: var(--bg-warning); border: 0.5px solid var(--border-warning); border-radius: var(--radius); padding: 10px 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div style="width: 20px; height: 20px; background: #1a5fa8; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
+          <i class="ti ti-check" style="color: white; font-size: 12px;"></i>
+        </div>
+        <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">طلب مستعجل</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 13px; color: var(--text-secondary);">رسوم الاستعجال:</span>
+        <input type="text" value="10.00" style="width: 80px; padding: 6px 10px; border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 14px; text-align: center; background: var(--surface-2);" />
+        <span style="font-size: 13px; color: var(--text-secondary);">ر.س</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- E: المجموع -->
+  <div style="padding: 12px 16px; background: var(--surface-2);">
+    <p style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin: 0 0 10px;">هـ — الإجمالي</p>
+
+    <div style="background: var(--surface-1); border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="font-size: 13px; color: var(--text-secondary);">المجموع الفرعي</span>
+        <span style="font-size: 13px; color: var(--text-primary);">24.00 ر.س</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 13px; color: var(--text-secondary);">الخصم</span>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <input type="text" value="0" style="width: 38px; padding: 3px 6px; border-radius: 4px; border: 0.5px solid var(--border); font-size: 13px; text-align: center;" />
+          <span style="font-size: 12px; color: var(--text-muted);">%</span>
+          <span style="font-size: 13px; color: var(--text-danger);">- 0.00 ر.س</span>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="font-size: 13px; color: var(--text-secondary);">رسوم الاستعجال</span>
+        <span style="font-size: 13px; color: var(--text-warning);">+ 10.00 ر.س</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="font-size: 13px; color: var(--text-secondary);">ضريبة (15%)</span>
+        <span style="font-size: 13px; color: var(--text-primary);">+ 5.10 ر.س</span>
+      </div>
+      <div style="border-top: 0.5px solid var(--border); margin: 8px 0;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 15px; font-weight: 500; color: var(--text-primary);">الإجمالي</span>
+        <span style="font-size: 19px; font-weight: 500; color: #1a5fa8;">39.10 ر.س</span>
+      </div>
+    </div>
+
+    <input type="text" placeholder="ملاحظات الفاتورة (اختياري)..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 14px; text-align: right; margin-bottom: 12px; background: var(--surface-2);" />
+
+    <div style="display: flex; gap: 8px;">
+      <button style="flex: 1; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 14px; color: var(--text-secondary); cursor: pointer;">
+        حفظ كمسودة
+      </button>
+      <button style="flex: 2; background: #1a5fa8; border: none; border-radius: var(--radius); padding: 12px; font-size: 15px; font-weight: 500; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <i class="ti ti-check" style="font-size: 18px;"></i>
+        إنشاء الفاتورة
+      </button>
+    </div>
+  </div>
+
+</div>

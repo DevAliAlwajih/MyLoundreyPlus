@@ -1,13 +1,13 @@
-import { IsNotEmpty, IsString, Length, IsOptional, IsObject } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length, IsOptional, IsObject } from 'class-validator';
 
 export class VerifyOtpDto {
-  @IsNotEmpty()
-  @IsString()
-  phoneNumber: string;
+  @IsNotEmpty({ message: 'الإيميل مطلوب' })
+  @IsEmail({}, { message: 'الإيميل غير صالح' })
+  email: string;
 
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'رمز التحقق مطلوب' })
   @IsString()
-  @Length(6, 6, { message: 'رمز التحقق يجب أن يكون 6 أرقام' })
+  @Length(6, 6, { message: 'رمز التحقق يجب أن يكون 6 أرقام بالضبط' })
   otp: string;
 
   @IsOptional()

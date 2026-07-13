@@ -1,5 +1,5 @@
 export declare class VerifyOtpDto {
-    phoneNumber: string;
+    email: string;
     otp: string;
     deviceInfo?: {
         deviceId?: string;

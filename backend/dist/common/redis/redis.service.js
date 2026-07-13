@@ -16,9 +16,17 @@ const ioredis_1 = require("ioredis");
 let RedisService = class RedisService {
     constructor(configService) {
         this.configService = configService;
+        this.logger = new common_1.Logger('RedisService');
         this.client = new ioredis_1.default({
-            host: this.configService.get('REDIS_HOST', 'localhost'),
+            host: this.configService.get('REDIS_HOST', '127.0.0.1'),
             port: this.configService.get('REDIS_PORT', 6379),
+            lazyConnect: false,
+        });
+        this.client.on('connect', () => {
+            this.logger.log('✅ Redis connected successfully');
+        });
+        this.client.on('error', (err) => {
+            this.logger.error(`❌ Redis connection error: ${err.message}`);
         });
     }
     async get(key) {

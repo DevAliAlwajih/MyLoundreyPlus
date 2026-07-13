@@ -15,14 +15,14 @@ class VerifyOtpDto {
 }
 exports.VerifyOtpDto = VerifyOtpDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'الإيميل مطلوب' }),
+    (0, class_validator_1.IsEmail)({}, { message: 'الإيميل غير صالح' }),
     __metadata("design:type", String)
-], VerifyOtpDto.prototype, "phoneNumber", void 0);
+], VerifyOtpDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'رمز التحقق مطلوب' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Length)(6, 6, { message: 'رمز التحقق يجب أن يكون 6 أرقام' }),
+    (0, class_validator_1.Length)(6, 6, { message: 'رمز التحقق يجب أن يكون 6 أرقام بالضبط' }),
     __metadata("design:type", String)
 ], VerifyOtpDto.prototype, "otp", void 0);
 __decorate([

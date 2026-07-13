@@ -15,11 +15,8 @@ class SendOtpDto {
 }
 exports.SendOtpDto = SendOtpDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)({ message: 'رقم الهاتف مطلوب' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^\+9[67]\d{8,9}$/, {
-        message: 'رقم الهاتف غير صالح. يجب أن يبدأ بـ +966 أو +967 (مثال: +966500000000)',
-    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'الإيميل مطلوب' }),
+    (0, class_validator_1.IsEmail)({}, { message: 'الإيميل غير صالح' }),
     __metadata("design:type", String)
-], SendOtpDto.prototype, "phoneNumber", void 0);
+], SendOtpDto.prototype, "email", void 0);
 //# sourceMappingURL=send-otp.dto.js.map

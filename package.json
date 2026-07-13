@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/nodemailer": "^8.0.0",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "nodemailer": "^8.0.10",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}

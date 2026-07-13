@@ -1,9 +1,9 @@
 import { Redirect } from 'expo-router';
-import useLaundryStore from '../src/store/useLaundryStore';
+import { useAuthStore } from '../stores/authStore';
 
 export default function Index() {
-  const { token } = useLaundryStore();
-  return token
+  const { isAuthenticated } = useAuthStore();
+  return isAuthenticated
     ? <Redirect href="/(tabs)/dashboard" />
-    : <Redirect href="/(auth)/login" />;
+    : <Redirect href="/(auth)/welcome" />;
 }

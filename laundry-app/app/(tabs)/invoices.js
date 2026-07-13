@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, STATUS } from '../../src/constants/theme';
 import useInvoiceStore from '../../src/store/useInvoiceStore';
+import { useRouter } from 'expo-router';
 
 const SERVICES = [
   { id: 'wash',       label: 'غسيل عادي',      price: 15 },
@@ -18,6 +19,7 @@ const SERVICES = [
 const STATUS_FILTERS = ['الكل', 'received', 'washing', 'drying', 'ready', 'delivered'];
 
 export default function InvoicesScreen() {
+  const router = useRouter();
   const { invoices, isLoading, fetchInvoices, updateStatus, createInvoice } = useInvoiceStore();
   const [filter, setFilter] = useState('الكل');
   const [search, setSearch] = useState('');
@@ -97,7 +99,7 @@ export default function InvoicesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>الفواتير</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setShowNewModal(true)}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/(app)/invoices/new')}>
           <Ionicons name="add" size={22} color="#fff" />
           <Text style={styles.addBtnText}>فاتورة جديدة</Text>
         </TouchableOpacity>

@@ -28,11 +28,30 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const user = await this.prisma.user.findUnique({
             where: { id: payload.sub },
+            select: {
+                id: true,
+                fullName: true,
+                phoneNumber: true,
+                role: true,
+                isActive: true,
+                uniqueId: true,
+            },
         });
         if (!user || !user.isActive) {
-            throw new common_1.UnauthorizedException('المستخدم غير موجود أو غير نشط');
+            throw new common_1.UnauthorizedException({
+                success: false,
+                error: { code: 'UNAUTHORIZED', message: 'المستخدم غير موجود أو غير نشط' },
+            });
         }
-        return user;
+        let laundryId = null;
+        if (user.role === 'laundry') {
+            const laundry = await this.prisma.laundry.findFirst({
+                where: { ownerId: user.id },
+                select: { id: true },
+            });
+            laundryId = laundry?.id ?? null;
+        }
+        return { ...user, laundryId };
     }
 };
 exports.JwtStrategy = JwtStrategy;
