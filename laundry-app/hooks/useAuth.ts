@@ -58,8 +58,9 @@ export const useRegister = () => {
     onMutate: () => setApiError(null),
 
     onSuccess: async ({ responseData, logo }) => {
-      if (responseData.success && responseData.data) {
-        const { accessToken, refreshToken, user } = responseData.data;
+      // الباكند يُرجع {accessToken, refreshToken, user} مباشرة بدون غلاف {success, data}
+      const { accessToken, refreshToken, user } = responseData;
+      if (accessToken && refreshToken && user) {
         login(user, accessToken, refreshToken);
 
         if (logo) {
@@ -104,10 +105,11 @@ export const useLogin = () => {
 
     onMutate: () => setApiError(null),
 
-    onSuccess: (data) => {
-      if (data.success && data.data) {
-        const { accessToken, refreshToken, user } = data.data;
-        login(user, accessToken, refreshToken);
+    onSuccess: async (data) => {
+      // الباكند يُرجع {accessToken, refreshToken, user} مباشرة بدون غلاف {success, data}
+      const { accessToken, refreshToken, user } = data;
+      if (accessToken && refreshToken && user) {
+        await login(user, accessToken, refreshToken);
       }
     },
 

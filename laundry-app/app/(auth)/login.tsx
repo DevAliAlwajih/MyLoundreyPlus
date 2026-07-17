@@ -45,7 +45,7 @@ export default function LoginScreen() {
     setApiError(null);
     loginMutation.mutate(data, {
       onSuccess: () => {
-        router.replace('/(tabs)/dashboard');
+        console.log('Login mutation success, RootLayout will handle redirect');
       },
       onError: (error: any) => {
         const data = error.response?.data;

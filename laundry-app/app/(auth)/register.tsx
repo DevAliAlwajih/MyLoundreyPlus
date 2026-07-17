@@ -77,7 +77,7 @@ export default function RegisterScreen() {
     setApiError(null);
     registerMutation.mutate(data, {
       onSuccess: () => {
-        router.replace('/(tabs)/dashboard');
+        console.log('Register mutation success, RootLayout will handle redirect');
       },
       onError: (error: any) => {
         const status = error.response?.status;

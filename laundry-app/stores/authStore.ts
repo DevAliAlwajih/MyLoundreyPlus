@@ -36,9 +36,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true, // Initially true while we check SecureStore
 
   login: async (userData: User, access: string, refresh: string) => {
-    await SecureStore.setItemAsync('accessToken', access);
-    await SecureStore.setItemAsync('refreshToken', refresh);
-    await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    try {
+      await SecureStore.setItemAsync('accessToken', access);
+      await SecureStore.setItemAsync('refreshToken', refresh);
+      await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('[authStore.login] SecureStore save FAILED:', error);
+      throw error; // Re-throw so the caller (useAuth) can catch it
+    }
 
     set({
       user: userData,
@@ -46,6 +51,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       refreshToken: refresh,
       isAuthenticated: true,
     });
+    console.log('[authStore.login] SecureStore save complete, isAuthenticated set to true');
   },
 
   logout: async () => {

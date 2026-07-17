@@ -62,7 +62,7 @@ export default function AppLayout() {
 
       {/* ── الفواتير ── */}
       <Tabs.Screen
-        name="invoices"
+        name="invoices/index"
         options={{
           title: t('nav.invoices'),
           tabBarIcon: ({ color, size }) => (
@@ -73,7 +73,7 @@ export default function AppLayout() {
 
       {/* ── المحادثات ── */}
       <Tabs.Screen
-        name="conversations"
+        name="conversations/index"
         options={{
           title: t('nav.conversations'),
           tabBarIcon: ({ color, size }) => (
@@ -84,7 +84,7 @@ export default function AppLayout() {
 
       {/* ── الإعدادات ── */}
       <Tabs.Screen
-        name="settings"
+        name="settings/index"
         options={{
           title: t('nav.settings'),
           tabBarIcon: ({ color, size }) => (
@@ -94,30 +94,19 @@ export default function AppLayout() {
       />
 
       {/* ── شاشات فرعية — مخفية من الـ Tab Bar ── */}
-      <Tabs.Screen
-        name="bookings"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
-      <Tabs.Screen
-        name="crm"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
-      <Tabs.Screen
-        name="promotions"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
-      <Tabs.Screen
-        name="reports"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
+      <Tabs.Screen name="bookings/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="crm/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="crm/[phone]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="profile/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="profile/edit" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="profile/location" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="profile/working-hours" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="promotions/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="reports/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="chat/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="invoices/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="invoices/items" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="invoices/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
   );
 }

@@ -30,7 +30,7 @@ export default function SettingsScreen() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    fetchNotificationPrefs();
+    // fetchNotificationPrefs(); // مؤجلة لمرحلة الإعدادات الشخصية
     fetchSubscription();
     
     // Load theme preference

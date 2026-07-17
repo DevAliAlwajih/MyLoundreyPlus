@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,8 +15,12 @@ const COLORS = {
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const { checkAuthStatus, isLoading } = useAuthStore();
+  const checkAuthStatus = useAuthStore((s) => s.checkAuthStatus);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
     const init = async () => {
@@ -27,6 +31,26 @@ export default function RootLayout() {
     };
     init();
   }, []);
+
+  useEffect(() => {
+    console.log('[RootLayout Auth Check] isReady:', isReady, 'isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'segments:', segments);
+    if (!isReady || isLoading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const isIndex = segments.length === 0 || segments[0] === 'index';
+
+    console.log('[RootLayout Auth Check] inAuthGroup:', inAuthGroup, 'isIndex:', isIndex);
+
+    if (isAuthenticated && (inAuthGroup || isIndex)) {
+      console.log('[RootLayout Auth Check] -> Redirecting to /(app)/dashboard');
+      router.replace('/(app)/dashboard');
+    } else if (!isAuthenticated && !inAuthGroup) {
+      console.log('[RootLayout Auth Check] -> Redirecting to /(auth)/welcome');
+      router.replace('/(auth)/welcome');
+    } else {
+      console.log('[RootLayout Auth Check] -> No action taken');
+    }
+  }, [isAuthenticated, isReady, isLoading, segments]);
 
   if (!isReady || isLoading) {
     return (
@@ -42,7 +66,6 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(app)" />
       </Stack>
     </QueryClientProvider>
