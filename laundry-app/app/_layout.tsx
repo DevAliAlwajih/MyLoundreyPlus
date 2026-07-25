@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../stores/authStore';
 import { initI18n } from '../i18n'; // Bootstrap i18n
 
@@ -22,12 +23,18 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
+
   useEffect(() => {
     const init = async () => {
-      await initI18n();
-      // Check auth logic on boot
-      await checkAuthStatus();
-      setIsReady(true);
+      try {
+        await initI18n();
+        await checkAuthStatus();
+      } catch (error) {
+        console.error('[RootLayout] Error during initialization:', error);
+        useAuthStore.setState({ isLoading: false, isAuthenticated: false });
+      } finally {
+        setIsReady(true);
+      }
     };
     init();
   }, []);
@@ -36,19 +43,27 @@ export default function RootLayout() {
     console.log('[RootLayout Auth Check] isReady:', isReady, 'isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'segments:', segments);
     if (!isReady || isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const isIndex = segments.length === 0 || segments[0] === 'index';
+    const stringSegments = segments as string[];
+    const inAuthGroup = stringSegments[0] === '(auth)';
+    const isIndex = stringSegments.length === 0 || stringSegments[0] === 'index';
 
-    console.log('[RootLayout Auth Check] inAuthGroup:', inAuthGroup, 'isIndex:', isIndex);
+    const isPreviewMode = useAuthStore.getState().isPreviewMode;
 
-    if (isAuthenticated && (inAuthGroup || isIndex)) {
+    console.log('[RootLayout Auth Check] inAuthGroup:', inAuthGroup, 'isIndex:', isIndex, 'isPreviewMode:', isPreviewMode);
+
+    // Clear preview mode when user navigates away from auth group
+    if (!inAuthGroup && isPreviewMode) {
+      useAuthStore.getState().setPreviewMode(false);
+    }
+
+    if (isAuthenticated && (inAuthGroup || isIndex) && !isPreviewMode) {
       console.log('[RootLayout Auth Check] -> Redirecting to /(app)/dashboard');
       router.replace('/(app)/dashboard');
     } else if (!isAuthenticated && !inAuthGroup) {
-      console.log('[RootLayout Auth Check] -> Redirecting to /(auth)/welcome');
-      router.replace('/(auth)/welcome');
+      console.log('[RootLayout Auth Check] -> Redirecting to /(auth)/login');
+      router.replace('/(auth)/login');
     } else {
-      console.log('[RootLayout Auth Check] -> No action taken');
+      console.log('[RootLayout Auth Check] -> No action taken', isPreviewMode ? '(preview mode)' : '');
     }
   }, [isAuthenticated, isReady, isLoading, segments]);
 

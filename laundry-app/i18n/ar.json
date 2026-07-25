@@ -22,6 +22,7 @@
     "ok": "حسناً",
     "cancel": "إلغاء",
     "error": "خطأ",
+    "alert": "تنبيه",
     "success": "تم بنجاح",
     "updateFailed": "فشل التحديث",
     "locationFailed": "فشل تحديد الموقع الحالي",
@@ -64,12 +65,20 @@
     },
     "loginScreen": {
       "title": "تسجيل الدخول",
+      "appName": "مغسلتي اس بلس",
+      "welcomeSubtitle": "هلا بك في مغسلتي اس بلس",
       "email": "البريد الإلكتروني",
       "password": "كلمة المرور",
       "forgotPassword": "نسيت كلمة المرور؟",
       "submit": "تسجيل الدخول",
       "noAccount": "ليس لديك حساب؟ إنشاء حساب",
-      "success": "تم تسجيل الدخول بنجاح!"
+      "createAccount": "إنشاء حساب",
+      "success": "تم تسجيل الدخول بنجاح!",
+      "enableBiometricFirst": "قم بتفعيل الدخول عبر البصمة من الإعدادات",
+      "removeAccountConfirm": "هل تريد إزالة هذا الحساب من الجهاز؟",
+      "offlineMode": "الدخول بدون انترنت",
+      "contactUs": "تواصل معنا",
+      "aboutUs": "تعرف من نحن"
     },
     "forgotPassword": {
       "title": "استعادة كلمة المرور",
@@ -477,7 +486,22 @@
     "changeLanguageTitle": "تغيير اللغة",
     "changeLanguageMessage": "سيتم إعادة تشغيل التطبيق لتطبيق التغييرات. هل أنت متأكد؟",
     "restartRequired": "يرجى إغلاق التطبيق وإعادة فتحه لتطبيق تغيير اللغة بالكامل.",
-    "devices": "إدارة الأجهزة"
+    "devices": "إدارة الأجهزة",
+    "security": {
+      "title": "الأمان والخصوصية",
+      "biometricAuth": "الدخول بالبصمة / الوجه",
+      "biometricDesc": "تسجيل الدخول سريعاً باستخدام بصمة الإصبع أو الوجه",
+      "biometricFingerprint": "بصمة الإصبع",
+      "biometricFace": "بصمة الوجه",
+      "biometricBoth": "البصمة / الوجه",
+      "biometricNotSupported": "جهازك لا يدعم المصادقة الحيوية",
+      "biometricNotEnrolled": "لا توجد بصمات مسجلة في إعدادات الجهاز",
+      "biometricEnablePrompt": "يرجى تأكيد هويتك لتفعيل الدخول بالبصمة",
+      "biometricAuthReason": "قم بالمصادقة للوصول إلى التطبيق",
+      "biometricAuthFailed": "تعذرت المصادقة، يرجى المحاولة مجدداً",
+      "biometricFallback": "إلغاء - تسجيل الدخول بكلمة المرور",
+      "biometricContinue": "المتابعة بالبصمة"
+    }
   },
   "location": {
     "selectCountry": "اختر الدولة",

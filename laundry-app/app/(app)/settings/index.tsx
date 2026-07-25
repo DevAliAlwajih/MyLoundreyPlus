@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as SecureStore from 'expo-secure-store';
 import * as Linking from 'expo-linking';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
@@ -28,6 +29,8 @@ export default function SettingsScreen() {
 
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+  const [biometricTypeStr, setBiometricTypeStr] = useState<string | null>(null);
 
   useEffect(() => {
     // fetchNotificationPrefs(); // مؤجلة لمرحلة الإعدادات الشخصية
@@ -37,7 +40,66 @@ export default function SettingsScreen() {
     SecureStore.getItemAsync('appTheme').then(theme => {
       if (theme === 'dark') setIsDarkMode(true);
     });
+
+    SecureStore.getItemAsync('biometric_enabled').then(val => {
+      setIsBiometricEnabled(val === 'true');
+    });
+    checkBiometricType();
   }, []);
+
+  const checkBiometricType = async () => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    if (!hasHardware) return;
+    const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+    if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION) && types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+       setBiometricTypeStr(t('settings.security.biometricBoth'));
+    } else if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+       setBiometricTypeStr(t('settings.security.biometricFace'));
+    } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+       setBiometricTypeStr(t('settings.security.biometricFingerprint'));
+    } else {
+       setBiometricTypeStr(t('settings.security.biometricBoth')); // Fallback
+    }
+  };
+
+  const handleBiometricToggle = async (val: boolean) => {
+    if (!val) {
+      // Disable
+      setIsBiometricEnabled(false);
+      await SecureStore.deleteItemAsync('biometric_enabled');
+      return;
+    }
+
+    // Enable
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    if (!hasHardware) {
+      Alert.alert(t('common.error'), t('settings.security.biometricNotSupported'));
+      return;
+    }
+
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    if (!isEnrolled) {
+      Alert.alert(t('common.error'), t('settings.security.biometricNotEnrolled'));
+      return;
+    }
+
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: t('settings.security.biometricEnablePrompt'),
+        disableDeviceFallback: true,
+        cancelLabel: t('common.cancel'),
+      });
+
+      if (result.success) {
+        setIsBiometricEnabled(true);
+        await SecureStore.setItemAsync('biometric_enabled', 'true');
+      } else {
+        setIsBiometricEnabled(false);
+      }
+    } catch (e) {
+      setIsBiometricEnabled(false);
+    }
+  };
 
   const handleLanguageToggle = async (val: boolean) => {
     // val true = AR, false = EN
@@ -136,6 +198,18 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
+        <SettingsSection title={t('settings.security.title')}>
+          <SettingsRow 
+            icon="finger-print-outline" 
+            title={t('settings.security.biometricAuth')} 
+            value={biometricTypeStr || ''}
+            isSwitch
+            switchValue={isBiometricEnabled}
+            onSwitchChange={handleBiometricToggle}
+            isLast
+          />
+        </SettingsSection>
+
         {subscription && (
           <SettingsSection title={t('settings.subscription')}>
             <SubscriptionCard subscription={subscription} />
@@ -219,6 +293,11 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title="">
+          <SettingsRow 
+            icon="exit-outline" 
+            title="خروج" 
+            onPress={() => { useAuthStore.getState().setPreviewMode(true); router.push('/(auth)/login'); }} 
+          />
           <SettingsRow 
             icon="log-out-outline" 
             title={t('settings.logout')} 

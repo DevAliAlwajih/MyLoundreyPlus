@@ -11,12 +11,21 @@ export interface User {
   role: 'laundry' | 'customer' | 'admin';
 }
 
+export interface RememberedAccount {
+  email: string;
+  fullName: string;
+  laundryName?: string;
+  logoUrl?: string;
+}
+
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   user: User | null;
+  rememberedAccount: RememberedAccount | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isPreviewMode: boolean;
 
   // Actions
   login: (userData: User, access: string, refresh: string) => Promise<void>;
@@ -26,20 +35,32 @@ interface AuthState {
   checkAuthStatus: () => Promise<void>;
   updateFullName: (name: string) => Promise<void>;
   updateEmail: (email: string) => Promise<void>;
+  removeRememberedAccount: () => Promise<void>;
+  setPreviewMode: (val: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
   refreshToken: null,
   user: null,
+  rememberedAccount: null,
   isAuthenticated: false,
   isLoading: true, // Initially true while we check SecureStore
+  isPreviewMode: false,
 
   login: async (userData: User, access: string, refresh: string) => {
     try {
       await SecureStore.setItemAsync('accessToken', access);
       await SecureStore.setItemAsync('refreshToken', refresh);
       await SecureStore.setItemAsync('user', JSON.stringify(userData));
+      
+      const remAcc: RememberedAccount = {
+        email: userData.email,
+        fullName: userData.fullName,
+        // laundryName and logoUrl might be added here later if returned by backend
+      };
+      await SecureStore.setItemAsync('remembered_account', JSON.stringify(remAcc));
+      set({ rememberedAccount: remAcc });
     } catch (error) {
       console.error('[authStore.login] SecureStore save FAILED:', error);
       throw error; // Re-throw so the caller (useAuth) can catch it
@@ -50,6 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       accessToken: access,
       refreshToken: refresh,
       isAuthenticated: true,
+      isPreviewMode: false, // Always clear preview mode on real login
     });
     console.log('[authStore.login] SecureStore save complete, isAuthenticated set to true');
   },
@@ -58,6 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
     await SecureStore.deleteItemAsync('user');
+    await SecureStore.deleteItemAsync('biometric_enabled');
+    // Note: We intentionally do NOT delete 'remembered_account' here
     
     set({
       user: null,
@@ -76,22 +100,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refreshToken: currentRefreshToken,
       });
 
-      if (response.data?.success && response.data?.data) {
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-        
-        await SecureStore.setItemAsync('accessToken', accessToken);
-        // Sometimes APIs don't return a new refresh token if the old one is still valid
-        if (newRefreshToken) {
-          await SecureStore.setItemAsync('refreshToken', newRefreshToken);
-        }
+      // الباكند يُرجع {accessToken, refreshToken, user} مباشرة من الجذر — بدون غلاف {success, data}
+      const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        set({
-          accessToken,
-          refreshToken: newRefreshToken || currentRefreshToken,
-        });
-      } else {
-        throw new Error('Failed to refresh token');
+      if (!accessToken) {
+        throw new Error('No accessToken in refresh response');
       }
+
+      await SecureStore.setItemAsync('accessToken', accessToken);
+      if (newRefreshToken) {
+        await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+      }
+
+      set({
+        accessToken,
+        refreshToken: newRefreshToken || currentRefreshToken,
+      });
     } catch (error) {
       console.error('Failed to refresh access token', error);
       get().logout();
@@ -108,11 +132,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuthStatus: async () => {
     try {
       set({ isLoading: true });
-      const [accessToken, refreshToken, userStr] = await Promise.all([
+      const [accessToken, refreshToken, userStr, rememberedAccountStr] = await Promise.all([
         SecureStore.getItemAsync('accessToken'),
         SecureStore.getItemAsync('refreshToken'),
         SecureStore.getItemAsync('user'),
+        SecureStore.getItemAsync('remembered_account'),
       ]);
+
+      if (rememberedAccountStr) {
+        try {
+          set({ rememberedAccount: JSON.parse(rememberedAccountStr) });
+        } catch (e) {
+          console.error('Failed to parse remembered_account', e);
+        }
+      }
 
       if (accessToken && userStr) {
         const user = JSON.parse(userStr) as User;
@@ -146,5 +179,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const updatedUser = { ...user, email };
     await SecureStore.setItemAsync('user', JSON.stringify(updatedUser));
     set({ user: updatedUser });
+  },
+
+  removeRememberedAccount: async () => {
+    await SecureStore.deleteItemAsync('remembered_account');
+    set({ rememberedAccount: null });
+  },
+
+  setPreviewMode: (val: boolean) => {
+    set({ isPreviewMode: val });
   },
 }));

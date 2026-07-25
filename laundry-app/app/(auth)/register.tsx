@@ -110,13 +110,7 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
 
-          <TouchableOpacity style={styles.backButton} onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/(auth)/welcome');
-            }
-          }}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
 
@@ -296,7 +290,7 @@ export default function RegisterScreen() {
 
             <TouchableOpacity
               style={styles.footerLink}
-              onPress={() => router.replace('/(auth)/login')}
+              onPress={() => router.back()}
             >
               <Text style={styles.footerLinkText}>{t('auth.register.haveAccount')}</Text>
             </TouchableOpacity>

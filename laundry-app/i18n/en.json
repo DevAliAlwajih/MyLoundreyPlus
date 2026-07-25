@@ -22,6 +22,7 @@
     "ok": "OK",
     "cancel": "Cancel",
     "error": "Error",
+    "alert": "Alert",
     "success": "Success",
     "updateFailed": "Update Failed",
     "locationFailed": "Failed to get current location",
@@ -64,12 +65,20 @@
     },
     "loginScreen": {
       "title": "Login",
+      "appName": "MyLoundreyPlus",
+      "welcomeSubtitle": "Welcome to MyLoundreyPlus",
       "email": "Email",
       "password": "Password",
       "forgotPassword": "Forgot Password?",
       "submit": "Login",
       "noAccount": "Don't have an account? Create one",
-      "success": "Logged in successfully!"
+      "createAccount": "Create Account",
+      "success": "Logged in successfully!",
+      "enableBiometricFirst": "Enable biometric login from Settings first",
+      "removeAccountConfirm": "Remove this account from device?",
+      "offlineMode": "Sign in without internet",
+      "contactUs": "Contact Us",
+      "aboutUs": "About Us"
     },
     "forgotPassword": {
       "title": "Reset Password",
@@ -476,7 +485,22 @@
     "changeLanguageTitle": "Change Language",
     "changeLanguageMessage": "The app will restart to apply changes. Are you sure?",
     "restartRequired": "Please close and reopen the app to fully apply the language change.",
-    "devices": "Device Management"
+    "devices": "Device Management",
+    "security": {
+      "title": "Security & Privacy",
+      "biometricAuth": "Biometric Login",
+      "biometricDesc": "Login quickly using Fingerprint or Face ID",
+      "biometricFingerprint": "Fingerprint",
+      "biometricFace": "Face ID",
+      "biometricBoth": "Biometric",
+      "biometricNotSupported": "Your device does not support biometric authentication",
+      "biometricNotEnrolled": "No biometrics enrolled on this device",
+      "biometricEnablePrompt": "Please authenticate to enable biometric login",
+      "biometricAuthReason": "Authenticate to access the app",
+      "biometricAuthFailed": "Authentication failed, please try again",
+      "biometricFallback": "Cancel - Login with Password",
+      "biometricContinue": "Continue with Biometrics"
+    }
   },
   "location": {
     "selectCountry": "Select Country",
