@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../stores/authStore';
+import { useThemeStore } from '../stores/themeStore';
 import { initI18n } from '../i18n'; // Bootstrap i18n
 
 // Use existing colors if present or define primary
@@ -28,6 +29,7 @@ export default function RootLayout() {
     const init = async () => {
       try {
         await initI18n();
+        await useThemeStore.getState().initTheme();
         await checkAuthStatus();
       } catch (error) {
         console.error('[RootLayout] Error during initialization:', error);

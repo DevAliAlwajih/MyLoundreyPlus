@@ -97,16 +97,11 @@ export default function AppLayout() {
       <Tabs.Screen name="bookings/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="crm/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="crm/[phone]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="profile/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="profile/edit" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="profile/location" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="profile/working-hours" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="profile" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="promotions/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="reports/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="chat/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="invoices/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="invoices/items" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="invoices/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="invoices" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
   );
 }
