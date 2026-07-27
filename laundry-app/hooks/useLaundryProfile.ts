@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/axios';
 import { useLaundryStore, LaundryProfile, LaundryHoliday } from '../stores/laundryStore';
+import { useAuthStore } from '../stores/authStore';
 
 export const useProfile = () => {
   const { setProfile } = useLaundryStore();
@@ -19,20 +20,30 @@ export const useProfile = () => {
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
+  const updateRememberedAccount = useAuthStore((s) => s.updateRememberedAccount);
 
   return useMutation({
     mutationFn: async (data: Partial<LaundryProfile>) => {
       const response = await api.patch('/my-laundry', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-laundry-profile'] });
+      
+      const updates: any = {};
+      if (variables.name !== undefined) updates.laundryName = variables.name;
+      if (variables.phone !== undefined) updates.phone = variables.phone;
+      
+      if (Object.keys(updates).length > 0) {
+        updateRememberedAccount(updates);
+      }
     },
   });
 };
 
 export const useUploadLogo = () => {
   const queryClient = useQueryClient();
+  const updateRememberedAccount = useAuthStore((s) => s.updateRememberedAccount);
 
   return useMutation({
     mutationFn: async (imageUri: string) => {
@@ -56,14 +67,18 @@ export const useUploadLogo = () => {
       });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['my-laundry-profile'] });
+      if (data?.data?.logoUrl) {
+        updateRememberedAccount({ logoUrl: data.data.logoUrl });
+      }
     },
   });
 };
 
 export const useDeleteLogo = () => {
   const queryClient = useQueryClient();
+  const updateRememberedAccount = useAuthStore((s) => s.updateRememberedAccount);
 
   return useMutation({
     mutationFn: async () => {
@@ -72,6 +87,7 @@ export const useDeleteLogo = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-laundry-profile'] });
+      updateRememberedAccount({ logoUrl: null });
     },
   });
 };

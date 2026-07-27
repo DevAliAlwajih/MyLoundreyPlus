@@ -15,18 +15,10 @@ import { useLogin } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/authStore';
 import * as SecureStore from 'expo-secure-store';
 import { useBiometricLogin } from '../../hooks/useBiometricLogin';
+import { useThemeStore } from '../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  surface: '#ffffff',
-  surface2: '#f0f2f5',
-  error: '#e74c3c',
-  text: '#333',
-  textSecondary: '#666',
-  textMuted: '#999',
-  border: '#eee',
-};
+
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -36,17 +28,14 @@ export default function LoginScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const { handleBiometricAuth } = useBiometricLogin();
+  const { colors, themeMode, toggleTheme } = useThemeStore();
 
   useFocusEffect(
     useCallback(() => {
       SecureStore.getItemAsync('biometric_enabled').then(val => {
         setIsBiometricEnabled(val === 'true');
-      });
-      SecureStore.getItemAsync('appTheme').then(theme => {
-        if (theme === 'dark') setIsDarkMode(true);
       });
     }, [])
   );
@@ -65,11 +54,7 @@ export default function LoginScreen() {
     }
   };
 
-  const toggleTheme = async () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    await SecureStore.setItemAsync('appTheme', newTheme ? 'dark' : 'light');
-  };
+
 
   const onBiometricPress = () => {
     if (isBiometricEnabled) {
@@ -133,8 +118,11 @@ export default function LoginScreen() {
     });
   };
 
+  const styles = getStyles(colors);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -143,12 +131,12 @@ export default function LoginScreen() {
           
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.langButton} onPress={toggleLanguage}>
-              <Ionicons name="language-outline" size={16} color={COLORS.textSecondary} />
+              <Ionicons name="language-outline" size={16} color={colors.textSecondary} />
               <Text style={styles.langButtonText}>{i18n.language === 'ar' ? 'English' : 'عربي'}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
-              <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={20} color={COLORS.textSecondary} />
+              <Ionicons name={themeMode === 'dark' ? "sunny-outline" : "moon-outline"} size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -180,7 +168,7 @@ export default function LoginScreen() {
                 </View>
                 <View style={styles.accountCardActions}>
                   <TouchableOpacity style={styles.iconButton} onPress={() => Alert.alert(t('common.alert', 'تنبيه'), t('common.comingSoon', 'قريباً'))}>
-                    <Ionicons name="qr-code-outline" size={20} color={COLORS.textSecondary} />
+                    <Ionicons name="qr-code-outline" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.iconButton} onPress={() => {
                     Alert.alert(t('common.alert', 'تنبيه'), t('auth.loginScreen.removeAccountConfirm', 'هل تريد إزالة هذا الحساب من الجهاز؟'), [
@@ -188,7 +176,7 @@ export default function LoginScreen() {
                       { text: t('common.ok', 'موافق'), style: 'destructive', onPress: removeRememberedAccount }
                     ]);
                   }}>
-                    <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -238,7 +226,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.offlineCheckbox} onPress={() => setOfflineMode(!offlineMode)}>
-              <Ionicons name={offlineMode ? "checkbox" : "square-outline"} size={20} color={offlineMode ? COLORS.primary : COLORS.textSecondary} />
+              <Ionicons name={offlineMode ? "checkbox" : "square-outline"} size={20} color={offlineMode ? colors.primary : colors.textSecondary} />
               <Text style={styles.offlineText}>{t('auth.loginScreen.offlineMode', 'الدخول بدون انترنت')}</Text>
             </TouchableOpacity>
 
@@ -259,7 +247,7 @@ export default function LoginScreen() {
                 style={styles.submitBiometricButton} 
                 onPress={onBiometricPress}
               >
-                <Ionicons name="finger-print" size={32} color={COLORS.primary} />
+                <Ionicons name="finger-print" size={32} color={colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -267,7 +255,7 @@ export default function LoginScreen() {
               style={styles.secondaryButton} 
               onPress={() => router.push('/(auth)/register')}
             >
-              <Ionicons name="person-add-outline" size={18} color={COLORS.textSecondary} />
+              <Ionicons name="person-add-outline" size={18} color={colors.textSecondary} />
               <Text style={styles.secondaryButtonText}>{t('auth.loginScreen.createAccount', 'إنشاء حساب')}</Text>
             </TouchableOpacity>
 
@@ -287,11 +275,11 @@ export default function LoginScreen() {
 
             <View style={styles.footerLinks}>
               <TouchableOpacity style={styles.footerLinkItem} onPress={() => Alert.alert(t('common.alert', 'تنبيه'), t('common.comingSoon', 'قريباً'))}>
-                <Ionicons name="headset-outline" size={20} color={COLORS.textSecondary} />
+                <Ionicons name="headset-outline" size={20} color={colors.textSecondary} />
                 <Text style={styles.footerLinkText}>{t('auth.loginScreen.contactUs', 'تواصل معنا')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.footerLinkItem} onPress={() => Alert.alert(t('common.alert', 'تنبيه'), t('common.comingSoon', 'قريباً'))}>
-                <Ionicons name="information-circle-outline" size={20} color={COLORS.textSecondary} />
+                <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
                 <Text style={styles.footerLinkText}>{t('auth.loginScreen.aboutUs', 'تعرف من نحن')}</Text>
               </TouchableOpacity>
             </View>
@@ -303,10 +291,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -322,7 +310,7 @@ const styles = StyleSheet.create({
   langButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface2,
+    backgroundColor: colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -330,14 +318,14 @@ const styles = StyleSheet.create({
   },
   langButtonText: {
     fontSize: 12,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '500',
   },
   themeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.surface2,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -357,12 +345,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   errorBox: {
     backgroundColor: '#fdecea',
@@ -373,7 +361,7 @@ const styles = StyleSheet.create({
     borderColor: '#f5c6cb'
   },
   errorBoxText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center'
   },
@@ -381,7 +369,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accountCard: {
-    backgroundColor: COLORS.surface2,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -405,16 +393,16 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   accountName: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   accountEmail: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   accountCardActions: {
@@ -425,7 +413,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -435,19 +423,19 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'right',
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.error,
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
   },
@@ -456,7 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   forgotPasswordText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -468,7 +456,7 @@ const styles = StyleSheet.create({
   },
   offlineText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   submitRow: {
     flexDirection: 'row',
@@ -476,7 +464,7 @@ const styles = StyleSheet.create({
   },
   submitButtonMain: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
@@ -488,7 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.surface2,
+    backgroundColor: colors.surface,
     marginLeft: 12,
   },
   submitButtonText: {
@@ -500,7 +488,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -509,7 +497,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   secondaryButtonText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '500',
   },
@@ -518,7 +506,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 40,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
     paddingTop: 24,
     marginTop: 32,
   },
@@ -566,6 +554,6 @@ const styles = StyleSheet.create({
   },
   footerLinkText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
 });

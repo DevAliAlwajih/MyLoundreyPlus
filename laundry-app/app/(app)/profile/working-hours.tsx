@@ -15,16 +15,10 @@ import {
   useDeleteHoliday 
 } from '../../../hooks/useLaundryProfile';
 import { WorkingHourRow } from '../../../components/profile/WorkingHourRow';
+import { useThemeStore } from '../../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  error: '#e74c3c',
-  border: '#ddd',
-  white: '#fff',
-  text: '#333',
-  gray: '#666',
-};
+
 
 const DEFAULT_HOURS: WorkingHour[] = [
   { day: 'sunday', isOpen: true, openTime: '08:00', closeTime: '22:00' },
@@ -40,6 +34,7 @@ export default function WorkingHoursScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === 'rtl';
+  const { colors, themeMode } = useThemeStore();
 
   const { profile } = useLaundryStore();
   
@@ -122,12 +117,15 @@ export default function WorkingHoursScreen() {
     );
   };
 
+  const styles = getStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={COLORS.text} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('profile.workingHours')}</Text>
         <View style={{ width: 40 }} />
@@ -150,16 +148,16 @@ export default function WorkingHoursScreen() {
         <View style={[styles.sectionHeader, isRTL && styles.rowReverse]}>
           <Text style={styles.sectionTitle}>{t('workingHours.exceptionalHolidays')}</Text>
           <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
-            <Ionicons name="add" size={18} color={COLORS.primary} />
+            <Ionicons name="add" size={18} color={colors.primary} />
             <Text style={styles.addButtonText}>{t('workingHours.addHoliday')}</Text>
           </TouchableOpacity>
         </View>
 
         {isLoadingHolidays ? (
-          <ActivityIndicator color={COLORS.primary} style={{ marginTop: 20 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
         ) : holidays.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={40} color={COLORS.border} />
+            <Ionicons name="calendar-outline" size={40} color={colors.border} />
             <Text style={styles.emptyText}>{t('workingHours.noHolidays')}</Text>
           </View>
         ) : (
@@ -176,7 +174,7 @@ export default function WorkingHoursScreen() {
                 onPress={() => handleDeleteHoliday(holiday.id)}
                 disabled={deleteHolidayMutation.isPending}
               >
-                <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
               </TouchableOpacity>
             </View>
           ))
@@ -191,7 +189,7 @@ export default function WorkingHoursScreen() {
           disabled={updateMutation.isPending}
         >
           {updateMutation.isPending ? (
-            <ActivityIndicator color={COLORS.white} />
+            <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.saveButtonText}>{t('profile.saveHours')}</Text>
           )}
@@ -205,7 +203,7 @@ export default function WorkingHoursScreen() {
             <View style={[styles.modalHeader, isRTL && styles.rowReverse]}>
               <Text style={styles.modalTitle}>{t('workingHours.addHoliday')}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -238,7 +236,7 @@ export default function WorkingHoursScreen() {
               disabled={addHolidayMutation.isPending || !holidayDate}
             >
               {addHolidayMutation.isPending ? (
-                <ActivityIndicator color={COLORS.white} />
+                <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.saveButtonText}>{t('common.save')}</Text>
               )}
@@ -251,10 +249,10 @@ export default function WorkingHoursScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -262,9 +260,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   backButton: {
     width: 40,
@@ -274,7 +272,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   scrollContent: {
     padding: 16,
@@ -282,7 +280,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     marginVertical: 24,
   },
   sectionHeader: {
@@ -300,18 +298,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eef5ff',
+    backgroundColor: colors.surface2,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   addButtonText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 4,
@@ -321,27 +319,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 30,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   emptyText: {
     marginTop: 8,
-    color: COLORS.gray,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   holidayCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: colors.border,
   },
   holidayInfo: {
     flex: 1,
@@ -349,31 +347,31 @@ const styles = StyleSheet.create({
   holidayDate: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   holidayReason: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: colors.textSecondary,
   },
   deleteButton: {
     padding: 8,
   },
   footer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   saveButtonText: {
-    color: COLORS.white,
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -385,7 +383,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 20,
   },
@@ -398,25 +396,27 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   modalBody: {
     marginBottom: 10,
   },
   label: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: colors.textSecondary,
     marginBottom: 8,
     fontWeight: '500',
   },
   input: {
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 16,
     height: 50,
     fontSize: 15,
-    color: COLORS.text,
+    color: colors.text,
+    backgroundColor: colors.surface,
     textAlign: 'left',
   },
 });
+

@@ -13,18 +13,10 @@ import * as Location from 'expo-location';
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useUpdateProfile } from '../../../hooks/useLaundryProfile';
 import { GULF_COUNTRIES } from '../../../constants/gulfCountries';
+import { useThemeStore } from '../../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  primaryLight: '#eef5ff',
-  bg: '#f8f9fa',
-  text: '#333',
-  gray: '#666',
-  lightGray: '#999',
-  border: '#ddd',
-  white: '#fff',
-  error: '#e74c3c',
-};
+
 
 type CountryType = (typeof GULF_COUNTRIES)[number];
 type CityType = CountryType['cities'][number];
@@ -34,6 +26,7 @@ export default function LocationScreen() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === 'rtl';
   const isAr = i18n.language === 'ar';
+  const { colors, themeMode } = useThemeStore();
 
   const { profile } = useLaundryStore();
   const updateMutation = useUpdateProfile();
@@ -173,13 +166,16 @@ export default function LocationScreen() {
     ? (isAr ? selectedCity.nameAr : selectedCity.nameEn)
     : t('location.selectCity');
 
+  const styles = getStyles(colors);
+
   // ─── Render ───
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={24} color={COLORS.text} />
+          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('profile.location')}</Text>
         <View style={{ width: 40 }} />
@@ -202,7 +198,7 @@ export default function LocationScreen() {
           ]}>
             {countryLabel}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={COLORS.gray} />
+          <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* ─── 2. City Picker ─── */}
@@ -226,7 +222,7 @@ export default function LocationScreen() {
           ]}>
             {cityLabel}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={selectedCountry ? COLORS.gray : '#ccc'} />
+          <Ionicons name="chevron-down" size={20} color={selectedCountry ? colors.textSecondary : colors.textMuted} />
         </TouchableOpacity>
 
         {/* ─── 3. GPS Button ─── */}
@@ -237,9 +233,9 @@ export default function LocationScreen() {
             disabled={isLocating}
           >
             {isLocating ? (
-              <ActivityIndicator color={COLORS.primary} size="small" />
+              <ActivityIndicator color={colors.primary} size="small" />
             ) : (
-              <Ionicons name="locate" size={22} color={COLORS.primary} />
+              <Ionicons name="locate" size={22} color={colors.primary} />
             )}
             <Text style={[styles.gpsButtonText, isRTL && { marginRight: 10, marginLeft: 0 }]}>
               {t('location.useCurrentLocation')}
@@ -272,7 +268,7 @@ export default function LocationScreen() {
             </MapView>
           ) : (
             <View style={styles.mapPlaceholder}>
-              <Ionicons name="map-outline" size={48} color="#ccc" />
+              <Ionicons name="map-outline" size={48} color={colors.textMuted} />
               <Text style={styles.mapPlaceholderText}>
                 {t('location.selectCountryCityFirst')}
               </Text>
@@ -283,7 +279,7 @@ export default function LocationScreen() {
         {/* Coordinates display */}
         {markerPosition && (
           <View style={[styles.coordsRow, isRTL && { flexDirection: 'row-reverse' }]}>
-            <Ionicons name="location" size={16} color={COLORS.primary} />
+            <Ionicons name="location" size={16} color={colors.primary} />
             <Text style={styles.coordsText}>
               {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
             </Text>
@@ -303,7 +299,7 @@ export default function LocationScreen() {
           disabled={!bothSelected || !markerPosition || updateMutation.isPending}
         >
           {updateMutation.isPending ? (
-            <ActivityIndicator color={COLORS.white} />
+            <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.saveButtonText}>{t('profile.saveLocation')}</Text>
           )}
@@ -317,7 +313,7 @@ export default function LocationScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('location.selectCountry')}</Text>
               <TouchableOpacity onPress={() => setCountryModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -337,7 +333,7 @@ export default function LocationScreen() {
                     ]}>
                       {isAr ? item.nameAr : item.nameEn}
                     </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={COLORS.primary} />}
+                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                   </TouchableOpacity>
                 );
               }}
@@ -353,7 +349,7 @@ export default function LocationScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('location.selectCity')}</Text>
               <TouchableOpacity onPress={() => setCityModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -373,7 +369,7 @@ export default function LocationScreen() {
                     ]}>
                       {isAr ? item.nameAr : item.nameEn}
                     </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={COLORS.primary} />}
+                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                   </TouchableOpacity>
                 );
               }}
@@ -386,10 +382,10 @@ export default function LocationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -397,9 +393,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   backButton: {
     width: 40,
@@ -409,7 +405,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   scrollContent: {
     padding: 20,
@@ -417,7 +413,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: colors.textSecondary,
     marginBottom: 8,
     fontWeight: '500',
   },
@@ -432,22 +428,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 52,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: 10,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
   },
   pickerDisabled: {
-    backgroundColor: '#f5f5f5',
-    borderColor: '#eee',
+    backgroundColor: colors.surface2,
+    borderColor: colors.border,
   },
   pickerText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
   },
   pickerPlaceholder: {
-    color: COLORS.lightGray,
+    color: colors.textMuted,
   },
 
   // ─── GPS Button ───
@@ -458,15 +454,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.surface2,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#d0e3ff',
+    borderColor: colors.border,
   },
   gpsButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.primary,
+    color: colors.primary,
     marginLeft: 10,
   },
 
@@ -477,7 +473,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   map: {
     flex: 1,
@@ -486,12 +482,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.surface2,
   },
   mapPlaceholderText: {
     marginTop: 12,
     fontSize: 14,
-    color: COLORS.lightGray,
+    color: colors.textMuted,
     textAlign: 'center',
   },
 
@@ -504,29 +500,29 @@ const styles = StyleSheet.create({
   },
   coordsText: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: colors.textSecondary,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 
   // ─── Footer ───
   footer: {
     padding: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 54,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   saveButtonDisabled: {
-    backgroundColor: '#aaa',
+    backgroundColor: colors.border,
   },
   saveButtonText: {
-    color: COLORS.white,
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -538,7 +534,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '60%',
@@ -550,12 +546,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   listItem: {
     flexDirection: 'row',
@@ -564,18 +560,19 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   listItemSelected: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.surface2,
   },
   listItemText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
   },
   listItemTextSelected: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });
+

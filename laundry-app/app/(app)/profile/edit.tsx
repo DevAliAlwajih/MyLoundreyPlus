@@ -16,20 +16,16 @@ import { useLaundryStore } from '../../../stores/laundryStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { useUpdateProfile, useUploadLogo, useDeleteLogo } from '../../../hooks/useLaundryProfile';
 import { useUpdateMe, useRequestEmailChange, useConfirmEmailChange } from '../../../hooks/useUserProfile';
+import { useThemeStore } from '../../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  error: '#e74c3c',
-  text: '#333',
-  gray: '#666',
-  border: '#ddd'
-};
+
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === 'rtl';
+  const { colors, themeMode } = useThemeStore();
 
   const { profile } = useLaundryStore();
   const { user, updateFullName, updateEmail } = useAuthStore();
@@ -180,7 +176,7 @@ export default function EditProfileScreen() {
           updateLaundryMutation.mutateAsync({
             name: data.name,
             nameAr: data.nameAr,
-            phoneNumber: data.phone,
+            phone: data.phone,
             tax_enabled: data.tax_enabled ?? false,
             tax_rate: data.tax_enabled && data.tax_rate ? Number(data.tax_rate) : 0,
             urgency_enabled: data.urgency_enabled ?? false,
@@ -204,16 +200,18 @@ export default function EditProfileScreen() {
   };
 
   const isSaving = updateLaundryMutation.isPending || updateMeMutation.isPending;
+  const styles = getStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color="#333" />
+            <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('profile.edit')}</Text>
           <View style={{ width: 40 }} />
@@ -239,13 +237,13 @@ export default function EditProfileScreen() {
             </View>
             <View style={[styles.logoActions, isRTL && { alignItems: 'flex-end' }]}>
               <TouchableOpacity style={styles.uploadBtn} onPress={handlePickImage} disabled={uploadLogoMutation.isPending}>
-                <Ionicons name="cloud-upload-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="cloud-upload-outline" size={20} color={colors.primary} />
                 <Text style={styles.uploadBtnText}>{t('profile.uploadLogo')}</Text>
               </TouchableOpacity>
               {profile?.logoUrl && (
                 <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteLogo} disabled={deleteLogoMutation.isPending}>
-                  <Ionicons name="trash-outline" size={20} color={COLORS.error} />
-                  {deleteLogoMutation.isPending ? <ActivityIndicator color={COLORS.error} size="small"/> : <Text style={styles.deleteBtnText}>{t('profile.deleteLogo')}</Text>}
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                  {deleteLogoMutation.isPending ? <ActivityIndicator color={colors.error} size="small"/> : <Text style={styles.deleteBtnText}>{t('profile.deleteLogo')}</Text>}
                 </TouchableOpacity>
               )}
             </View>
@@ -351,7 +349,12 @@ export default function EditProfileScreen() {
                   control={control}
                   name="tax_enabled"
                   render={({ field: { onChange, value } }) => (
-                    <Switch value={value} onValueChange={onChange} trackColor={{ true: COLORS.primary }} />
+                    <Switch
+                      value={value}
+                      onValueChange={onChange}
+                      trackColor={{ false: colors.border, true: colors.primary }}
+                      thumbColor={value ? colors.surface : colors.textMuted}
+                    />
                   )}
                 />
               </View>
@@ -372,7 +375,7 @@ export default function EditProfileScreen() {
                           onChangeText={onChange}
                           value={value}
                         />
-                        <Text style={{ paddingHorizontal: 16, color: COLORS.gray, fontWeight: 'bold' }}>%</Text>
+                        <Text style={{ paddingHorizontal: 16, color: colors.textSecondary, fontWeight: 'bold' }}>%</Text>
                       </View>
                       {errors.tax_rate && <Text style={[styles.errorText, isRTL && styles.textRight]}>{errors.tax_rate.message}</Text>}
                     </View>
@@ -387,7 +390,12 @@ export default function EditProfileScreen() {
                   control={control}
                   name="urgency_enabled"
                   render={({ field: { onChange, value } }) => (
-                    <Switch value={value} onValueChange={onChange} trackColor={{ true: COLORS.primary }} />
+                    <Switch
+                      value={value}
+                      onValueChange={onChange}
+                      trackColor={{ false: colors.border, true: colors.primary }}
+                      thumbColor={value ? colors.surface : colors.textMuted}
+                    />
                   )}
                 />
               </View>
@@ -408,7 +416,7 @@ export default function EditProfileScreen() {
                           onChangeText={onChange}
                           value={value}
                         />
-                        <Text style={{ paddingHorizontal: 16, color: COLORS.gray }}>{t('common.sar')}</Text>
+                        <Text style={{ paddingHorizontal: 16, color: colors.textSecondary }}>{t('common.sar')}</Text>
                       </View>
                       {errors.urgency_fee && <Text style={[styles.errorText, isRTL && styles.textRight]}>{errors.urgency_fee.message}</Text>}
                     </View>
@@ -444,7 +452,7 @@ export default function EditProfileScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('profile.changeEmail')}</Text>
               <TouchableOpacity onPress={() => { setEmailModalVisible(false); setEmailStep(1); setNewEmail(''); setOtp(''); }}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             
@@ -469,7 +477,7 @@ export default function EditProfileScreen() {
               </View>
             ) : (
               <View style={styles.modalBody}>
-                <Text style={[styles.label, { color: COLORS.primary, marginBottom: 16 }, isRTL && styles.textRight]}>
+                <Text style={[styles.label, { color: colors.primary, marginBottom: 16 }, isRTL && styles.textRight]}>
                   {t('profile.emailOtpSent')}
                 </Text>
                 <Text style={[styles.label, isRTL && styles.textRight]}>OTP</Text>
@@ -498,10 +506,10 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -510,8 +518,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   backButton: {
     width: 40,
@@ -521,7 +529,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   scrollContent: {
     padding: 20,
@@ -531,18 +539,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 30,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#eee'
+    borderColor: colors.border
   },
   logoContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
     overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.surface2,
     marginRight: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -572,12 +580,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#eef5ff',
+    backgroundColor: colors.surface2,
     borderRadius: 8,
     alignSelf: 'flex-start'
   },
   uploadBtnText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600'
   },
   deleteBtn: {
@@ -586,12 +594,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#fff0f0',
+    backgroundColor: colors.surface2,
     borderRadius: 8,
     alignSelf: 'flex-start'
   },
   deleteBtnText: {
-    color: COLORS.error,
+    color: colors.error,
     fontWeight: '600'
   },
   form: {
@@ -599,7 +607,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
     fontWeight: '500',
   },
@@ -612,12 +620,12 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   emailContainer: {
     flexDirection: 'row',
@@ -627,38 +635,38 @@ const styles = StyleSheet.create({
   },
   emailInput: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    color: '#888'
+    backgroundColor: colors.surface2,
+    color: colors.textMuted
   },
   changeEmailBtn: {
     height: 50,
     justifyContent: 'center',
     paddingHorizontal: 16,
-    backgroundColor: '#eef5ff',
+    backgroundColor: colors.surface2,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d0e3ff'
+    borderColor: colors.border
   },
   changeEmailText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600'
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.error,
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.border,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
@@ -675,7 +683,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -690,17 +698,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333'
+    color: colors.text
   },
   modalBody: {
     flex: 1
   },
   sectionContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: colors.border,
     marginBottom: 16,
   },
   switchRow: {
@@ -713,9 +721,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     overflow: 'hidden',
   }
 });
+

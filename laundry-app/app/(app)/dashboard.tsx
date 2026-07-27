@@ -11,12 +11,13 @@ import {
   ActivityIndicator,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
 import { useLaundryStore } from '../../stores/laundryStore';
 import { useBookings } from '../../hooks/useBookings';
@@ -191,6 +192,27 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { i18n } = useTranslation();
   const isAr = i18n.language === 'ar';
+  const queryClient = useQueryClient();
+
+  const [isFocused, setIsFocused] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, [])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }),
+      queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+      queryClient.invalidateQueries({ queryKey: ['invoices'] }),
+    ]);
+    setRefreshing(false);
+  }, [queryClient]);
 
   const { profile } = useLaundryStore();
   const laundryName = isAr
@@ -214,6 +236,7 @@ export default function DashboardScreen() {
       };
     },
     staleTime: 2 * 60 * 1000,
+    refetchInterval: isFocused ? 5000 : false,
   });
 
   // Pending bookings count
@@ -230,6 +253,14 @@ export default function DashboardScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={[PRIMARY]} 
+            tintColor={PRIMARY}
+          />
+        }
       >
         {/* ── Header ── */}
         <View style={styles.header}>

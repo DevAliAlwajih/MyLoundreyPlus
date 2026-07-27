@@ -15,7 +15,8 @@ export interface RememberedAccount {
   email: string;
   fullName: string;
   laundryName?: string;
-  logoUrl?: string;
+  phone?: string;
+  logoUrl?: string | null;
 }
 
 interface AuthState {
@@ -35,6 +36,7 @@ interface AuthState {
   checkAuthStatus: () => Promise<void>;
   updateFullName: (name: string) => Promise<void>;
   updateEmail: (email: string) => Promise<void>;
+  updateRememberedAccount: (data: Partial<RememberedAccount>) => Promise<void>;
   removeRememberedAccount: () => Promise<void>;
   setPreviewMode: (val: boolean) => void;
 }
@@ -179,6 +181,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const updatedUser = { ...user, email };
     await SecureStore.setItemAsync('user', JSON.stringify(updatedUser));
     set({ user: updatedUser });
+  },
+
+  updateRememberedAccount: async (data: Partial<RememberedAccount>) => {
+    const { rememberedAccount } = get();
+    if (!rememberedAccount) return;
+    
+    const updated = { ...rememberedAccount, ...data };
+    await SecureStore.setItemAsync('remembered_account', JSON.stringify(updated));
+    set({ rememberedAccount: updated });
   },
 
   removeRememberedAccount: async () => {

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { WorkingHour } from '../../stores/laundryStore';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface WorkingHourRowProps {
   item: WorkingHour;
@@ -11,6 +12,7 @@ interface WorkingHourRowProps {
 
 export const WorkingHourRow: React.FC<WorkingHourRowProps> = ({ item, onChange }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
   const [showOpenPicker, setShowOpenPicker] = useState(false);
   const [showClosePicker, setShowClosePicker] = useState(false);
 
@@ -57,13 +59,15 @@ export const WorkingHourRow: React.FC<WorkingHourRowProps> = ({ item, onChange }
     onChange({ ...item, isOpen: val });
   };
 
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.dayHeader}>
         <Text style={styles.dayText}>{t(`profile.days.${item.day}`)}</Text>
         <Switch
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
-          thumbColor={item.isOpen ? '#1a5fa8' : '#f4f3f4'}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={item.isOpen ? colors.surface : colors.textMuted}
           onValueChange={toggleSwitch}
           value={item.isOpen}
         />
@@ -138,14 +142,14 @@ export const WorkingHourRow: React.FC<WorkingHourRowProps> = ({ item, onChange }
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     marginVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: colors.border,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -155,14 +159,14 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   timesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: colors.border,
     paddingTop: 12,
   },
   timeBlock: {
@@ -171,15 +175,15 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   timeValue: {
     fontSize: 16,
-    color: '#1a5fa8',
+    color: colors.primary,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: colors.surface2,
     borderRadius: 6,
     overflow: 'hidden',
   },
@@ -187,12 +191,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: 'center',
     paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.surface2,
     borderRadius: 6,
   },
   closedText: {
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: 'bold',
   },
 });
+

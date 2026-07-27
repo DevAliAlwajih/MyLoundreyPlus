@@ -10,17 +10,15 @@ import { useTranslation } from 'react-i18next';
 import { OTPInput } from '../../components/auth/OTPInput';
 import { PasswordInput } from '../../components/auth/PasswordInput';
 import { useSendOtp, useVerifyOtpAndResetPassword } from '../../hooks/useAuth';
+import { useThemeStore } from '../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  error: '#e74c3c',
-  success: '#2ecc71'
-};
+
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors, themeMode } = useThemeStore();
   
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
@@ -113,8 +111,11 @@ export default function ForgotPasswordScreen() {
     );
   };
 
+  const styles = getStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -125,7 +126,7 @@ export default function ForgotPasswordScreen() {
             if (step > 1) setStep((prev) => (prev - 1) as any);
             else router.back();
           }}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.header}>
@@ -156,6 +157,7 @@ export default function ForgotPasswordScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  placeholderTextColor={colors.textMuted}
                 />
 
                 <TouchableOpacity 
@@ -235,10 +237,10 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -256,36 +258,36 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 8,
   },
   errorBox: {
-    backgroundColor: '#fdecea',
+    backgroundColor: colors.surface2,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#f5c6cb'
+    borderColor: colors.error
   },
   errorBoxText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center'
   },
   successBox: {
-    backgroundColor: '#e8f8f5',
+    backgroundColor: colors.surface2,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#c3e6cb'
+    borderColor: colors.success
   },
   successBoxText: {
-    color: COLORS.success,
+    color: colors.success,
     fontSize: 14,
     textAlign: 'center'
   },
@@ -294,24 +296,24 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
     fontWeight: '500',
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     textAlign: 'right',
     marginBottom: 24,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
@@ -328,12 +330,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   resendText: {
-    color: '#888',
+    color: colors.textMuted,
     fontSize: 14,
   },
   resendLink: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
+

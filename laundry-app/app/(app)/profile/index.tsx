@@ -8,18 +8,18 @@ import { useProfile } from '../../../hooks/useLaundryProfile';
 import { ProfileSkeleton } from '../../../components/profile/ProfileSkeleton';
 import { SubscriptionBadge } from '../../../components/profile/SubscriptionBadge';
 import { LogoUploader } from '../../../components/profile/LogoUploader';
+import { useThemeStore } from '../../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  text: '#333',
-  border: '#eee',
-};
+
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { colors, themeMode } = useThemeStore();
   const { data: profile, isLoading, isError, refetch, isRefetching } = useProfile();
+
+  const styles = getStyles(colors);
 
   if (isLoading && !profile) {
     return <ProfileSkeleton />;
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   if (isError || !profile) {
     return (
       <SafeAreaView style={styles.centerContainer}>
+        <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
         <Text style={styles.errorText}>{t('auth.errors.default')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryText}>{t('profile.retry')}</Text>
@@ -52,6 +53,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -76,11 +78,11 @@ export default function ProfileScreen() {
 
         <View style={styles.card}>
           <View style={styles.cardRow}>
-            <Ionicons name="call-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="call-outline" size={20} color={colors.primary} />
             <Text style={styles.cardText}>{profile.phone || '--'}</Text>
           </View>
           <View style={styles.cardRow}>
-            <Ionicons name="mail-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="mail-outline" size={20} color={colors.primary} />
             <Text style={styles.cardText}>{profile.email || '--'}</Text>
           </View>
         </View>
@@ -91,13 +93,13 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(app)/profile/edit')}
           >
             <View style={styles.actionIcon}>
-              <Ionicons name="information-circle-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="information-circle-outline" size={24} color={colors.primary} />
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionTitle}>{t('profile.edit')}</Text>
               <Text style={styles.actionSubtitle} numberOfLines={1}>{displayAddress || '--'}</Text>
             </View>
-            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color="#ccc" />
+            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -105,7 +107,7 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(app)/profile/location')}
           >
             <View style={styles.actionIcon}>
-              <Ionicons name="location-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="location-outline" size={24} color={colors.primary} />
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionTitle}>{t('profile.location')}</Text>
@@ -113,7 +115,7 @@ export default function ProfileScreen() {
                 {profile.latitude && profile.longitude ? `${profile.latitude.toFixed(4)}, ${profile.longitude.toFixed(4)}` : '--'}
               </Text>
             </View>
-            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color="#ccc" />
+            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -121,13 +123,13 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(app)/profile/working-hours')}
           >
             <View style={styles.actionIcon}>
-              <Ionicons name="time-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="time-outline" size={24} color={colors.primary} />
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionTitle}>{t('profile.workingHours')}</Text>
               <Text style={styles.actionSubtitle}>{getTodayHours()}</Text>
             </View>
-            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color="#ccc" />
+            <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -135,16 +137,16 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 40,
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   infoCenter: {
     alignItems: 'center',
@@ -167,22 +169,22 @@ const styles = StyleSheet.create({
   laundryName: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 8,
   },
   expiryDate: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     marginHorizontal: 20,
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   cardRow: {
     flexDirection: 'row',
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     marginRight: 12,
     fontSize: 16,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
     textAlign: 'left',
   },
@@ -203,18 +205,18 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   actionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: colors.surface2,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -227,23 +229,23 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'left',
   },
   actionSubtitle: {
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     marginTop: 4,
     textAlign: 'left',
   },
   errorText: {
-    color: '#e74c3c',
+    color: colors.error,
     marginBottom: 16,
   },
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   retryText: {
@@ -251,3 +253,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { PasswordInput } from '../auth/PasswordInput';
 import { useChangePassword } from '../../hooks/useSettings';
+import { useThemeStore } from '../../stores/themeStore';
 
 const schema = z.object({
   currentPassword: z.string().min(1, 'Required'),
@@ -27,6 +28,7 @@ interface ChangePasswordModalProps {
 export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onClose }) => {
   const { t } = useTranslation();
   const mutation = useChangePassword();
+  const { colors } = useThemeStore();
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -49,11 +51,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visibl
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.sheet, { backgroundColor: colors.surface }]}>
             <View style={styles.header}>
-              <Text style={styles.title}>{t('settings.changePassword')}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{t('settings.changePassword')}</Text>
               <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -97,7 +99,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visibl
             />
 
             <TouchableOpacity 
-              style={[styles.submitBtn, mutation.isPending && styles.disabledBtn]} 
+              style={[styles.submitBtn, { backgroundColor: colors.primary }, mutation.isPending && styles.disabledBtn]} 
               onPress={handleSubmit(onSubmit)} 
               disabled={mutation.isPending}
             >
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -134,7 +135,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   submitBtn: {
-    backgroundColor: '#1a5fa8',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',

@@ -2,6 +2,7 @@ import React, { forwardRef, useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, TextInputProps, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface PasswordInputProps extends TextInputProps {
   error?: string;
@@ -11,15 +12,16 @@ export const PasswordInput = forwardRef<TextInput, PasswordInputProps>(
   ({ error, style, ...props }, ref) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const { t } = useTranslation();
+    const { colors } = useThemeStore();
 
     return (
       <View style={styles.container}>
-        <View style={[styles.inputContainer, error ? styles.inputError : null]}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }, error ? { borderColor: colors.error } : null]}>
           <TextInput
             ref={ref}
-            style={[styles.input, style]}
+            style={[styles.input, { color: colors.text }, style]}
             secureTextEntry={!isPasswordVisible}
-            placeholderTextColor="#888"
+            placeholderTextColor={colors.textMuted}
             autoCapitalize="none"
             {...props}
           />
@@ -31,11 +33,11 @@ export const PasswordInput = forwardRef<TextInput, PasswordInputProps>(
             <Ionicons
               name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color="#666"
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
       </View>
     );
   }
@@ -52,19 +54,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  inputError: {
-    borderColor: '#e74c3c',
   },
   input: {
     flex: 1,
     height: 50,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#333',
     textAlign: 'right',
   },
   iconContainer: {
@@ -73,7 +69,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: '#e74c3c',
     fontSize: 12,
     marginTop: 4,
     textAlign: 'left',

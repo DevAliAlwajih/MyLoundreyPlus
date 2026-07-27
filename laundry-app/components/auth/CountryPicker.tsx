@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface Country {
   code: string;
@@ -27,8 +28,10 @@ interface CountryPickerProps {
 
 export const CountryPicker: React.FC<CountryPickerProps> = ({ selectedCode, onSelect, language = 'ar' }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const { colors } = useThemeStore();
 
   const selectedCountry = GULF_COUNTRIES.find((c) => c.code === selectedCode) || GULF_COUNTRIES[0];
+  const styles = getStyles(colors);
 
   return (
     <>
@@ -39,7 +42,7 @@ export const CountryPicker: React.FC<CountryPickerProps> = ({ selectedCode, onSe
       >
         <Text style={styles.flagText}>{selectedCountry.flag}</Text>
         <Text style={styles.codeText}>{selectedCountry.code}</Text>
-        <Ionicons name="chevron-down" size={16} color="#666" style={{ marginLeft: 4 }} />
+        <Ionicons name="chevron-down" size={16} color={colors.textSecondary} style={{ marginLeft: 4 }} />
       </TouchableOpacity>
 
       <Modal
@@ -55,7 +58,7 @@ export const CountryPicker: React.FC<CountryPickerProps> = ({ selectedCode, onSe
                 {language === 'ar' ? 'اختر الدولة' : 'Select Country'}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -88,13 +91,13 @@ export const CountryPicker: React.FC<CountryPickerProps> = ({ selectedCode, onSe
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   pickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     borderRightWidth: 1,
-    borderRightColor: '#ddd',
+    borderRightColor: colors.border,
     height: '100%',
   },
   flagText: {
@@ -103,20 +106,20 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
-    paddingBottom: 30, // Safe area for newer iPhones
+    paddingBottom: 30,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -124,22 +127,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   countryItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: colors.border,
   },
   countryItemSelected: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: colors.surface2,
   },
   itemFlag: {
     fontSize: 24,
@@ -148,11 +151,12 @@ const styles = StyleSheet.create({
   itemName: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   itemCode: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#666',
+    color: colors.textSecondary,
   },
 });
+

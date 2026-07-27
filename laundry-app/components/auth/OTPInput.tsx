@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, I18nManager } from 'react-native';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface OTPInputProps {
   length: number;
@@ -10,6 +11,7 @@ interface OTPInputProps {
 export const OTPInput: React.FC<OTPInputProps> = ({ length, value, onChange }) => {
   const [otpArray, setOtpArray] = useState<string[]>(Array(length).fill(''));
   const inputsRef = useRef<Array<TextInput | null>>([]);
+  const { colors } = useThemeStore();
 
   useEffect(() => {
     // Sync external value to internal array
@@ -63,6 +65,8 @@ export const OTPInput: React.FC<OTPInputProps> = ({ length, value, onChange }) =
     }
   };
 
+  const styles = getStyles(colors);
+
   return (
     <View style={[styles.container, I18nManager.isRTL && styles.rtlContainer]}>
       {otpArray.map((digit, index) => (
@@ -78,13 +82,14 @@ export const OTPInput: React.FC<OTPInputProps> = ({ length, value, onChange }) =
           selectTextOnFocus
           // Force LTR for OTP numbers
           textAlign="center"
+          placeholderTextColor={colors.textMuted}
         />
       ))}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -98,13 +103,14 @@ const styles = StyleSheet.create({
     width: 45,
     height: 55,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
     fontSize: 24,
-    color: '#333',
-    backgroundColor: '#fff',
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   inputFilled: {
-    borderColor: '#1a5fa8',
+    borderColor: colors.primary,
   },
 });
+

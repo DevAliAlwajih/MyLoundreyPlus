@@ -6,7 +6,9 @@ import * as SecureStore from 'expo-secure-store';
 import * as Linking from 'expo-linking';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../../../stores/authStore';
+import { useThemeStore } from '../../../stores/themeStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useUpdateNotificationPrefs } from '../../../hooks/useSettings';
 import { SettingsSection } from '../../../components/settings/SettingsSection';
@@ -28,18 +30,14 @@ export default function SettingsScreen() {
   const updatePrefsMutation = useUpdateNotificationPrefs();
 
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { colors, themeMode, toggleTheme } = useThemeStore();
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const [biometricTypeStr, setBiometricTypeStr] = useState<string | null>(null);
 
   useEffect(() => {
     // fetchNotificationPrefs(); // مؤجلة لمرحلة الإعدادات الشخصية
     fetchSubscription();
-    
-    // Load theme preference
-    SecureStore.getItemAsync('appTheme').then(theme => {
-      if (theme === 'dark') setIsDarkMode(true);
-    });
+
 
     SecureStore.getItemAsync('biometric_enabled').then(val => {
       setIsBiometricEnabled(val === 'true');
@@ -128,10 +126,8 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleThemeToggle = async (val: boolean) => {
-    setIsDarkMode(val);
-    await SecureStore.setItemAsync('appTheme', val ? 'dark' : 'light');
-    // Note: Full dark mode UI implementation is pending for future phase
+  const handleThemeToggle = () => {
+    toggleTheme();
   };
 
   const handlePrefToggle = (key: keyof typeof notificationPrefs) => (val: boolean) => {
@@ -152,7 +148,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         <SettingsSection title={t('settings.business')}>
@@ -228,9 +225,9 @@ export default function SettingsScreen() {
           <SettingsRow 
             icon="moon-outline" 
             title={t('settings.theme')} 
-            value={isDarkMode ? t('settings.dark') : t('settings.light')}
+            value={themeMode === 'dark' ? t('settings.dark') : t('settings.light')}
             isSwitch
-            switchValue={isDarkMode}
+            switchValue={themeMode === 'dark'}
             onSwitchChange={handleThemeToggle}
             isLast
           />
@@ -320,7 +317,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContent: {
     paddingVertical: 20,

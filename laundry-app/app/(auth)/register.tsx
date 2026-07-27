@@ -14,18 +14,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { PasswordInput } from '../../components/auth/PasswordInput';
 import { CountryPicker } from '../../components/auth/CountryPicker';
 import { useRegister } from '../../hooks/useAuth';
+import { useThemeStore } from '../../stores/themeStore';
+import { StatusBar } from 'expo-status-bar';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-  error: '#e74c3c'
-};
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const registerMutation = useRegister();
   const [apiError, setApiError] = useState<string | null>(null);
+  const { colors, themeMode } = useThemeStore();
 
   const registerSchema = z.object({
     fullName: z.string().min(1, { message: t('auth.validation.required') }),
@@ -102,8 +100,11 @@ export default function RegisterScreen() {
     });
   };
 
+  const styles = getStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -111,7 +112,7 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
 
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.header}>
@@ -136,7 +137,7 @@ export default function RegisterScreen() {
                     <Image source={{ uri: value }} style={styles.logoImage} />
                   ) : (
                     <View style={styles.logoPlaceholder}>
-                      <Ionicons name="camera-outline" size={32} color="#888" />
+                      <Ionicons name="camera-outline" size={32} color={colors.textSecondary} />
                       <Text style={styles.logoText}>{t('auth.register.chooseLogo')}</Text>
                     </View>
                   )}
@@ -301,10 +302,10 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -322,18 +323,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   errorBox: {
-    backgroundColor: '#fdecea',
+    backgroundColor: colors.surface2,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#f5c6cb'
+    borderColor: colors.error
   },
   errorBoxText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center'
   },
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
     fontWeight: '500',
   },
@@ -352,39 +353,39 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     textAlign: 'right',
   },
   phoneContainer: {
     flexDirection: 'row',
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     overflow: 'hidden',
   },
   phoneInput: {
     flex: 1,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.error,
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerLinkText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   logoContainer: {
@@ -413,11 +414,11 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     overflow: 'hidden',
   },
   logoImage: {
@@ -429,14 +430,14 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   removeLogo: {
     marginTop: 8,
   },
   removeLogoText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
   },
 });

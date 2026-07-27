@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { useUploadLogo } from '../../hooks/useLaundryProfile';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface LogoUploaderProps {
   currentLogoUrl: string | null;
@@ -11,6 +12,7 @@ interface LogoUploaderProps {
 
 export const LogoUploader: React.FC<LogoUploaderProps> = ({ currentLogoUrl }) => {
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
   const uploadMutation = useUploadLogo();
   const [localUri, setLocalUri] = useState<string | null>(null);
 
@@ -31,7 +33,6 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ currentLogoUrl }) =>
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
       
-      // Check file size (rough estimate via asset.fileSize if available, though expo doesn't always provide it reliably)
       if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
         Alert.alert('Error', 'Image exceeds 5MB limit');
         return;
@@ -52,6 +53,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ currentLogoUrl }) =>
   };
 
   const displayUri = localUri || currentLogoUrl;
+  const styles = getStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -59,7 +61,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ currentLogoUrl }) =>
         {displayUri ? (
           <Image source={{ uri: displayUri }} style={styles.image} />
         ) : (
-          <Ionicons name="business" size={50} color="#ccc" />
+          <Ionicons name="business" size={50} color={colors.textMuted} />
         )}
         
         {uploadMutation.isPending && (
@@ -80,7 +82,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = ({ currentLogoUrl }) =>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     alignItems: 'center',
     marginVertical: 20,
@@ -92,12 +94,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.surface2,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#1a5fa8',
+    borderColor: colors.primary,
   },
   image: {
     width: '100%',
@@ -113,13 +115,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#1a5fa8',
+    backgroundColor: colors.primary,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: colors.surface,
   },
 });
+
