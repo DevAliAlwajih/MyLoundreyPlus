@@ -21,4 +21,8 @@ export class UpdateInvoiceStatusDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

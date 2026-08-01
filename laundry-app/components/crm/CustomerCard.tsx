@@ -12,11 +12,15 @@ interface CustomerCardProps {
 export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress }) => {
   const { t, i18n } = useTranslation();
 
-  const formattedDate = new Date(customer.lastVisit).toLocaleDateString(i18n.language, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const deferredBalance = Number(customer.deferredBalance) || 0;
+  const lastVisitDate = customer.lastVisit ? new Date(customer.lastVisit) : null;
+  const formattedDate = lastVisitDate && !isNaN(lastVisitDate.getTime())
+    ? lastVisitDate.toLocaleDateString(i18n.language, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '--';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -37,12 +41,12 @@ export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress })
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>{t('invoice.title')}</Text>
-          <Text style={styles.statValue}>{customer.totalInvoices} {t('crm.visits')}</Text>
+          <Text style={styles.statValue}>{customer.totalInvoices || 0} {t('crm.visits')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>{t('crm.deferredBalance')}</Text>
-          <Text style={[styles.statValue, customer.deferredBalance > 0 ? styles.debtValue : styles.noDebtValue]}>
-            {customer.deferredBalance.toFixed(2)} ر.س
+          <Text style={[styles.statValue, deferredBalance > 0 ? styles.debtValue : styles.noDebtValue]}>
+            {deferredBalance.toFixed(2)} ر.س
           </Text>
         </View>
       </View>

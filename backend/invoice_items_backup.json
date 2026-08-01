@@ -1,0 +1,16 @@
+[
+  {
+    "id": "48ebaba5-488d-4f21-a8e2-c51f397ead6a",
+    "invoiceId": "483d7e95-75ec-4869-be21-e4e41956bc22",
+    "itemId": "098cf217-405d-4d60-aef0-fb5056c15253",
+    "itemName": "بنطال ",
+    "unitPrice": "19",
+    "quantity": 3,
+    "subtotal": "57",
+    "createdAt": "2026-07-29T18:35:09.083Z",
+    "item_name_ar": "بنطال ",
+    "item_name_en": "A",
+    "service_type": "washing_and_ironing",
+    "processing_type": "normal"
+  }
+]

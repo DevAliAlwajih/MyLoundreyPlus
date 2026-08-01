@@ -9,6 +9,7 @@ import { ProfileSkeleton } from '../../../components/profile/ProfileSkeleton';
 import { SubscriptionBadge } from '../../../components/profile/SubscriptionBadge';
 import { LogoUploader } from '../../../components/profile/LogoUploader';
 import { useThemeStore } from '../../../stores/themeStore';
+import { useAuthStore } from '../../../stores/authStore';
 import { StatusBar } from 'expo-status-bar';
 
 
@@ -17,6 +18,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { colors, themeMode } = useThemeStore();
+  const { user } = useAuthStore();
   const { data: profile, isLoading, isError, refetch, isRefetching } = useProfile();
 
   const styles = getStyles(colors);
@@ -79,11 +81,11 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <Ionicons name="call-outline" size={20} color={colors.primary} />
-            <Text style={styles.cardText}>{profile.phone || '--'}</Text>
+            <Text style={styles.cardText}>{profile.phoneNumber || '--'}</Text>
           </View>
           <View style={styles.cardRow}>
             <Ionicons name="mail-outline" size={20} color={colors.primary} />
-            <Text style={styles.cardText}>{profile.email || '--'}</Text>
+            <Text style={styles.cardText}>{user?.email || '--'}</Text>
           </View>
         </View>
 

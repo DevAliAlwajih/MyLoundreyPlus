@@ -6,6 +6,7 @@ export declare class CreateItemDto {
     washing_price?: number;
     ironing_price?: number;
     sortOrder?: number;
+    isActive?: boolean;
 }
 export declare class UpdateItemDto {
     nameAr?: string;

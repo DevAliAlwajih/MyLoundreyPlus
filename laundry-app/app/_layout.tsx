@@ -8,13 +8,28 @@ import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { initI18n } from '../i18n'; // Bootstrap i18n
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 // Use existing colors if present or define primary
 const COLORS = {
   primary: '#1a5fa8',
   bg: '#f8f9fa'
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Keep cached data fresh for 5 mins
+      gcTime: 1000 * 60 * 60 * 24, // Keep cached data in memory for offline use
+      networkMode: 'offlineFirst',
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: true,
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
+    },
+  },
+});
 
 export default function RootLayout() {
   const checkAuthStatus = useAuthStore((s) => s.checkAuthStatus);
@@ -78,13 +93,16 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(app)" />
+          <Stack.Screen name="conversation-modal/[id]" options={{ presentation: 'modal' }} />
+        </Stack>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

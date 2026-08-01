@@ -9,11 +9,11 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
@@ -25,10 +25,10 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             adminReply: string;
         }[];
         meta: {
@@ -41,11 +41,11 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
@@ -57,17 +57,17 @@ export declare class SupportController {
         success: boolean;
         data: ({
             user: {
+                email: string;
                 fullName: string;
                 role: import(".prisma/client").$Enums.user_role;
-                email: string;
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
@@ -84,17 +84,17 @@ export declare class SupportController {
         success: boolean;
         data: {
             user: {
+                email: string;
                 fullName: string;
                 role: import(".prisma/client").$Enums.user_role;
-                email: string;
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
@@ -106,11 +106,11 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
@@ -122,11 +122,11 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
             subject: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;

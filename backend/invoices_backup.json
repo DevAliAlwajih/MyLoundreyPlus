@@ -1,0 +1,25 @@
+[
+  {
+    "id": "483d7e95-75ec-4869-be21-e4e41956bc22",
+    "invoiceNumber": "TEMP",
+    "laundryId": "5c45e10a-bd8e-46c0-995e-dc6c5fe29e4e",
+    "customerId": null,
+    "status": "received",
+    "paymentType": "cash",
+    "subtotal": "57",
+    "discount": "0",
+    "totalAmount": "57",
+    "paidAmount": "0",
+    "dueAmount": "57",
+    "notes": "بيد علي ",
+    "createdAt": "2026-07-29T18:35:09.083Z",
+    "updatedAt": "2026-07-29T18:35:09.083Z",
+    "completedAt": null,
+    "walk_in_name": "علي عبدالله ",
+    "walk_in_phone": "775547603",
+    "walk_in_location": "الكويت ",
+    "expected_delivery_at": null,
+    "tax_amount": "0",
+    "urgency_fee": "0"
+  }
+]

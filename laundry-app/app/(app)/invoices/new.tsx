@@ -9,27 +9,13 @@ import { useLaundryStore } from '../../../stores/laundryStore';
 import { useCatalogMenu, useCreateInvoice, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
 import { QRScannerModal } from '../../../components/invoices/QRScannerModal';
 import { UniqueIdModal } from '../../../components/invoices/UniqueIdModal';
+import { useThemeStore } from '../../../stores/themeStore';
 import api from '../../../lib/axios';
-
-const COLORS = {
-  primary: '#1a5fa8',
-  primaryLight: 'rgba(26, 95, 168, 0.08)',
-  primaryBorder: 'rgba(26, 95, 168, 0.3)',
-  success: '#16a34a',
-  successLight: 'rgba(22, 163, 74, 0.08)',
-  warning: '#d97706',
-  warningLight: 'rgba(217, 119, 6, 0.08)',
-  danger: '#dc2626',
-  grey: '#6b7280',
-  greyLight: '#f3f4f6',
-  border: '#e5e7eb',
-  white: '#ffffff',
-  text: '#1f2937'
-};
 
 export default function NewInvoiceScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
   const params = useLocalSearchParams<{ prefillName?: string; prefillPhone?: string; prefillNotes?: string }>();
   
   const store = useInvoiceStore();
@@ -169,29 +155,29 @@ export default function NewInvoiceScreen() {
       
       <View style={styles.customerActionRow}>
         <TouchableOpacity style={styles.customerActionBtn} onPress={() => setQrModalVisible(true)}>
-          <Ionicons name="qr-code" size={18} color={COLORS.white} />
+          <Ionicons name="qr-code" size={18} color={colors.surface} />
           <Text style={styles.customerActionBtnText}>مسح QR</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.customerActionBtn, styles.idBtn]} onPress={() => setIdModalVisible(true)}>
-          <Ionicons name="keypad" size={18} color={COLORS.primary} />
-          <Text style={[styles.customerActionBtnText, {color: COLORS.primary}]}>إدخال معرّف</Text>
+          <Ionicons name="keypad" size={18} color={colors.primary} />
+          <Text style={[styles.customerActionBtnText, {color: colors.primary}]}>إدخال معرّف</Text>
         </TouchableOpacity>
       </View>
-
-      {loadingCustomer && <ActivityIndicator color={COLORS.primary} style={{marginBottom: 10}} />}
-
+ 
+      {loadingCustomer && <ActivityIndicator color={colors.primary} style={{marginBottom: 10}} />}
+ 
       {store.customerId && (
         <View style={styles.verifiedBanner}>
           <View style={styles.verifiedBannerLeft}>
-            <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+            <Ionicons name="checkmark-circle" size={16} color={colors.success} />
             <Text style={styles.verifiedBannerText}>عميل مسجل — تم تعبئة البيانات تلقائياً</Text>
           </View>
           <TouchableOpacity onPress={() => store.clearCustomer()} style={styles.verifiedBannerClose}>
-            <Ionicons name="close" size={14} color={COLORS.grey} />
+            <Ionicons name="close" size={14} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       )}
-
+ 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>اسم العميل*</Text>
         <TextInput
@@ -199,10 +185,11 @@ export default function NewInvoiceScreen() {
           value={store.customerName}
           onChangeText={(val) => store.setCustomer(val, store.customerPhone, store.customerLocation, store.customerId)}
           placeholder="علي محمد الوجيه"
+          placeholderTextColor={colors.textMuted}
           textAlign={i18n.language === 'ar' ? 'right' : 'left'}
         />
       </View>
-
+ 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>رقم الهاتف</Text>
         <TextInput
@@ -211,10 +198,11 @@ export default function NewInvoiceScreen() {
           onChangeText={(val) => store.setCustomer(store.customerName, val, store.customerLocation, store.customerId)}
           keyboardType="phone-pad"
           placeholder="+967 775547603"
+          placeholderTextColor={colors.textMuted}
           textAlign={i18n.language === 'ar' ? 'right' : 'left'}
         />
       </View>
-
+ 
       <View style={[styles.inputContainer, {marginBottom: 0}]}>
         <Text style={styles.label}>الموقع</Text>
         <TextInput
@@ -222,12 +210,13 @@ export default function NewInvoiceScreen() {
           value={store.customerLocation}
           onChangeText={(val) => store.setCustomer(store.customerName, store.customerPhone, val, store.customerId)}
           placeholder="(اختياري)"
+          placeholderTextColor={colors.textMuted}
           textAlign={i18n.language === 'ar' ? 'right' : 'left'}
         />
       </View>
     </View>
   );
-
+ 
   // Section B
   const renderPartB = () => (
     <View style={styles.section}>
@@ -237,7 +226,7 @@ export default function NewInvoiceScreen() {
       <Text style={styles.sectionSubtitle}>اختر قسماً أو أكثر — عند الطباعة يظهر المحدد فقط</Text>
       
       {loadingCatalog ? (
-        <ActivityIndicator size="small" color={COLORS.primary} style={{margin: 16}} />
+        <ActivityIndicator size="small" color={colors.primary} style={{margin: 16}} />
       ) : categories.length === 0 ? (
         <Text style={styles.emptyText}>لا توجد أقسام</Text>
       ) : (
@@ -252,7 +241,7 @@ export default function NewInvoiceScreen() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.checkboxIcon, isSelected && styles.checkboxIconSelected]}>
-                  {isSelected && <Ionicons name="checkmark" size={12} color={COLORS.white} />}
+                  {isSelected && <Ionicons name="checkmark" size={12} color={colors.surface} />}
                 </View>
                 <Text style={[styles.categoryCardText, isSelected && styles.categoryCardTextSelected]}>
                   {cat.categoryName}
@@ -276,10 +265,11 @@ export default function NewInvoiceScreen() {
         </View>
         
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={18} color={COLORS.grey} style={{marginLeft: 8}} />
+          <Ionicons name="search" size={18} color={colors.textSecondary} style={{marginLeft: 8}} />
           <TextInput
             style={styles.searchInput}
             placeholder="بحث عن صنف..."
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             textAlign={i18n.language === 'ar' ? 'right' : 'left'}
@@ -287,7 +277,7 @@ export default function NewInvoiceScreen() {
         </View>
         
         {loadingCatalog ? (
-          <ActivityIndicator size="small" color={COLORS.primary} style={{margin: 20}} />
+          <ActivityIndicator size="small" color={colors.primary} style={{margin: 20}} />
         ) : filteredCategories.length === 0 ? (
           <Text style={styles.emptyText}>اختر قسماً من القائمة أعلاه لعرض الأصناف</Text>
         ) : (
@@ -309,72 +299,72 @@ export default function NewInvoiceScreen() {
                 {isExpanded && (
                   <View style={styles.accordionContent}>
                     {visibleItems.map(item => {
-                      const cartItem = store.cart.find(c => c.itemId === item.itemId);
-                      const isSelected = !!cartItem;
-                      const qty = cartItem ? cartItem.quantity : 0;
-                      const currentService = cartItem?.serviceType || 'washing_and_ironing';
-                      
-                      return (
-                        <View key={item.itemId} style={[styles.itemRow, isSelected && styles.itemRowSelected]}>
-                          <View style={styles.itemRowHeader}>
-                            <Text style={styles.itemName}>{item.nameAr}</Text>
-                            <Text style={styles.itemBasePrice}>{item.fullServicePrice.toFixed(2)} ر.س</Text>
-                          </View>
-                          
-                          <View style={styles.serviceTypesRow}>
-                            {[
-                              { id: 'washing_and_ironing', label: 'غسيل+كوي' },
-                              { id: 'washing_only', label: 'غسيل', hide: item.washingPrice === null },
-                              { id: 'ironing_only', label: 'كوي', hide: item.ironingPrice === null },
-                            ].filter(s => !s.hide).map(s => {
-                              const isActive = currentService === s.id && isSelected;
-                              return (
-                                <TouchableOpacity
-                                  key={s.id}
-                                  style={[styles.serviceTypeBtn, isActive ? styles.serviceTypeBtnActive : styles.serviceTypeBtnInactive]}
-                                  onPress={() => {
-                                    if (isSelected) store.updateServiceType(item.itemId, s.id as any);
-                                    else store.addItem(item, cat.categoryId, cat.categoryName, s.id as any);
-                                  }}
-                                >
-                                  <Text style={[styles.serviceTypeBtnText, isActive && styles.serviceTypeBtnTextActive]}>
-                                    {s.label}{isActive ? '✓' : ''}
-                                  </Text>
-                                </TouchableOpacity>
-                              );
-                            })}
-                          </View>
-                          
-                          <View style={styles.itemRowFooter}>
-                            <View style={styles.priceContainer}>
-                              <Text style={styles.priceLabel}>السعر: </Text>
-                              <TextInput
-                                style={styles.priceInput}
-                                value={isSelected ? (cartItem?.unitPrice || 0).toString() : item.fullServicePrice.toString()}
-                                onChangeText={(val) => {
-                                  if (isSelected) store.updateItemPrice(item.itemId, parseFloat(val) || 0);
-                                }}
-                                keyboardType="decimal-pad"
-                                editable={isSelected}
-                              />
-                              <Text style={styles.priceLabel}> ر.س</Text>
-                            </View>
-                            
-                            <View style={styles.stepper}>
-                              <TouchableOpacity style={styles.stepperBtn} onPress={() => handleItemQuantityChange(cat, item, -1)}>
-                                <Text style={styles.stepperText}>−</Text>
-                              </TouchableOpacity>
-                              <View style={styles.stepperValueContainer}>
-                                <Text style={styles.stepperValue}>{qty}</Text>
-                              </View>
-                              <TouchableOpacity style={styles.stepperBtn} onPress={() => handleItemQuantityChange(cat, item, 1)}>
-                                <Text style={styles.stepperText}>+</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-                      );
-                    })}
+                       const cartItem = store.cart.find(c => c.itemId === item.itemId);
+                       const isSelected = !!cartItem;
+                       const qty = cartItem ? cartItem.quantity : 0;
+                       const currentService = cartItem?.serviceType || 'washing_and_ironing';
+                       
+                       return (
+                         <View key={item.itemId} style={[styles.itemRow, isSelected && styles.itemRowSelected]}>
+                           <View style={styles.itemRowHeader}>
+                             <Text style={styles.itemName}>{item.nameAr}</Text>
+                             <Text style={styles.itemBasePrice}>{(Number(item.fullServicePrice) || 0).toFixed(2)} ر.س</Text>
+                           </View>
+                           
+                           <View style={styles.serviceTypesRow}>
+                             {[
+                               { id: 'washing_and_ironing', label: 'غسيل+كوي' },
+                               { id: 'washing_only', label: 'غسيل', hide: item.washingPrice === null },
+                               { id: 'ironing_only', label: 'كوي', hide: item.ironingPrice === null },
+                             ].filter(s => !s.hide).map(s => {
+                               const isActive = currentService === s.id && isSelected;
+                               return (
+                                 <TouchableOpacity
+                                   key={s.id}
+                                   style={[styles.serviceTypeBtn, isActive ? styles.serviceTypeBtnActive : styles.serviceTypeBtnInactive]}
+                                   onPress={() => {
+                                     if (isSelected) store.updateServiceType(item.itemId, s.id as any);
+                                     else store.addItem(item, cat.categoryId, cat.categoryName, s.id as any);
+                                   }}
+                                 >
+                                   <Text style={[styles.serviceTypeBtnText, isActive && styles.serviceTypeBtnTextActive]}>
+                                     {s.label}{isActive ? '✓' : ''}
+                                   </Text>
+                                 </TouchableOpacity>
+                               );
+                             })}
+                           </View>
+                           
+                           <View style={styles.itemRowFooter}>
+                             <View style={styles.priceContainer}>
+                               <Text style={styles.priceLabel}>السعر: </Text>
+                               <TextInput
+                                 style={styles.priceInput}
+                                 value={isSelected ? (cartItem?.unitPrice || 0).toString() : item.fullServicePrice.toString()}
+                                 onChangeText={(val) => {
+                                   if (isSelected) store.updateItemPrice(item.itemId, parseFloat(val) || 0);
+                                 }}
+                                 keyboardType="decimal-pad"
+                                 editable={isSelected}
+                               />
+                               <Text style={styles.priceLabel}> ر.س</Text>
+                             </View>
+                             
+                             <View style={styles.stepper}>
+                               <TouchableOpacity style={styles.stepperBtn} onPress={() => handleItemQuantityChange(cat, item, -1)}>
+                                 <Text style={styles.stepperText}>−</Text>
+                               </TouchableOpacity>
+                               <View style={styles.stepperValueContainer}>
+                                 <Text style={styles.stepperValue}>{qty}</Text>
+                               </View>
+                               <TouchableOpacity style={styles.stepperBtn} onPress={() => handleItemQuantityChange(cat, item, 1)}>
+                                 <Text style={styles.stepperText}>+</Text>
+                               </TouchableOpacity>
+                             </View>
+                           </View>
+                         </View>
+                       );
+                     })}
                   </View>
                 )}
               </View>
@@ -420,7 +410,7 @@ export default function NewInvoiceScreen() {
                 {pt.label}{isActive ? '✓' : ''}
               </Text>
               {pt.icon && (
-                <Ionicons name={pt.icon as any} size={14} color={COLORS.grey} style={{marginLeft: 4}} />
+                <Ionicons name={pt.icon as any} size={14} color={colors.textSecondary} style={{marginLeft: 4}} />
               )}
             </TouchableOpacity>
           );
@@ -437,7 +427,7 @@ export default function NewInvoiceScreen() {
         <Ionicons 
           name={store.isUrgent ? 'checkbox' : 'square-outline'} 
           size={24} 
-          color={store.isUrgent ? COLORS.primary : COLORS.grey} 
+          color={store.isUrgent ? colors.primary : colors.textSecondary} 
         />
         <Text style={styles.urgencyLabel}>طلب مستعجل</Text>
       </TouchableOpacity>
@@ -448,8 +438,8 @@ export default function NewInvoiceScreen() {
           <View style={styles.urgencyFeeInputContainer}>
             <TextInput
               style={styles.urgencyFeeInput}
-              value={store.urgencyFeeAmount.toFixed(2)}
-              editable={false} // Store computes it, so read-only for now unless store supports manual override
+              value={(Number(store.urgencyFeeAmount) || 0).toFixed(2)}
+              editable={false}
             />
             <Text style={styles.urgencyFeeCurrency}>ر.س</Text>
           </View>
@@ -468,7 +458,7 @@ export default function NewInvoiceScreen() {
       <View style={styles.totalsContainer}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>المجموع الفرعي:</Text>
-          <Text style={styles.totalValue}>{store.subtotal.toFixed(2)} ر.س</Text>
+          <Text style={styles.totalValue}>{(Number(store.subtotal) || 0).toFixed(2)} ر.س</Text>
         </View>
         
         <View style={styles.totalRow}>
@@ -485,26 +475,26 @@ export default function NewInvoiceScreen() {
               <Text style={styles.discountPercent}>%</Text>
             </View>
           </View>
-          <Text style={styles.discountValue}>- {store.discountAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.discountValue}>- {(Number(store.discountAmount) || 0).toFixed(2)} ر.س</Text>
         </View>
         
         {store.isUrgent && (
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>رسوم الاستعجال:</Text>
-            <Text style={styles.totalValue}>+ {store.urgencyFeeAmount.toFixed(2)} ر.س</Text>
+            <Text style={styles.totalValue}>+ {(Number(store.urgencyFeeAmount) || 0).toFixed(2)} ر.س</Text>
           </View>
         )}
         
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>ضريبة ({store.taxPercent}%):</Text>
-          <Text style={styles.totalValue}>+ {store.taxAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.totalValue}>+ {(Number(store.taxAmount) || 0).toFixed(2)} ر.س</Text>
         </View>
         
         <View style={styles.totalsDivider} />
         
         <View style={styles.totalRow}>
           <Text style={styles.finalTotalLabel}>الإجمالي:</Text>
-          <Text style={styles.finalTotalValue}>{store.total.toFixed(2)} ر.س</Text>
+          <Text style={styles.finalTotalValue}>{(Number(store.total) || 0).toFixed(2)} ر.س</Text>
         </View>
       </View>
       
@@ -515,6 +505,7 @@ export default function NewInvoiceScreen() {
           value={store.notes}
           onChangeText={store.setNotes}
           multiline
+          placeholderTextColor={colors.textMuted}
           textAlignVertical="top"
           textAlign={i18n.language === 'ar' ? 'right' : 'left'}
         />
@@ -525,11 +516,13 @@ export default function NewInvoiceScreen() {
           <Text style={styles.draftBtnText}>حفظ كمسودة</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.createBtn} onPress={() => handleCreate('received')} disabled={createMutation.isPending}>
-          {createMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.createBtnText}>✓ إنشاء الفاتورة</Text>}
+          {createMutation.isPending ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.createBtnText}>✓ إنشاء الفاتورة</Text>}
         </TouchableOpacity>
       </View>
     </View>
   );
+
+  const styles = getStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -538,7 +531,7 @@ export default function NewInvoiceScreen() {
       <KeyboardAvoidingView style={styles.flex1} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name={I18nManager.isRTL ? "arrow-forward" : "arrow-back"} size={24} color="#333" />
+            <Ionicons name={I18nManager.isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>إنشاء فاتورة جديدة</Text>
           <View style={{ width: 40 }} />
@@ -559,8 +552,8 @@ export default function NewInvoiceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.greyLight },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background === '#121212' ? '#1f1f1f' : '#f3f4f6' },
   flex1: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -568,21 +561,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center' },
-  title: { fontSize: 18, fontWeight: 'bold', color: COLORS.text },
+  title: { fontSize: 18, fontWeight: 'bold', color: colors.text },
   scrollContent: { padding: 16, paddingBottom: 40 },
   
   section: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   sectionHeaderContainer: {
     marginBottom: 12,
@@ -590,12 +583,12 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.grey,
+    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: COLORS.grey,
+    color: colors.textSecondary,
     marginBottom: 12,
   },
 
@@ -604,30 +597,34 @@ const styles = StyleSheet.create({
   customerActionBtn: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  idBtn: { backgroundColor: COLORS.primaryLight, borderWidth: 1, borderColor: COLORS.primaryBorder },
-  customerActionBtnText: { color: COLORS.white, fontWeight: 'bold', marginLeft: 6, fontSize: 13 },
+  idBtn: { 
+    backgroundColor: colors.background === '#121212' ? 'rgba(74, 144, 226, 0.15)' : 'rgba(26, 95, 168, 0.08)', 
+    borderWidth: 1, 
+    borderColor: colors.background === '#121212' ? 'rgba(74, 144, 226, 0.3)' : 'rgba(26, 95, 168, 0.3)' 
+  },
+  customerActionBtnText: { color: '#fff', fontWeight: 'bold', marginLeft: 6, fontSize: 13 },
   verifiedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.successLight,
+    backgroundColor: colors.background === '#121212' ? 'rgba(46, 204, 113, 0.15)' : 'rgba(46, 204, 113, 0.08)',
     padding: 10,
     borderRadius: 8,
     marginBottom: 16,
   },
   verifiedBannerLeft: { flexDirection: 'row', alignItems: 'center' },
-  verifiedBannerText: { color: COLORS.success, fontSize: 12, fontWeight: 'bold', marginLeft: 6 },
+  verifiedBannerText: { color: colors.success, fontSize: 12, fontWeight: 'bold', marginLeft: 6 },
   verifiedBannerClose: { padding: 4 },
   inputContainer: { marginBottom: 12 },
-  label: { fontSize: 13, color: COLORS.grey, marginBottom: 6 },
+  label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6 },
   input: {
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 10, fontSize: 14, color: COLORS.text, backgroundColor: COLORS.white,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 10, fontSize: 14, color: colors.text, backgroundColor: colors.background,
   },
 
   // Part B
@@ -641,62 +638,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  categoryCardSelected: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary },
-  categoryCardUnselected: { backgroundColor: COLORS.greyLight, borderColor: COLORS.border },
+  categoryCardSelected: { 
+    backgroundColor: colors.background === '#121212' ? 'rgba(74, 144, 226, 0.15)' : 'rgba(26, 95, 168, 0.08)', 
+    borderColor: colors.primary 
+  },
+  categoryCardUnselected: { 
+    backgroundColor: colors.background === '#121212' ? colors.surface2 : '#f3f4f6', 
+    borderColor: colors.border 
+  },
   checkboxIcon: {
-    width: 18, height: 18, borderRadius: 4, borderWidth: 1, borderColor: COLORS.grey,
+    width: 18, height: 18, borderRadius: 4, borderWidth: 1, borderColor: colors.textMuted,
     justifyContent: 'center', alignItems: 'center',
   },
-  checkboxIconSelected: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  categoryCardText: { fontSize: 14, color: COLORS.text },
-  categoryCardTextSelected: { fontWeight: 'bold', color: COLORS.primary },
-  emptyText: { textAlign: 'center', color: COLORS.grey, marginVertical: 12, fontSize: 14 },
+  checkboxIconSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  categoryCardText: { fontSize: 14, color: colors.text },
+  categoryCardTextSelected: { fontWeight: 'bold', color: colors.primary },
+  emptyText: { textAlign: 'center', color: colors.textSecondary, marginVertical: 12, fontSize: 14 },
 
   // Part C
-  searchContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, paddingHorizontal: 10, marginBottom: 16, backgroundColor: COLORS.greyLight },
-  searchInput: { flex: 1, paddingVertical: 8, fontSize: 14 },
+  searchContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: colors.border, 
+    borderRadius: 8, 
+    paddingHorizontal: 10, 
+    marginBottom: 16, 
+    backgroundColor: colors.background === '#121212' ? colors.surface2 : '#f3f4f6' 
+  },
+  searchInput: { flex: 1, paddingVertical: 8, fontSize: 14, color: colors.text },
   accordionBlock: { marginBottom: 12 },
   accordionHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  accordionTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.text, marginRight: 8 },
-  accordionLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  accordionTitle: { fontSize: 14, fontWeight: 'bold', color: colors.text, marginRight: 8 },
+  accordionLine: { flex: 1, height: 1, backgroundColor: colors.border },
   accordionContent: { marginTop: 8 },
   itemRow: {
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.surface,
   },
   itemRowSelected: {
     borderRightWidth: 3,
-    borderRightColor: COLORS.primary,
-    backgroundColor: COLORS.primaryLight,
+    borderRightColor: colors.primary,
+    backgroundColor: colors.background === '#121212' ? 'rgba(74, 144, 226, 0.15)' : 'rgba(26, 95, 168, 0.08)',
   },
   itemRowHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  itemName: { fontSize: 14, fontWeight: 'bold', color: COLORS.text },
-  itemBasePrice: { fontSize: 13, color: COLORS.grey },
+  itemName: { fontSize: 14, fontWeight: 'bold', color: colors.text },
+  itemBasePrice: { fontSize: 13, color: colors.textSecondary },
   serviceTypesRow: { flexDirection: 'row', gap: 6, marginBottom: 12 },
   serviceTypeBtn: {
     borderRadius: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  serviceTypeBtnActive: { backgroundColor: COLORS.primary },
-  serviceTypeBtnInactive: { backgroundColor: COLORS.greyLight },
-  serviceTypeBtnText: { fontSize: 11, color: COLORS.grey },
-  serviceTypeBtnTextActive: { color: COLORS.white, fontWeight: 'bold' },
+  serviceTypeBtnActive: { backgroundColor: colors.primary },
+  serviceTypeBtnInactive: { backgroundColor: colors.background === '#121212' ? colors.surface2 : '#f3f4f6' },
+  serviceTypeBtnText: { fontSize: 11, color: colors.textSecondary },
+  serviceTypeBtnTextActive: { color: '#fff', fontWeight: 'bold' },
   itemRowFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priceContainer: { flexDirection: 'row', alignItems: 'center' },
-  priceLabel: { fontSize: 12, color: COLORS.text },
+  priceLabel: { fontSize: 12, color: colors.text },
   priceInput: {
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, fontSize: 12, minWidth: 40, textAlign: 'center', backgroundColor: COLORS.white,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, fontSize: 12, minWidth: 40, textAlign: 'center', backgroundColor: colors.background, color: colors.text
   },
-  stepper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: 6, backgroundColor: COLORS.white },
+  stepper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 6, backgroundColor: colors.surface },
   stepperBtn: { paddingHorizontal: 10, paddingVertical: 4 },
-  stepperText: { fontSize: 14, fontWeight: 'bold', color: COLORS.text },
-  stepperValueContainer: { paddingHorizontal: 12, borderLeftWidth: 1, borderRightWidth: 1, borderColor: COLORS.border },
-  stepperValue: { fontSize: 14, fontWeight: 'bold', color: COLORS.text },
+  stepperText: { fontSize: 14, fontWeight: 'bold', color: colors.text },
+  stepperValueContainer: { paddingHorizontal: 12, borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.border },
+  stepperValue: { fontSize: 14, fontWeight: 'bold', color: colors.text },
 
   // Part D
   paymentGrid: { flexDirection: 'row', gap: 8, marginBottom: 16 },
@@ -708,40 +720,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  paymentBtnActive: { backgroundColor: COLORS.primary },
-  paymentBtnInactive: { backgroundColor: COLORS.greyLight, borderWidth: 0.5, borderColor: COLORS.border },
-  paymentBtnDisabled: { backgroundColor: COLORS.greyLight, opacity: 0.5 },
-  paymentBtnText: { fontSize: 12, color: COLORS.text },
-  paymentBtnTextActive: { color: COLORS.white, fontWeight: 'bold' },
-  paymentBtnTextDisabled: { color: COLORS.grey },
-  urgencyDivider: { height: 1, backgroundColor: COLORS.border, marginBottom: 16 },
+  paymentBtnActive: { backgroundColor: colors.primary },
+  paymentBtnInactive: { backgroundColor: colors.background === '#121212' ? colors.surface2 : '#f3f4f6', borderWidth: 0.5, borderColor: colors.border },
+  paymentBtnDisabled: { backgroundColor: colors.background === '#121212' ? colors.surface2 : '#f3f4f6', opacity: 0.5 },
+  paymentBtnText: { fontSize: 12, color: colors.text },
+  paymentBtnTextActive: { color: '#fff', fontWeight: 'bold' },
+  paymentBtnTextDisabled: { color: colors.textMuted },
+  urgencyDivider: { height: 1, backgroundColor: colors.border, marginBottom: 16 },
   urgencyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  urgencyLabel: { marginLeft: 8, fontSize: 14, color: COLORS.text, fontWeight: '500' },
+  urgencyLabel: { marginLeft: 8, fontSize: 14, color: colors.text, fontWeight: '500' },
   urgencyFeeRow: { flexDirection: 'row', alignItems: 'center', marginLeft: 32 },
-  urgencyFeeLabel: { fontSize: 12, color: COLORS.grey, marginRight: 8 },
-  urgencyFeeInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: 6, paddingHorizontal: 8, backgroundColor: COLORS.white },
-  urgencyFeeInput: { paddingVertical: 4, paddingHorizontal: 4, fontSize: 13, minWidth: 50, textAlign: 'center', color: COLORS.text },
-  urgencyFeeCurrency: { fontSize: 12, color: COLORS.grey },
+  urgencyFeeLabel: { fontSize: 12, color: colors.textSecondary, marginRight: 8 },
+  urgencyFeeInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 8, backgroundColor: colors.background },
+  urgencyFeeInput: { paddingVertical: 4, paddingHorizontal: 4, fontSize: 13, minWidth: 50, textAlign: 'center', color: colors.text },
+  urgencyFeeCurrency: { fontSize: 12, color: colors.textSecondary },
 
   // Part E
   totalsContainer: { marginBottom: 16 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  totalLabel: { fontSize: 13, color: COLORS.text },
-  totalValue: { fontSize: 13, fontWeight: '500', color: COLORS.text },
+  totalLabel: { fontSize: 13, color: colors.text },
+  totalValue: { fontSize: 13, fontWeight: '500', color: colors.text },
   discountRow: { flexDirection: 'row', alignItems: 'center' },
-  discountInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: 4, marginLeft: 8, backgroundColor: COLORS.white },
-  discountInput: { paddingHorizontal: 6, paddingVertical: 2, fontSize: 13, width: 40, textAlign: 'center' },
-  discountPercent: { paddingRight: 6, fontSize: 12, color: COLORS.grey },
-  discountValue: { fontSize: 13, color: COLORS.danger, fontWeight: '500' },
-  totalsDivider: { height: 1, backgroundColor: COLORS.border, marginVertical: 10 },
-  finalTotalLabel: { fontSize: 15, fontWeight: 'bold', color: COLORS.text },
-  finalTotalValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.primary },
+  discountInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 4, marginLeft: 8, backgroundColor: colors.background },
+  discountInput: { paddingHorizontal: 6, paddingVertical: 2, fontSize: 13, width: 40, textAlign: 'center', color: colors.text },
+  discountPercent: { paddingRight: 6, fontSize: 12, color: colors.textSecondary },
+  discountValue: { fontSize: 13, color: colors.error, fontWeight: '500' },
+  totalsDivider: { height: 1, backgroundColor: colors.border, marginVertical: 10 },
+  finalTotalLabel: { fontSize: 15, fontWeight: 'bold', color: colors.text },
+  finalTotalValue: { fontSize: 16, fontWeight: 'bold', color: colors.primary },
   notesContainer: { marginBottom: 20 },
-  notesLabel: { fontSize: 13, color: COLORS.grey, marginBottom: 6 },
-  notesInput: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 10, minHeight: 60, backgroundColor: COLORS.white, fontSize: 13 },
+  notesLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 6 },
+  notesInput: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 10, minHeight: 60, backgroundColor: colors.background, fontSize: 13, color: colors.text },
   actionButtonsRow: { flexDirection: 'row', gap: 12 },
-  draftBtn: { flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, paddingVertical: 12, alignItems: 'center', backgroundColor: COLORS.white },
-  draftBtnText: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  createBtn: { flex: 2, backgroundColor: COLORS.primary, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
-  createBtnText: { color: COLORS.white, fontSize: 14, fontWeight: 'bold' },
+  draftBtn: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 12, alignItems: 'center', backgroundColor: colors.surface },
+  draftBtnText: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  createBtn: { flex: 2, backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
+  createBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
 });

@@ -10,6 +10,10 @@ export class CreateCategoryDto {
   @IsInt()
   @Min(0)
   sortOrder?: number = 0;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 export class UpdateCategoryDto {

@@ -17,17 +17,17 @@ export declare class InvoiceLaundryController {
             paidAmount: number;
             dueAmount: number;
             id: string;
-            status: import(".prisma/client").$Enums.invoice_status;
             createdAt: Date;
-            invoiceNumber: string;
-            paymentType: import(".prisma/client").$Enums.payment_type;
-            walk_in_name: string;
             customer: {
                 id: string;
                 phoneNumber: string;
-                fullName: string;
                 uniqueId: string;
+                fullName: string;
             };
+            status: import(".prisma/client").$Enums.invoice_status;
+            invoiceNumber: string;
+            paymentType: import(".prisma/client").$Enums.payment_type;
+            walk_in_name: string;
         }[];
         meta: {
             page: number;
@@ -58,15 +58,15 @@ export declare class InvoiceLaundryController {
             status: import(".prisma/client").$Enums.invoice_status;
             paymentType: import(".prisma/client").$Enums.payment_type;
             laundry: {
-                name: string;
                 phoneNumber: string;
+                name: string;
                 address: string;
                 city: string;
             };
             customer: {
                 phoneNumber: string;
-                fullName: string;
                 uniqueId: string;
+                fullName: string;
             };
             walk_in_name: string;
             walk_in_phone: string;
@@ -105,8 +105,8 @@ export declare class InvoiceCustomerController {
                 logoUrl: string;
             };
             id: string;
-            status: import(".prisma/client").$Enums.invoice_status;
             createdAt: Date;
+            status: import(".prisma/client").$Enums.invoice_status;
             invoiceNumber: string;
             paymentType: import(".prisma/client").$Enums.payment_type;
             expected_delivery_at: Date;

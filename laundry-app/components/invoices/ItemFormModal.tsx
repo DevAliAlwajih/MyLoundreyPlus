@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, FlatList, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CatalogItem, CatalogCategory, useCreateCatalogItem, useUpdateCatalogItem } from '../../hooks/useInvoices';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface ItemFormModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ interface ItemFormModalProps {
 
 export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, item, categories, initialCategoryId }) => {
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
   const createMutation = useCreateCatalogItem();
   const updateMutation = useUpdateCatalogItem();
   
@@ -104,15 +106,22 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
     if (isEdit && item) {
       updateMutation.mutate({ id: item.itemId, ...payload }, {
         onSuccess: () => onClose(),
+        onError: (err: any) => {
+          Alert.alert(t('common.error'), err.response?.data?.message || err.message || t('auth.errors.default'));
+        }
       });
     } else {
       createMutation.mutate(payload, {
         onSuccess: () => onClose(),
+        onError: (err: any) => {
+          Alert.alert(t('common.error'), err.response?.data?.message || err.message || t('auth.errors.default'));
+        }
       });
     }
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const styles = getStyles(colors);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -121,7 +130,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
           <View style={styles.header}>
             <Text style={styles.title}>{isEdit ? t('invoice.editItem') : t('catalog.addItem')}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#333" />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -132,7 +141,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
                 <Text style={styles.label}>{t('catalog.categoryName')} *</Text>
                 <TouchableOpacity style={styles.pickerButton} onPress={() => setShowCategoryPicker(true)}>
                   <Text style={styles.pickerText}>{selectedCategoryName}</Text>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
+                  <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
                 {errors.categoryId && <Text style={styles.errorText}>{errors.categoryId.message}</Text>}
               </View>
@@ -219,7 +228,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
               name="isActive"
               render={({ field: { onChange, value } }) => (
                 <TouchableOpacity style={styles.activeToggle} onPress={() => onChange(!value)}>
-                  <Ionicons name={value ? 'checkbox' : 'square-outline'} size={24} color={value ? '#1a5fa8' : '#ccc'} />
+                  <Ionicons name={value ? 'checkbox' : 'square-outline'} size={24} color={value ? colors.primary : colors.textMuted} />
                   <Text style={styles.activeText}>{t('invoice.active')}</Text>
                 </TouchableOpacity>
               )}
@@ -251,7 +260,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
                   <Text style={[styles.pickerItemText, selectedCategoryId === cat.categoryId && styles.pickerItemTextActive]}>
                     {cat.categoryName}
                   </Text>
-                  {selectedCategoryId === cat.categoryId && <Ionicons name="checkmark" size={20} color="#1a5fa8" />}
+                  {selectedCategoryId === cat.categoryId && <Ionicons name="checkmark" size={20} color={colors.primary} />}
                 </TouchableOpacity>
               )}
             />
@@ -262,14 +271,14 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({ visible, onClose, 
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -284,7 +293,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   form: {
     maxHeight: Platform.OS === 'ios' ? 450 : 500,
@@ -301,33 +310,35 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 8,
     fontWeight: '500',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   pickerButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
+    backgroundColor: colors.background,
   },
   pickerText: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   errorText: {
-    color: '#e74c3c',
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
   },
@@ -340,10 +351,10 @@ const styles = StyleSheet.create({
   activeText: {
     marginLeft: 8,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   submitButton: {
-    backgroundColor: '#1a5fa8',
+    backgroundColor: colors.primary,
     height: 50,
     borderRadius: 12,
     justifyContent: 'center',
@@ -364,7 +375,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   pickerContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     width: '100%',
     maxHeight: 400,
@@ -373,6 +384,7 @@ const styles = StyleSheet.create({
   pickerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -382,17 +394,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   pickerItemActive: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: colors.background,
   },
   pickerItemText: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   pickerItemTextActive: {
-    color: '#1a5fa8',
+    color: colors.primary,
     fontWeight: 'bold',
   },
 });

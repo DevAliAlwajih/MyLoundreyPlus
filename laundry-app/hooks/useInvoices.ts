@@ -24,13 +24,14 @@ export interface CatalogCategory {
 
 export interface InvoiceItem {
   id: string;
-  itemId: string;
+  itemId?: string;
   itemName: string;
-  itemNameAr: string;
+  itemNameAr?: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  notes: string;
+  notes?: string;
+  service_type?: string;
 }
 
 export interface StatusHistory {
@@ -62,6 +63,47 @@ export interface Invoice {
   expectedDeliveryAt?: string;
 }
 
+// Normalize raw API response to frontend Invoice shape safely
+function normalizeInvoice(raw: any): Invoice {
+  const toNum = (v: any) => (v !== null && v !== undefined ? Number(v) : 0);
+  return {
+    id: raw.id,
+    invoiceNumber: raw.invoiceNumber ?? raw.invoice_number ?? '--',
+    status: raw.status,
+    customerName: raw.customer?.fullName ?? raw.walk_in_name ?? '--',
+    customerPhone: raw.customer?.phoneNumber ?? raw.walk_in_phone ?? '',
+    paymentType: raw.paymentType ?? raw.payment_type ?? 'cash',
+    isUrgent: toNum(raw.urgency_fee) > 0,
+    notes: raw.notes ?? '',
+    subtotal: toNum(raw.subtotal),
+    discountPercent: toNum(raw.discountPercent ?? raw.discount_percent),
+    discountAmount: toNum(raw.discountAmount ?? raw.discount),
+    urgencyFeePercent: toNum(raw.urgencyFeePercent ?? raw.urgency_fee_percent),
+    urgencyFeeAmount: toNum(raw.urgencyFeeAmount ?? raw.urgency_fee),
+    taxPercent: toNum(raw.taxPercent ?? raw.tax_percent),
+    taxAmount: toNum(raw.taxAmount ?? raw.tax_amount),
+    total: toNum(raw.total ?? raw.totalAmount ?? raw.total_amount),
+    items: (raw.items ?? []).map((item: any) => ({
+      id: item.id,
+      itemId: item.itemId,
+      itemName: item.itemName ?? item.item_name ?? '',
+      itemNameAr: item.item_name_ar ?? item.itemName ?? '',
+      quantity: toNum(item.quantity),
+      unitPrice: toNum(item.unitPrice ?? item.unit_price),
+      totalPrice: toNum(item.subtotal ?? item.totalPrice ?? item.total_price ?? (toNum(item.unitPrice ?? item.unit_price) * toNum(item.quantity))),
+      notes: item.notes ?? '',
+      service_type: item.service_type,
+    })),
+    statusHistory: (raw.statusHistory ?? raw.statusLogs ?? []).map((h: any) => ({
+      status: h.newStatus ?? h.status,
+      changedAt: h.changedAt,
+      notes: h.note ?? h.notes ?? '',
+    })),
+    createdAt: raw.createdAt,
+    expectedDeliveryAt: raw.expected_delivery_at ?? raw.expectedDeliveryAt,
+  };
+}
+
 // --- Hooks ---
 
 // Fetch Invoices
@@ -81,7 +123,7 @@ export const useInvoiceById = (id: string) => {
     queryKey: ['invoice', id],
     queryFn: async () => {
       const response = await api.get(`/invoices/${id}`);
-      return response.data?.data as Invoice;
+      return normalizeInvoice(response.data?.data);
     },
     enabled: !!id,
   });

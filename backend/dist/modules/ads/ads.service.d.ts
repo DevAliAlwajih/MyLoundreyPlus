@@ -22,11 +22,11 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            sortOrder: number | null;
-            isActive: boolean;
             title: string;
+            sortOrder: number | null;
             startDate: Date | null;
             endDate: Date | null;
             createdBy: string | null;
@@ -43,11 +43,11 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            sortOrder: number | null;
-            isActive: boolean;
             title: string;
+            sortOrder: number | null;
             startDate: Date | null;
             endDate: Date | null;
             createdBy: string | null;
@@ -61,11 +61,11 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            sortOrder: number | null;
-            isActive: boolean;
             title: string;
+            sortOrder: number | null;
             startDate: Date | null;
             endDate: Date | null;
             createdBy: string | null;
@@ -91,11 +91,11 @@ export declare class AdsService {
         data: {
             viewsCount: number;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            sortOrder: number | null;
-            isActive: boolean;
             title: string;
+            sortOrder: number | null;
             startDate: Date | null;
             endDate: Date | null;
             createdBy: string | null;

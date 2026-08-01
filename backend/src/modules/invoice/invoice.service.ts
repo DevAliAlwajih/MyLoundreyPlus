@@ -169,9 +169,19 @@ export class InvoiceService {
 
     // ─── الإنشاء في Transaction ───
     const invoice = await this.prisma.$transaction(async (tx) => {
+      // 1. تحديث العداد ذرياً (Atomic Increment)
+      const counter = await tx.invoiceCounter.upsert({
+        where: { laundryId },
+        create: { laundryId, lastNumber: 1 },
+        update: { lastNumber: { increment: 1 } },
+      });
+
+      // 2. توليد رقم الفاتورة التسلسلي (مثال: INV-0001)
+      const generatedInvoiceNumber = `INV-${counter.lastNumber.toString().padStart(4, '0')}`;
+
       const inv = await tx.invoice.create({
         data: {
-          invoiceNumber: 'TEMP', // يُستبدل تلقائياً بواسطة DB Trigger
+          invoiceNumber: generatedInvoiceNumber,
           laundry: { connect: { id: laundryId } },
           customer: customerId ? { connect: { id: customerId } } : undefined,
           paymentType  : dto.paymentType as any,
@@ -203,11 +213,18 @@ export class InvoiceService {
   // 2. GET /invoices — قائمة فواتير المغسلة
   // ────────────────────────────────────────────────────
   async findAll(laundryId: string, query: QueryInvoiceDto) {
-    const { status, customerId, page = 1, limit = 20 } = query;
+    const { status, customerId, search, page = 1, limit = 20 } = query;
 
     const where: any = { laundryId };
     if (status)     where.status     = status;
     if (customerId) where.customerId = customerId;
+    if (search && search.trim()) {
+      where.OR = [
+        { walk_in_name : { contains: search.trim(), mode: 'insensitive' } },
+        { walk_in_phone: { contains: search.trim() } },
+        { invoiceNumber: { contains: search.trim() } },
+      ];
+    }
 
     const [invoices, total] = await this.prisma.$transaction([
       this.prisma.invoice.findMany({
@@ -354,7 +371,7 @@ export class InvoiceService {
           changedBy,
           oldStatus : invoice.status as any,
           newStatus : dto.status as any,
-          note      : dto.note,
+          note      : dto.notes || dto.note,
         },
       });
 
@@ -585,6 +602,14 @@ export class InvoiceService {
 
       subtotal += unitPrice * itemDto.quantity;
 
+      // تحويل قيم نوع الخدمة من Frontend لتتطابق مع enum قاعدة البيانات
+      const serviceTypeMap: Record<string, string> = {
+        'washing_only'        : 'washing',
+        'ironing_only'        : 'ironing',
+        'washing_and_ironing' : 'washing_and_ironing',
+      };
+      const dbServiceType = serviceTypeMap[itemDto.serviceType ?? 'washing_and_ironing'] ?? 'washing_and_ironing';
+
       lines.push({
         itemId          : itemDto.itemId,
         itemName        : item.nameAr,
@@ -592,7 +617,7 @@ export class InvoiceService {
         item_name_en    : item.nameEn,
         unitPrice,
         quantity        : itemDto.quantity,
-        service_type    : itemDto.serviceType    ?? 'washing_and_ironing',
+        service_type    : dbServiceType,
         processing_type : itemDto.processingType ?? 'normal',
       });
     }

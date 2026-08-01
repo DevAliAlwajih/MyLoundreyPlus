@@ -21,15 +21,15 @@ export declare class PromotionController {
             isExpired: boolean;
             isUpcoming: boolean;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
             title: string;
-            description: string | null;
-            imageUrl: string | null;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
+            imageUrl: string | null;
         }[];
         meta: {
             total: number;
@@ -42,15 +42,15 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
             title: string;
-            description: string | null;
-            imageUrl: string | null;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
+            imageUrl: string | null;
         };
     }>;
     togglePromotion(req: any, id: string): Promise<{
@@ -64,15 +64,15 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
             title: string;
-            description: string | null;
-            imageUrl: string | null;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
+            imageUrl: string | null;
         };
     }>;
     deletePromotion(req: any, id: string): Promise<{
@@ -85,25 +85,25 @@ export declare class PromotionController {
             id: string;
             createdAt: Date;
             title: string;
-            description: string;
-            imageUrl: string;
             startDate: Date;
             endDate: Date;
+            description: string;
+            imageUrl: string;
         }[];
     }>;
     getPromotionDetails(id: string): Promise<{
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
             title: string;
-            description: string | null;
-            imageUrl: string | null;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
+            imageUrl: string | null;
         };
     }>;
     recordView(req: any, id: string): Promise<{

@@ -10,22 +10,17 @@ export declare class AdminService {
     getLaundries(dto: QueryAdminLaundriesDto): Promise<{
         success: boolean;
         data: ({
-            owner: {
-                phoneNumber: string;
-                fullName: string;
-                email: string;
-            };
             subscriptions: ({
                 plan: {
                     nameAr: string;
                 };
             } & {
+                promoCode: string | null;
                 id: string;
+                isActive: boolean;
                 createdAt: Date;
                 laundryId: string;
-                isActive: boolean;
                 notes: string | null;
-                promoCode: string | null;
                 planId: string;
                 amountPaid: import("@prisma/client/runtime/library").Decimal;
                 paymentMethod: string | null;
@@ -37,15 +32,21 @@ export declare class AdminService {
                 invoices: number;
                 ratings: number;
             };
+            owner: {
+                phoneNumber: string;
+                email: string;
+                fullName: string;
+            };
         } & {
             id: string;
-            ownerId: string;
+            phoneNumber: string;
+            createdAt: Date;
+            updatedAt: Date;
+            country: string | null;
             name: string;
             nameAr: string | null;
-            phoneNumber: string;
             address: string | null;
             city: string | null;
-            country: string | null;
             latitude: import("@prisma/client/runtime/library").Decimal | null;
             longitude: import("@prisma/client/runtime/library").Decimal | null;
             workingHours: import("@prisma/client/runtime/library").JsonValue | null;
@@ -53,12 +54,11 @@ export declare class AdminService {
             status: import(".prisma/client").$Enums.laundry_status;
             ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
             ratingCount: number | null;
-            createdAt: Date;
-            updatedAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal | null;
             urgency_enabled: boolean;
             urgency_fee: import("@prisma/client/runtime/library").Decimal | null;
+            ownerId: string;
         })[];
         meta: {
             total: number;
@@ -72,43 +72,13 @@ export declare class AdminService {
             stats: {
                 totalRevenue: number | import("@prisma/client/runtime/library").Decimal;
             };
-            categories: ({
-                items: {
-                    id: string;
-                    nameAr: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    sortOrder: number;
-                    isActive: boolean;
-                    categoryId: string;
-                    nameEn: string;
-                    basePrice: import("@prisma/client/runtime/library").Decimal;
-                    washing_price: import("@prisma/client/runtime/library").Decimal | null;
-                    ironing_price: import("@prisma/client/runtime/library").Decimal | null;
-                }[];
-            } & {
-                id: string;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                laundryId: string;
-                sortOrder: number;
-                isActive: boolean;
-            })[];
-            owner: {
-                id: string;
-                phoneNumber: string;
-                createdAt: Date;
-                fullName: string;
-                email: string;
-            };
             subscriptions: ({
                 plan: {
                     id: string;
-                    nameAr: string;
+                    isActive: boolean;
                     createdAt: Date;
                     updatedAt: Date;
-                    isActive: boolean;
+                    nameAr: string;
                     nameEn: string;
                     durationDays: number;
                     priceSar: import("@prisma/client/runtime/library").Decimal;
@@ -120,12 +90,12 @@ export declare class AdminService {
                     offer_valid_until: Date | null;
                 };
             } & {
+                promoCode: string | null;
                 id: string;
+                isActive: boolean;
                 createdAt: Date;
                 laundryId: string;
-                isActive: boolean;
                 notes: string | null;
-                promoCode: string | null;
                 planId: string;
                 amountPaid: import("@prisma/client/runtime/library").Decimal;
                 paymentMethod: string | null;
@@ -135,17 +105,48 @@ export declare class AdminService {
             })[];
             _count: {
                 invoices: number;
-                promotions: number;
                 ratings: number;
+                promotions: number;
+            };
+            categories: ({
+                items: {
+                    id: string;
+                    isActive: boolean;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    nameAr: string;
+                    sortOrder: number;
+                    categoryId: string;
+                    nameEn: string;
+                    basePrice: import("@prisma/client/runtime/library").Decimal;
+                    washing_price: import("@prisma/client/runtime/library").Decimal | null;
+                    ironing_price: import("@prisma/client/runtime/library").Decimal | null;
+                }[];
+            } & {
+                id: string;
+                isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                laundryId: string;
+                sortOrder: number;
+            })[];
+            owner: {
+                id: string;
+                phoneNumber: string;
+                email: string;
+                fullName: string;
+                createdAt: Date;
             };
             id: string;
-            ownerId: string;
+            phoneNumber: string;
+            createdAt: Date;
+            updatedAt: Date;
+            country: string | null;
             name: string;
             nameAr: string | null;
-            phoneNumber: string;
             address: string | null;
             city: string | null;
-            country: string | null;
             latitude: import("@prisma/client/runtime/library").Decimal | null;
             longitude: import("@prisma/client/runtime/library").Decimal | null;
             workingHours: import("@prisma/client/runtime/library").JsonValue | null;
@@ -153,12 +154,11 @@ export declare class AdminService {
             status: import(".prisma/client").$Enums.laundry_status;
             ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
             ratingCount: number | null;
-            createdAt: Date;
-            updatedAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal | null;
             urgency_enabled: boolean;
             urgency_fee: import("@prisma/client/runtime/library").Decimal | null;
+            ownerId: string;
         };
     }>;
     updateLaundryStatus(laundryId: string, adminId: string, dto: UpdateLaundryStatusDto): Promise<{
@@ -171,10 +171,10 @@ export declare class AdminService {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             isActive: boolean;
             lastLoginAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
             userId: string;
             deviceType: string | null;
             deviceOs: string | null;
@@ -196,15 +196,15 @@ export declare class AdminService {
         data: {
             id: string;
             phoneNumber: string;
+            email: string;
+            fullName: string;
+            role: import(".prisma/client").$Enums.user_role;
+            isActive: boolean;
+            lastLoginAt: Date;
             createdAt: Date;
             _count: {
                 userDevices: number;
             };
-            isActive: boolean;
-            fullName: string;
-            role: import(".prisma/client").$Enums.user_role;
-            lastLoginAt: Date;
-            email: string;
         }[];
         meta: {
             total: number;
@@ -222,18 +222,18 @@ export declare class AdminService {
             };
             id: string;
             phoneNumber: string | null;
-            country: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
-            fullName: string;
             uniqueId: string;
+            email: string | null;
+            fullName: string;
             qrCode: string | null;
             avatarUrl: string | null;
             role: import(".prisma/client").$Enums.user_role;
+            isActive: boolean;
             isVerified: boolean;
             lastLoginAt: Date | null;
-            email: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            country: string | null;
             currency: string | null;
         };
     }>;
@@ -247,10 +247,10 @@ export declare class AdminService {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             isActive: boolean;
             lastLoginAt: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
             userId: string;
             deviceType: string | null;
             deviceOs: string | null;
@@ -309,8 +309,8 @@ export declare class AdminService {
     updateSetting(key: string, value: string, adminId: string): Promise<{
         success: boolean;
         data: {
-            description: string | null;
             updated_at: Date;
+            description: string | null;
             key: string;
             value: string;
             updated_by: string | null;

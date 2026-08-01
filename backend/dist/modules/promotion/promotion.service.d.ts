@@ -10,10 +10,10 @@ export declare class PromotionService {
         data: {
             id: string;
             createdAt: Date;
-            description: string;
             title: string;
             startDate: Date;
             endDate: Date;
+            description: string;
             imageUrl: string;
         }[];
     }>;
@@ -21,14 +21,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
-            description: string | null;
             title: string;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
             imageUrl: string | null;
         };
     }>;
@@ -42,14 +42,14 @@ export declare class PromotionService {
             isExpired: boolean;
             isUpcoming: boolean;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
-            description: string | null;
             title: string;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
             imageUrl: string | null;
         }[];
         meta: {
@@ -63,14 +63,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
-            description: string | null;
             title: string;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
             imageUrl: string | null;
         };
     }>;
@@ -78,14 +78,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            laundryId: string;
-            isActive: boolean;
-            description: string | null;
             title: string;
+            laundryId: string;
             startDate: Date | null;
             endDate: Date | null;
+            description: string | null;
             imageUrl: string | null;
         };
     }>;

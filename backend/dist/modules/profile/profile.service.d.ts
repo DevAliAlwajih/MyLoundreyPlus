@@ -9,15 +9,15 @@ export declare class ProfileService {
         data: {
             id: string;
             phoneNumber: string;
-            country: string;
-            createdAt: Date;
-            fullName: string;
             uniqueId: string;
+            email: string;
+            fullName: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
-            email: string;
+            createdAt: Date;
+            country: string;
             currency: string;
         };
     }>;
@@ -26,15 +26,15 @@ export declare class ProfileService {
         data: {
             id: string;
             phoneNumber: string;
-            country: string;
-            createdAt: Date;
-            fullName: string;
             uniqueId: string;
+            email: string;
+            fullName: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
-            email: string;
+            createdAt: Date;
+            country: string;
             currency: string;
         };
     }>;

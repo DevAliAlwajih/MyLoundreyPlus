@@ -11,9 +11,9 @@ export declare class RatingService {
         data: {
             id: string;
             createdAt: Date;
+            invoiceId: string;
             laundryId: string;
             customerId: string;
-            invoiceId: string;
             stars: number;
             comment: string | null;
         };
@@ -33,9 +33,9 @@ export declare class RatingService {
             existingRating: {
                 id: string;
                 createdAt: Date;
+                invoiceId: string;
                 laundryId: string;
                 customerId: string;
-                invoiceId: string;
                 stars: number;
                 comment: string | null;
             };
@@ -82,11 +82,11 @@ export declare class RatingService {
                 name: string;
                 logoUrl: string;
             };
-            id: string;
-            createdAt: Date;
             invoice: {
                 invoiceNumber: string;
             };
+            id: string;
+            createdAt: Date;
             stars: number;
             comment: string;
         }[];

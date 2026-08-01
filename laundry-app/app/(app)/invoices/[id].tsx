@@ -55,28 +55,28 @@ export default function InvoiceDetailScreen() {
     <View style={styles.totalsCard}>
       <View style={styles.row}>
         <Text style={styles.label}>{t('invoice.subtotal')}</Text>
-        <Text style={styles.value}>{invoice.subtotal.toFixed(2)} ر.س</Text>
+        <Text style={styles.value}>{(Number(invoice.subtotal) || 0).toFixed(2)} ر.س</Text>
       </View>
       {invoice.discountAmount > 0 && (
         <View style={styles.row}>
           <Text style={styles.label}>{t('invoice.discount')} ({invoice.discountPercent}%)</Text>
-          <Text style={styles.valueNegative}>- {invoice.discountAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.valueNegative}>- {(Number(invoice.discountAmount) || 0).toFixed(2)} ر.س</Text>
         </View>
       )}
       {invoice.isUrgent && (
         <View style={styles.row}>
           <Text style={styles.label}>{t('invoice.urgencyFee')} ({invoice.urgencyFeePercent}%)</Text>
-          <Text style={styles.valuePositive}>+ {invoice.urgencyFeeAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.valuePositive}>+ {(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ر.س</Text>
         </View>
       )}
       <View style={styles.row}>
         <Text style={styles.label}>{t('invoice.tax')} ({invoice.taxPercent}%)</Text>
-        <Text style={styles.valuePositive}>+ {invoice.taxAmount.toFixed(2)} ر.س</Text>
+        <Text style={styles.valuePositive}>+ {(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س</Text>
       </View>
       <View style={styles.divider} />
       <View style={styles.row}>
         <Text style={styles.totalLabel}>{t('invoice.total')}</Text>
-        <Text style={styles.totalValue}>{invoice.total.toFixed(2)} ر.س</Text>
+        <Text style={styles.totalValue}>{(Number(invoice.total) || 0).toFixed(2)} ر.س</Text>
       </View>
     </View>
   );
@@ -130,8 +130,8 @@ export default function InvoiceDetailScreen() {
               <Text style={styles.itemName}>{i18n.language === 'ar' ? item.itemNameAr : item.itemName}</Text>
               {item.notes ? <Text style={styles.itemNotes}>{item.notes}</Text> : null}
             </View>
-            <Text style={styles.itemQty}>{item.quantity} x {item.unitPrice.toFixed(2)}</Text>
-            <Text style={styles.itemTotal}>{item.totalPrice.toFixed(2)}</Text>
+            <Text style={styles.itemQty}>{item.quantity} x {(Number(item.unitPrice) || 0).toFixed(2)}</Text>
+            <Text style={styles.itemTotal}>{(Number(item.totalPrice) || 0).toFixed(2)}</Text>
           </View>
         ))}
 

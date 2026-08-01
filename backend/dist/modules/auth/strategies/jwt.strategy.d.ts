@@ -10,10 +10,10 @@ export declare class JwtStrategy extends JwtStrategy_base {
         laundryId: string;
         id: string;
         phoneNumber: string;
-        isActive: boolean;
-        fullName: string;
         uniqueId: string;
+        fullName: string;
         role: import(".prisma/client").$Enums.user_role;
+        isActive: boolean;
     }>;
 }
 export {};

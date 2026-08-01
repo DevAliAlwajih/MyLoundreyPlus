@@ -449,6 +449,7 @@ export class LaundryService {
         laundryId: laundry.id,
         name: dto.name,
         sortOrder: dto.sortOrder ?? 0,
+        isActive: dto.isActive ?? true,
       },
       select: { id: true, name: true, sortOrder: true, isActive: true },
     });
@@ -530,11 +531,12 @@ export class LaundryService {
       data: {
         categoryId,
         nameAr        : dto.nameAr,
-        nameEn        : dto.nameEn,
+        nameEn        : dto.nameEn || dto.nameAr,
         basePrice     : dto.basePrice,
         washing_price : dto.washing_price,
         ironing_price : dto.ironing_price,
         sortOrder     : dto.sortOrder ?? 0,
+        isActive      : dto.isActive ?? true,
       },
       select: {
         id            : true,

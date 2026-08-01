@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { StackActions } from '@react-navigation/native';
 
 const PRIMARY = '#1a5fa8';
 const INACTIVE = '#9ca3af';
@@ -62,24 +63,42 @@ export default function AppLayout() {
 
       {/* ── الفواتير ── */}
       <Tabs.Screen
-        name="invoices/index"
+        name="invoices"
         options={{
           title: t('nav.invoices'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon name="receipt" color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            try {
+              navigation.dispatch(StackActions.popToTop());
+            } catch (e) {
+              // Ignore if no stack to pop
+            }
+          },
+        })}
       />
 
       {/* ── المحادثات ── */}
       <Tabs.Screen
-        name="conversations/index"
+        name="conversations"
         options={{
           title: t('nav.conversations'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon name="chatbubble-ellipses" color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            try {
+              navigation.dispatch(StackActions.popToTop());
+            } catch (e) {
+              // Ignore if no stack to pop
+            }
+          },
+        })}
       />
 
       {/* ── الإعدادات ── */}
@@ -91,17 +110,25 @@ export default function AppLayout() {
             <TabIcon name="settings" color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            try {
+              navigation.dispatch(StackActions.popToTop());
+            } catch (e) {
+              // Ignore if no stack to pop
+            }
+          },
+        })}
       />
 
       {/* ── شاشات فرعية — مخفية من الـ Tab Bar ── */}
-      <Tabs.Screen name="bookings/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="crm/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="crm/[phone]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="bookings" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="crm" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="profile" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="promotions/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="reports/index" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="chat/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="invoices" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="promotions" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="reports" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+
+
     </Tabs>
   );
 }

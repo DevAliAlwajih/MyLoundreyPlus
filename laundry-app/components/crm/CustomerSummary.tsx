@@ -25,7 +25,7 @@ export const CustomerSummary: React.FC<CustomerSummaryProps> = ({ customer }) =>
   };
 
   const handleChat = () => {
-    router.push(`/(app)/chat/${customer.customerId}`);
+    router.push(`/conversation-modal/${customer.customerId}`);
   };
 
   const remindMutation = useRemindCustomer();

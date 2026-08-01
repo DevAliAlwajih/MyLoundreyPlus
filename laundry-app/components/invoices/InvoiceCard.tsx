@@ -43,7 +43,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress }) =>
 
       <View style={styles.footer}>
         <View style={styles.amountContainer}>
-          <Text style={styles.totalText}>{invoice.total.toFixed(2)} ر.س</Text>
+          <Text style={styles.totalText}>{(Number(invoice.total ?? (invoice as any).totalAmount) || 0).toFixed(2)} ر.س</Text>
           <Ionicons name={getPaymentIcon(invoice.paymentType)} size={16} color="#1a5fa8" style={styles.paymentIcon} />
         </View>
         <View style={{ alignItems: 'flex-end' }}>

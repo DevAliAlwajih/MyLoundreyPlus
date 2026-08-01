@@ -1,4 +1,4 @@
-import { IsOptional, IsIn, IsUUID, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsIn, IsUUID, IsNumber, Min, Max, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { INVOICE_STATUSES, InvoiceStatusType } from './update-invoice-status.dto';
 
@@ -10,6 +10,10 @@ export class QueryInvoiceDto {
   @IsOptional()
   @IsUUID('4')
   customerId?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @IsOptional()
   @Type(() => Number)

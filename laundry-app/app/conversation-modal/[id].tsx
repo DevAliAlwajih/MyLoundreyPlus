@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Keyboard
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useChatMessages, useSendMessage, useUploadChatAttachment, useMarkChatAsRead } from '../../../hooks/useChat';
+import { useChatMessages, useSendMessage, useUploadChatAttachment, useMarkChatAsRead } from '../../hooks/useChat';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';

@@ -27,7 +27,7 @@ export default function ConversationsScreen() {
       icon: 'headset' as const,
       iconBg: '#e8f0fb',
       iconColor: PRIMARY,
-      route: '/(app)/chat/support',
+      route: '/conversation-modal/support',
     },
     {
       id: 'customers',

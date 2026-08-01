@@ -8,15 +8,12 @@ import { useCatalogMenu, useDeleteCatalogItem, useDeleteCategory, CatalogItem, C
 import { CatalogItemRow } from '../../../components/invoices/CatalogItemRow';
 import { ItemFormModal } from '../../../components/invoices/ItemFormModal';
 import { CategoryFormModal } from '../../../components/invoices/CategoryFormModal';
-
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-};
+import { useThemeStore } from '../../../stores/themeStore';
 
 export default function CatalogItemsScreen() {
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { colors } = useThemeStore();
   
   const { data: menuData, isLoading } = useCatalogMenu();
   const deleteItemMutation = useDeleteCatalogItem();
@@ -49,7 +46,11 @@ export default function CatalogItemsScreen() {
         { 
           text: t('common.ok'), 
           style: 'destructive',
-          onPress: () => deleteCategoryMutation.mutate(cat.categoryId)
+          onPress: () => deleteCategoryMutation.mutate(cat.categoryId, {
+            onError: (err: any) => {
+              Alert.alert(t('common.error'), err.response?.data?.message || err.message || t('auth.errors.default'));
+            }
+          })
         }
       ]
     );
@@ -68,7 +69,11 @@ export default function CatalogItemsScreen() {
   };
 
   const handleDeleteItem = (id: string) => {
-    deleteItemMutation.mutate(id);
+    deleteItemMutation.mutate(id, {
+      onError: (err: any) => {
+        Alert.alert(t('common.error'), err.response?.data?.message || err.message || t('auth.errors.default'));
+      }
+    });
   };
 
   // --- Renderers ---
@@ -78,13 +83,15 @@ export default function CatalogItemsScreen() {
     data: c.items,
   })) || [];
 
+  const styles = getStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* إخفاء شريط التبويبات في شاشة قائمة الأسعار */}
       <Tabs.Screen options={{ tabBarStyle: { display: 'none' } }} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>{t('catalog.title')}</Text>
         <View style={{ width: 40 }} />
@@ -92,7 +99,7 @@ export default function CatalogItemsScreen() {
 
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <SectionList
@@ -102,7 +109,7 @@ export default function CatalogItemsScreen() {
           
           ListHeaderComponent={
             <TouchableOpacity style={styles.addCategoryBtn} onPress={handleAddCategory}>
-              <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+              <Ionicons name="add-circle" size={24} color={colors.primary} />
               <Text style={styles.addCategoryText}>{t('catalog.addCategory')}</Text>
             </TouchableOpacity>
           }
@@ -112,10 +119,10 @@ export default function CatalogItemsScreen() {
               <Text style={styles.sectionTitle}>{section.title}</Text>
               <View style={styles.sectionActions}>
                 <TouchableOpacity style={styles.sectionActionBtn} onPress={() => handleEditCategory(section as unknown as CatalogCategory)}>
-                  <Ionicons name="pencil" size={18} color="#666" />
+                  <Ionicons name="pencil" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sectionActionBtn} onPress={() => handleDeleteCategory(section as unknown as CatalogCategory)}>
-                  <Ionicons name="trash" size={18} color="#e74c3c" />
+                  <Ionicons name="trash" size={18} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -131,7 +138,7 @@ export default function CatalogItemsScreen() {
 
           renderSectionFooter={({ section }) => (
             <TouchableOpacity style={styles.addItemBtn} onPress={() => handleAddItem(section.categoryId)}>
-              <Ionicons name="add" size={20} color="#666" />
+              <Ionicons name="add" size={20} color={colors.textSecondary} />
               <Text style={styles.addItemText}>{t('catalog.addItem')}</Text>
             </TouchableOpacity>
           )}
@@ -166,10 +173,10 @@ export default function CatalogItemsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -177,9 +184,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   backButton: {
     width: 40,
@@ -189,7 +196,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   center: {
     flex: 1,
@@ -203,25 +210,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     margin: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   addCategoryText: {
     marginLeft: 8,
     fontSize: 16,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: 'bold',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#e6f2ff',
+    backgroundColor: colors.background === '#121212' ? '#1f1f1f' : '#e6f2ff',
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginTop: 10,
@@ -229,7 +236,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
   },
   sectionActions: {
     flexDirection: 'row',
@@ -243,21 +250,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.border,
   },
   addItemText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   emptyContainer: {
     alignItems: 'center',
     marginTop: 60,
   },
   emptyText: {
-    color: '#999',
+    color: colors.textMuted,
     fontSize: 16,
   },
   fab: {
@@ -267,7 +274,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

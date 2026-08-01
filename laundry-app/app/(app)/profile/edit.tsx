@@ -47,7 +47,7 @@ export default function EditProfileScreen() {
     fullName: z.string().min(2, { message: t('auth.validation.required') }),
     name: z.string().min(2, { message: t('auth.validation.required') }),
     nameAr: z.string().min(2, { message: t('auth.validation.required') }),
-    phone: z.string().regex(/^[0-9]{7,}$/, { message: t('auth.validation.invalidPhone') }),
+    phoneNumber: z.string().regex(/^[0-9]{7,}$/, { message: t('auth.validation.invalidPhone') }),
     tax_enabled: z.boolean().optional(),
     tax_rate: z.string().optional().refine((val) => {
       if (!val) return true;
@@ -70,7 +70,7 @@ export default function EditProfileScreen() {
       fullName: user?.fullName || '',
       name: profile?.name || '',
       nameAr: profile?.nameAr || '',
-      phone: profile?.phone || '',
+      phoneNumber: profile?.phoneNumber || '',
       tax_enabled: profile?.tax_enabled ?? false,
       tax_rate: profile?.tax_rate !== null && profile?.tax_rate !== undefined ? String(profile.tax_rate) : '',
       urgency_enabled: profile?.urgency_enabled ?? false,
@@ -166,7 +166,7 @@ export default function EditProfileScreen() {
       if (
         data.name !== profile?.name || 
         data.nameAr !== profile?.nameAr || 
-        data.phone !== profile?.phone ||
+        data.phoneNumber !== profile?.phoneNumber ||
         data.tax_enabled !== profile?.tax_enabled ||
         data.tax_rate !== String(profile?.tax_rate ?? '') ||
         data.urgency_enabled !== profile?.urgency_enabled ||
@@ -176,7 +176,7 @@ export default function EditProfileScreen() {
           updateLaundryMutation.mutateAsync({
             name: data.name,
             nameAr: data.nameAr,
-            phone: data.phone,
+            phoneNumber: data.phoneNumber,
             tax_enabled: data.tax_enabled ?? false,
             tax_rate: data.tax_enabled && data.tax_rate ? Number(data.tax_rate) : 0,
             urgency_enabled: data.urgency_enabled ?? false,
@@ -308,17 +308,17 @@ export default function EditProfileScreen() {
             <Text style={[styles.label, isRTL && styles.textRight]}>{t('profile.phone')}</Text>
             <Controller
               control={control}
-              name="phone"
+              name="phoneNumber"
               render={({ field: { onChange, onBlur, value } }) => (
                 <View style={styles.inputContainer}>
                   <TextInput
-                    style={[styles.input, errors.phone && styles.inputError, { textAlign: 'left' }]}
+                    style={[styles.input, errors.phoneNumber && styles.inputError, { textAlign: 'left' }]}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
                     keyboardType="phone-pad"
                   />
-                  {errors.phone && <Text style={[styles.errorText, isRTL && styles.textRight]}>{errors.phone.message}</Text>}
+                  {errors.phoneNumber && <Text style={[styles.errorText, isRTL && styles.textRight]}>{errors.phoneNumber.message}</Text>}
                 </View>
               )}
             />

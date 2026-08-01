@@ -48,6 +48,10 @@ export class CreateItemDto {
   @IsInt()
   @Min(0)
   sortOrder?: number = 0;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 

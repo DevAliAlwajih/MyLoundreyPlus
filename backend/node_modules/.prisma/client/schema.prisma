@@ -84,6 +84,7 @@ model Laundry {
   ratings         Rating[]
   subscriptions   Subscription[]
   holidays        LaundryHoliday[]
+  invoiceCounter  InvoiceCounter?
 
   @@index([latitude, longitude], map: "idx_laundries_location")
   @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_laundries_name_trgm", type: Gin)
@@ -208,7 +209,7 @@ model LaundryPrice {
 
 model Invoice {
   id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  invoiceNumber        String             @unique @map("invoice_number") @db.VarChar(20)
+  invoiceNumber        String             @map("invoice_number") @db.VarChar(20)
   laundryId            String             @map("laundry_id") @db.Uuid
   customerId           String?            @map("customer_id") @db.Uuid
   status               invoice_status     @default(received)
@@ -235,12 +236,21 @@ model Invoice {
   laundry              Laundry            @relation(fields: [laundryId], references: [id], onUpdate: NoAction)
   rating               Rating?
 
+  @@unique([laundryId, invoiceNumber], map: "idx_invoice_laundry_number")
   @@index([customerId, createdAt(sort: Desc)], map: "idx_invoices_customer")
   @@index([laundryId, createdAt(sort: Desc)], map: "idx_invoices_laundry")
   @@index([invoiceNumber], map: "idx_invoices_number")
   @@index([paymentType], map: "idx_invoices_payment")
   @@index([status], map: "idx_invoices_status")
   @@map("invoices")
+}
+
+model InvoiceCounter {
+  laundryId  String  @id @map("laundry_id") @db.Uuid
+  lastNumber Int     @default(0) @map("last_number")
+  laundry    Laundry @relation(fields: [laundryId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_counters")
 }
 
 model InvoiceItem {

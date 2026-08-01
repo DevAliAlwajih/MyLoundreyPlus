@@ -34,4 +34,9 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateInvoiceStatusDto.prototype, "note", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateInvoiceStatusDto.prototype, "notes", void 0);
 //# sourceMappingURL=update-invoice-status.dto.js.map

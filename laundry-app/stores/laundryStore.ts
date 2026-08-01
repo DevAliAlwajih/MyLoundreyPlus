@@ -20,8 +20,7 @@ export interface LaundryProfile {
   nameAr: string;
   description: string;
   descriptionAr: string;
-  phone: string;
-  email: string;
+  phoneNumber: string;
   logoUrl: string | null;
   country: string;
   city: string;
@@ -95,7 +94,7 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
 
   fetchSubscription: async () => {
     try {
-      const response = await api.get('/subscription/my');
+      const response = await api.get('/subscriptions/my');
       set({ subscription: response.data?.data });
     } catch (error) {
       // Fallback mock data for demo since backend might not have this fully implemented yet

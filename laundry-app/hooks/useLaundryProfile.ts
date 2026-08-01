@@ -32,7 +32,7 @@ export const useUpdateProfile = () => {
       
       const updates: any = {};
       if (variables.name !== undefined) updates.laundryName = variables.name;
-      if (variables.phone !== undefined) updates.phone = variables.phone;
+      if (variables.phoneNumber !== undefined) updates.phone = variables.phoneNumber;
       
       if (Object.keys(updates).length > 0) {
         updateRememberedAccount(updates);
