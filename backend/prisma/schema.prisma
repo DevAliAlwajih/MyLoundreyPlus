@@ -71,20 +71,26 @@ model Laundry {
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
   tax_enabled     Boolean         @default(false)
-  tax_rate        Decimal?        @default(0.00) @db.Decimal(5, 2)
-  urgency_enabled Boolean         @default(false)
-  urgency_fee     Decimal?        @default(0.00) @db.Decimal(8, 2)
-  bookings        bookings[]
-  categories      Category[]
-  chat_messages   chat_messages[]
-  invoices        Invoice[]
-  owner           User            @relation(fields: [ownerId], references: [id], onUpdate: NoAction)
-  laundryPrices   LaundryPrice[]
-  promotions      Promotion[]
-  ratings         Rating[]
-  subscriptions   Subscription[]
-  holidays        LaundryHoliday[]
-  invoiceCounter  InvoiceCounter?
+  tax_rate                 Decimal?                @default(0.00) @db.Decimal(5, 2)
+  urgency_enabled          Boolean                 @default(false)
+  urgency_fee              Decimal?                @default(0.00) @db.Decimal(8, 2)
+  billing_type             billing_type            @default(subscription)
+  commission_rate          Decimal?                @db.Decimal(5, 2)
+  trial_commission_ends_at DateTime?               @db.Timestamptz(6)
+  balance                  Decimal                 @default(0.00) @db.Decimal(10, 2)
+  debt_limit               Decimal?                @db.Decimal(10, 2)
+  bookings                 bookings[]
+  categories               Category[]
+  chat_messages            chat_messages[]
+  invoices                 Invoice[]
+  owner                    User                    @relation(fields: [ownerId], references: [id], onUpdate: NoAction)
+  laundryPrices            LaundryPrice[]
+  promotions               Promotion[]
+  ratings                  Rating[]
+  subscriptions            Subscription[]
+  holidays                 LaundryHoliday[]
+  invoiceCounter           InvoiceCounter?
+  commission_transactions  CommissionTransaction[]
 
   @@index([latitude, longitude], map: "idx_laundries_location")
   @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_laundries_name_trgm", type: Gin)
@@ -229,12 +235,13 @@ model Invoice {
   expected_delivery_at DateTime?          @db.Timestamptz(6)
   tax_amount           Decimal            @default(0.00) @db.Decimal(10, 2)
   urgency_fee          Decimal            @default(0.00) @db.Decimal(10, 2)
-  bookings             bookings[]
-  items                InvoiceItem[]
-  statusLogs           InvoiceStatusLog[]
-  customer             User?              @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  laundry              Laundry            @relation(fields: [laundryId], references: [id], onUpdate: NoAction)
-  rating               Rating?
+  bookings                 bookings[]
+  items                    InvoiceItem[]
+  statusLogs               InvoiceStatusLog[]
+  customer                 User?                   @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  laundry                  Laundry                 @relation(fields: [laundryId], references: [id], onUpdate: NoAction)
+  rating                   Rating?
+  commission_transactions  CommissionTransaction[]
 
   @@unique([laundryId, invoiceNumber], map: "idx_invoice_laundry_number")
   @@index([customerId, createdAt(sort: Desc)], map: "idx_invoices_customer")
@@ -544,4 +551,27 @@ model LaundryHoliday {
 
   @@unique([laundryId, date], map: "idx_laundry_holiday_unique")
   @@map("laundry_holidays")
+}
+
+model CommissionTransaction {
+  id                String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  laundry_id        String   @db.Uuid
+  invoice_id        String   @db.Uuid
+  invoice_total     Decimal  @db.Decimal(10, 2)
+  commission_rate   Decimal  @db.Decimal(5, 2)
+  commission_amount Decimal  @db.Decimal(10, 2)
+  balance_after     Decimal  @db.Decimal(10, 2)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  laundry           Laundry  @relation(fields: [laundry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invoice           Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([laundry_id, created_at(sort: Desc)], map: "idx_commission_laundry")
+  @@index([invoice_id], map: "idx_commission_invoice")
+  @@map("commission_transactions")
+}
+
+enum billing_type {
+  subscription
+  commission
 }

@@ -51,7 +51,7 @@ export class BookingService {
   async createBooking(customerId: string, dto: CreateBookingDto) {
     // 1. تحقق أن المغسلة موجودة وفعّالة
     const laundry = await this.prisma.laundry.findFirst({
-      where: { id: dto.laundryId, status: { in: ['active', 'trial'] as any[] } },
+      where: { id: dto.laundryId, status: { not: 'banned' } },
       select: { id: true, name: true },
     });
     if (!laundry) {

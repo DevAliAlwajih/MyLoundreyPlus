@@ -174,7 +174,7 @@ export class LaundryService {
       });
     }
 
-    if (laundry.status !== 'active') {
+    if (laundry.status === 'banned') {
       throw new ForbiddenException({
         success: false,
         error: { code: 'LAUNDRY_INACTIVE', message: 'المغسلة غير متاحة حالياً' },
@@ -209,7 +209,7 @@ export class LaundryService {
       });
     }
 
-    if (laundry.status !== 'active') {
+    if (laundry.status === 'banned') {
       throw new ForbiddenException({
         success: false,
         error: { code: 'LAUNDRY_INACTIVE', message: 'المغسلة غير متاحة حالياً' },

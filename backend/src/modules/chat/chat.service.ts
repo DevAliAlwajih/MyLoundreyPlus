@@ -80,7 +80,7 @@ export class ChatService {
     }
 
     const laundry = await this.prisma.laundry.findFirst({
-      where: { id: laundryId, status: { in: ['active', 'trial'] as any[] } },
+      where: { id: laundryId, status: { not: 'banned' } },
       select: { id: true, ownerId: true },
     });
 
