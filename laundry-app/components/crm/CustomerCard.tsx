@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Customer } from '../../stores/crmStore';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -11,6 +12,7 @@ interface CustomerCardProps {
 
 export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
 
   const deferredBalance = Number(customer.deferredBalance) || 0;
   const lastVisitDate = customer.lastVisit ? new Date(customer.lastVisit) : null;
@@ -23,28 +25,36 @@ export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress })
     : '--';
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.header}>
         <View style={styles.nameRow}>
-          <Ionicons name="person-circle" size={24} color="#1a5fa8" />
-          <Text style={styles.name}>{customer.customerName || t('crm.unregisteredCustomer')}</Text>
+          <Ionicons name="person-circle" size={24} color={colors.primary} />
+          <Text style={[styles.name, { color: colors.text }]}>
+            {customer.customerName || t('crm.unregisteredCustomer')}
+          </Text>
         </View>
-        <Text style={styles.phone}>{customer.customerPhone || '--'}</Text>
+        <Text style={[styles.phone, { color: colors.textSecondary }]}>
+          {customer.customerPhone || '--'}
+        </Text>
       </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>{t('crm.lastVisit')}</Text>
-          <Text style={styles.statValue}>{formattedDate}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('crm.lastVisit')}</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{formattedDate}</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>{t('invoice.title')}</Text>
-          <Text style={styles.statValue}>{customer.totalInvoices || 0} {t('crm.visits')}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('invoice.title')}</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{customer.totalInvoices || 0} {t('crm.visits')}</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>{t('crm.deferredBalance')}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('crm.deferredBalance')}</Text>
           <Text style={[styles.statValue, deferredBalance > 0 ? styles.debtValue : styles.noDebtValue]}>
             {deferredBalance.toFixed(2)} ر.س
           </Text>

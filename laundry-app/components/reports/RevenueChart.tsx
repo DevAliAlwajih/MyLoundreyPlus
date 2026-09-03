@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface RevenueChartProps {
   dailyBreakdown: {
@@ -11,6 +12,8 @@ interface RevenueChartProps {
 }
 
 export const RevenueChart: React.FC<RevenueChartProps> = ({ dailyBreakdown }) => {
+  const { colors, themeMode } = useThemeStore();
+
   if (!dailyBreakdown || dailyBreakdown.length === 0) {
     return null;
   }
@@ -44,18 +47,18 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ dailyBreakdown }) =>
         yAxisLabel=""
         yAxisSuffix=""
         chartConfig={{
-          backgroundColor: '#fff',
-          backgroundGradientFrom: '#fff',
-          backgroundGradientTo: '#fff',
+          backgroundColor: colors.surface,
+          backgroundGradientFrom: colors.surface,
+          backgroundGradientTo: colors.surface,
           decimalPlaces: 0,
-          color: (opacity = 1) => `rgba(26, 95, 168, ${opacity})`, // primary blue
-          labelColor: (opacity = 1) => `rgba(100, 100, 100, ${opacity})`,
+          color: (opacity = 1) => colors.primary,
+          labelColor: (opacity = 1) => colors.textSecondary,
           style: {
             borderRadius: 16,
           },
           propsForBackgroundLines: {
             strokeDasharray: '', // solid background lines
-            stroke: '#eee',
+            stroke: colors.border,
           }
         }}
         style={{
@@ -72,7 +75,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ dailyBreakdown }) =>
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     paddingVertical: 10,
     borderRadius: 12,
   },

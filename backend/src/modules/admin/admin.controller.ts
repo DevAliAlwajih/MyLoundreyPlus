@@ -15,6 +15,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
+import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -91,6 +92,15 @@ export class AdminController {
     @Body() dto: UpdateLaundryStatusDto,
   ) {
     return this.adminService.updateLaundryStatus(id, req.user.id, dto);
+  }
+
+  @ApiOperation({ summary: 'Admin: Update laundry billing settings (commission rate, debt limit, balance, trial period)' })
+  @Patch('laundries/:id/billing')
+  updateLaundryBilling(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLaundryBillingDto,
+  ) {
+    return this.adminService.updateLaundryBilling(id, dto);
   }
 
   @ApiOperation({ summary: 'Admin: Get laundry devices' })

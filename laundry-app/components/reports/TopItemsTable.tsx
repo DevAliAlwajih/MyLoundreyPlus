@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TopItem } from '../../stores/reportStore';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface TopItemsTableProps {
   items: TopItem[];
@@ -9,9 +10,10 @@ interface TopItemsTableProps {
 
 export const TopItemsTable: React.FC<TopItemsTableProps> = ({ items }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
 
   if (!items || items.length === 0) {
-    return <Text style={styles.emptyText}>{t('reports.noData')}</Text>;
+    return <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('reports.noData')}</Text>;
   }
 
   // Find max revenue for bar scaling
@@ -25,19 +27,19 @@ export const TopItemsTable: React.FC<TopItemsTableProps> = ({ items }) => {
 
         return (
           <View key={index} style={styles.row}>
-            <View style={styles.rankBadge}>
-              <Text style={styles.rankText}>{index + 1}</Text>
+            <View style={[styles.rankBadge, { backgroundColor: colors.primary + '15' }]}>
+              <Text style={[styles.rankText, { color: colors.primary }]}>{index + 1}</Text>
             </View>
             
             <View style={styles.detailsCol}>
               <View style={styles.textRow}>
-                <Text style={styles.itemName} numberOfLines={1}>{name}</Text>
-                <Text style={styles.revenue}>{item.revenue.toFixed(2)} {t('reports.currency')}</Text>
+                <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={1}>{name}</Text>
+                <Text style={[styles.revenue, { color: colors.primary }]}>{item.revenue.toFixed(2)} {t('reports.currency')}</Text>
               </View>
-              <Text style={styles.quantity}>{item.quantity} {t('reports.quantity')}</Text>
+              <Text style={[styles.quantity, { color: colors.textSecondary }]}>{item.quantity} {t('reports.quantity')}</Text>
               
-              <View style={styles.barTrack}>
-                <View style={[styles.barFill, { width: `${percentage}%` }]} />
+              <View style={[styles.barTrack, { backgroundColor: colors.background }]}>
+                <View style={[styles.barFill, { width: `${percentage}%`, backgroundColor: colors.primary }]} />
               </View>
             </View>
           </View>
@@ -49,10 +51,9 @@ export const TopItemsTable: React.FC<TopItemsTableProps> = ({ items }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   emptyText: {
-    color: '#888',
     textAlign: 'center',
     padding: 16,
   },
@@ -65,7 +66,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#f0f8ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -74,7 +74,6 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#1a5fa8',
   },
   detailsCol: {
     flex: 1,
@@ -88,29 +87,24 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
     flex: 1,
   },
   revenue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1a5fa8',
     marginLeft: 8,
   },
   quantity: {
     fontSize: 12,
-    color: '#888',
     marginBottom: 6,
   },
   barTrack: {
     height: 6,
-    backgroundColor: '#f0f0f0',
     borderRadius: 3,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    backgroundColor: '#a0c4e8', // Light primary
     borderRadius: 3,
   },
 });

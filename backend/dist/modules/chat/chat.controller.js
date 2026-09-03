@@ -51,6 +51,9 @@ let ChatController = class ChatController {
         }
         return laundryId;
     }
+    getLaundryConversations(req) {
+        return this.chatService.getLaundryConversations(this.getLaundryId(req));
+    }
     getLaundryMessages(req, customerId, query) {
         return this.chatService.getLaundryMessages(this.getLaundryId(req), customerId, query);
     }
@@ -68,6 +71,30 @@ let ChatController = class ChatController {
     }
     markAsRead(req, laundryId) {
         return this.chatService.markAsRead(req.user.id, laundryId);
+    }
+    deleteMessage(req, messageId) {
+        return this.chatService.deleteMessage(messageId, req.user.id);
+    }
+    getAdminSupportConversations() {
+        return this.chatService.getAdminSupportConversations();
+    }
+    getAdminSupportMessages(type, targetId, query) {
+        if (type !== 'customer' && type !== 'laundry') {
+            throw new common_1.BadRequestException('Invalid type');
+        }
+        return this.chatService.getAdminSupportMessages(type, targetId, query);
+    }
+    sendMessageFromAdmin(req, type, targetId, dto) {
+        if (type !== 'customer' && type !== 'laundry') {
+            throw new common_1.BadRequestException('Invalid type');
+        }
+        return this.chatService.sendMessageFromAdmin(req.user.id, type, targetId, dto);
+    }
+    markAdminSupportMessagesAsRead(req, type, targetId) {
+        if (type !== 'customer' && type !== 'laundry') {
+            throw new common_1.BadRequestException('Invalid type');
+        }
+        return this.chatService.markAdminSupportMessagesAsRead(req.user.id, type, targetId);
     }
 };
 exports.ChatController = ChatController;
@@ -106,6 +133,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, send_message_dto_1.SendMessageDto]),
     __metadata("design:returntype", void 0)
 ], ChatController.prototype, "sendMessageToSupport", null);
+__decorate([
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('laundry'),
+    (0, common_1.Get)('laundry/conversations'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "getLaundryConversations", null);
 __decorate([
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('laundry'),
@@ -170,6 +206,56 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ChatController.prototype, "markAsRead", null);
+__decorate([
+    (0, common_1.Delete)('messages/:messageId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('messageId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "deleteMessage", null);
+__decorate([
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/support/conversations'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "getAdminSupportConversations", null);
+__decorate([
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/support/:type/:targetId/messages'),
+    __param(0, (0, common_1.Param)('type')),
+    __param(1, (0, common_1.Param)('targetId', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, query_messages_dto_1.QueryMessagesDto]),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "getAdminSupportMessages", null);
+__decorate([
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Post)('admin/support/:type/:targetId/messages'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('type')),
+    __param(2, (0, common_1.Param)('targetId', common_1.ParseUUIDPipe)),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, send_message_dto_1.SendMessageDto]),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "sendMessageFromAdmin", null);
+__decorate([
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Patch)('admin/support/:type/:targetId/read'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('type')),
+    __param(2, (0, common_1.Param)('targetId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], ChatController.prototype, "markAdminSupportMessagesAsRead", null);
 exports.ChatController = ChatController = __decorate([
     (0, swagger_1.ApiTags)('Chat'),
     (0, swagger_1.ApiBearerAuth)(),

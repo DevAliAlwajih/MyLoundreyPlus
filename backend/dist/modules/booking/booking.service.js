@@ -44,7 +44,7 @@ let BookingService = class BookingService {
     }
     async createBooking(customerId, dto) {
         const laundry = await this.prisma.laundry.findFirst({
-            where: { id: dto.laundryId, status: { in: ['active', 'trial'] } },
+            where: { id: dto.laundryId, status: { not: 'banned' } },
             select: { id: true, name: true },
         });
         if (!laundry) {

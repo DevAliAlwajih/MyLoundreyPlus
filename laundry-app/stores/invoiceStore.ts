@@ -32,6 +32,7 @@ interface InvoiceStore {
   isUrgent: boolean;
   discountPercent: number;
   notes: string;
+  expectedDeliveryAt?: string;
 
   // Computed totals
   subtotal: number;
@@ -60,6 +61,8 @@ interface InvoiceStore {
   setUrgent: (isUrgent: boolean) => void;
   setDiscount: (percent: number) => void;
   setNotes: (notes: string) => void;
+  setExpectedDeliveryAt: (date?: string) => void;
+  setTaxPercent: (percent: number) => void;
   clearCart: () => void;
   computeTotals: () => void;
 }
@@ -74,6 +77,7 @@ export const useInvoiceStore = create<InvoiceStore>((set, get) => ({
   isUrgent: false,
   discountPercent: 0,
   notes: '',
+  expectedDeliveryAt: undefined,
 
   subtotal: 0,
   discountAmount: 0,
@@ -250,6 +254,13 @@ export const useInvoiceStore = create<InvoiceStore>((set, get) => ({
   },
 
   setNotes: (notes) => set({ notes }),
+  
+  setExpectedDeliveryAt: (date) => set({ expectedDeliveryAt: date }),
+
+  setTaxPercent: (percent) => {
+    set({ taxPercent: percent });
+    get().computeTotals();
+  },
 
   clearCart: () => {
     set({
@@ -262,6 +273,7 @@ export const useInvoiceStore = create<InvoiceStore>((set, get) => ({
       isUrgent: false,
       discountPercent: 0,
       notes: '',
+      expectedDeliveryAt: undefined,
       subtotal: 0,
       discountAmount: 0,
       urgencyFeeAmount: 0,

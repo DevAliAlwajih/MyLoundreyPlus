@@ -35,7 +35,7 @@ export default function SettingsScreen() {
   const [biometricTypeStr, setBiometricTypeStr] = useState<string | null>(null);
 
   useEffect(() => {
-    // fetchNotificationPrefs(); // مؤجلة لمرحلة الإعدادات الشخصية
+    fetchNotificationPrefs();
     fetchSubscription();
 
 

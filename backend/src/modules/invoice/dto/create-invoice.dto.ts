@@ -106,4 +106,8 @@ export class CreateInvoiceDto {
   @IsOptional()
   @Type(() => Date)
   expectedDeliveryAt?: Date;
+
+  @IsOptional()
+  @IsIn(['draft', 'received'], { message: "status يجب أن يكون 'draft' أو 'received'" })
+  status?: 'draft' | 'received';
 }

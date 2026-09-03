@@ -22,6 +22,7 @@ const update_laundry_dto_1 = require("./dto/update-laundry.dto");
 const category_dto_1 = require("./dto/category.dto");
 const item_dto_1 = require("./dto/item.dto");
 const create_holiday_dto_1 = require("./dto/create-holiday.dto");
+const update_customer_profile_dto_1 = require("./dto/update-customer-profile.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -112,6 +113,14 @@ let LaundryOwnerController = class LaundryOwnerController {
     getMyMenu(req) {
         return this.laundryService.getMyMenu(req.user.id);
     }
+    getWallet(req) {
+        return this.laundryService.getWallet(req.user.id);
+    }
+    getWalletTransactions(req, page, limit) {
+        const p = page ? parseInt(page, 10) : 1;
+        const l = limit ? parseInt(limit, 10) : 20;
+        return this.laundryService.getWalletTransactions(req.user.id, p, l);
+    }
     createCategory(req, dto) {
         return this.laundryService.createCategory(req.user.id, dto);
     }
@@ -152,6 +161,9 @@ let LaundryOwnerController = class LaundryOwnerController {
     }
     remindCustomer(req, customerId, channel) {
         return this.laundryService.remindCustomer(req.user.id, customerId, channel);
+    }
+    updateCustomerProfile(req, customerId, dto) {
+        return this.laundryService.updateCustomerProfile(req.user.id, customerId, dto);
     }
 };
 exports.LaundryOwnerController = LaundryOwnerController;
@@ -214,6 +226,22 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], LaundryOwnerController.prototype, "getMyMenu", null);
+__decorate([
+    (0, common_1.Get)('wallet'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], LaundryOwnerController.prototype, "getWallet", null);
+__decorate([
+    (0, common_1.Get)('wallet/transactions'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], LaundryOwnerController.prototype, "getWalletTransactions", null);
 __decorate([
     (0, common_1.Post)('categories'),
     __param(0, (0, common_1.Req)()),
@@ -325,6 +353,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", void 0)
 ], LaundryOwnerController.prototype, "remindCustomer", null);
+__decorate([
+    (0, common_1.Patch)('customers/:customerId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('customerId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_customer_profile_dto_1.UpdateCustomerProfileDto]),
+    __metadata("design:returntype", void 0)
+], LaundryOwnerController.prototype, "updateCustomerProfile", null);
 exports.LaundryOwnerController = LaundryOwnerController = __decorate([
     (0, common_1.Controller)('my-laundry'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

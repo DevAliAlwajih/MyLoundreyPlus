@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const ads_controller_1 = require("./ads.controller");
 const ads_service_1 = require("./ads.service");
 const prisma_module_1 = require("../../prisma/prisma.module");
+const upload_module_1 = require("../../upload/upload.module");
 let AdsModule = class AdsModule {
 };
 exports.AdsModule = AdsModule;
 exports.AdsModule = AdsModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, upload_module_1.UploadModule],
         controllers: [ads_controller_1.AdsController],
         providers: [ads_service_1.AdsService],
         exports: [ads_service_1.AdsService],

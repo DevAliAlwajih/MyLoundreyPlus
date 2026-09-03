@@ -4,13 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useCustomers } from '../../../hooks/useCRM';
+import { useCustomers, useUpdateCustomerProfile } from '../../../hooks/useCRM';
 import { CustomerCard } from '../../../components/crm/CustomerCard';
+import { useThemeStore } from '../../../stores/themeStore';
+import { Modal } from 'react-native';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-};
+
 
 export default function CRMScreen() {
   const router = useRouter();
@@ -18,16 +17,52 @@ export default function CRMScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDeferred, setFilterDeferred] = useState(false);
+  const { colors } = useThemeStore();
+
+  // Add Customer Modal State
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newLocation, setNewLocation] = useState('');
 
   const { data: customers, isLoading, isError, refetch, isRefetching } = useCustomers(searchQuery, filterDeferred);
+  const addCustomerMutation = useUpdateCustomerProfile();
+
+  const handleAddCustomer = () => {
+    if (!newName.trim() || !newPhone.trim()) {
+      alert(t('common.error', 'الاسم ورقم الهاتف مطلوبان'));
+      return;
+    }
+    
+    // We pass the phone as customerId to create a local profile
+    addCustomerMutation.mutate(
+      { 
+        customerId: newPhone, 
+        data: { localName: newName, localPhone: newPhone, notes: newLocation } 
+      },
+      {
+        onSuccess: () => {
+          setAddModalVisible(false);
+          setNewName('');
+          setNewPhone('');
+          setNewLocation('');
+          refetch();
+        },
+        onError: (err: any) => {
+          alert(err.response?.data?.message || t('common.error', 'حدث خطأ'));
+        }
+      }
+    );
+  };
 
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+    <View style={[styles.headerContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder={t('crm.search')}
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           onSubmitEditing={() => refetch()}
@@ -37,19 +72,19 @@ export default function CRMScreen() {
 
       <View style={styles.filtersContainer}>
         <TouchableOpacity
-          style={[styles.filterBtn, !filterDeferred && styles.filterBtnActive]}
+          style={[styles.filterBtn, { backgroundColor: colors.background }, !filterDeferred && { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
           onPress={() => setFilterDeferred(false)}
         >
-          <Text style={[styles.filterText, !filterDeferred && styles.filterTextActive]}>
+          <Text style={[styles.filterText, { color: colors.textSecondary }, !filterDeferred && { color: colors.primary, fontWeight: 'bold' }]}>
             {t('crm.allCustomers')}
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.filterBtn, filterDeferred && styles.filterBtnActive]}
+          style={[styles.filterBtn, { backgroundColor: colors.background }, filterDeferred && { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
           onPress={() => setFilterDeferred(true)}
         >
-          <Text style={[styles.filterText, filterDeferred && styles.filterTextActive]}>
+          <Text style={[styles.filterText, { color: colors.textSecondary }, filterDeferred && { color: colors.primary, fontWeight: 'bold' }]}>
             {t('crm.withDebt')}
           </Text>
         </TouchableOpacity>
@@ -58,26 +93,26 @@ export default function CRMScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('crm.title')}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>{t('crm.title')}</Text>
       </View>
 
       {renderHeader()}
 
       {isLoading && !isRefetching ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>{t('crm.failedToLoad')}</Text>
-          <TouchableOpacity onPress={() => refetch()}><Text style={{ color: COLORS.primary }}>{t('common.retry')}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => refetch()}><Text style={{ color: colors.primary }}>{t('common.retry')}</Text></TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={customers}
-          keyExtractor={(item, index) => item.customerId || index.toString()}
+          keyExtractor={(item, index) => `${item.customerId ?? 'c'}-${index}`}
           contentContainerStyle={styles.listContent}
           refreshing={isRefetching}
           onRefresh={refetch}
@@ -101,6 +136,74 @@ export default function CRMScreen() {
           }
         />
       )}
+
+      {/* FAB */}
+      <TouchableOpacity 
+        style={[styles.fab, { backgroundColor: colors.primary }]} 
+        onPress={() => setAddModalVisible(true)}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Add Customer Modal */}
+      <Modal visible={addModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>إضافة عميل جديد</Text>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>الاسم (مطلوب)</Text>
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                value={newName}
+                onChangeText={setNewName}
+                placeholder="اسم العميل"
+                placeholderTextColor={colors.textMuted}
+                textAlign="right"
+              />
+
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>رقم الهاتف (مطلوب)</Text>
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                value={newPhone}
+                onChangeText={setNewPhone}
+                placeholder="05xxxxxxxx"
+                keyboardType="phone-pad"
+                placeholderTextColor={colors.textMuted}
+                textAlign="right"
+              />
+
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>الموقع (اختياري)</Text>
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                value={newLocation}
+                onChangeText={setNewLocation}
+                placeholder="موقع العميل"
+                placeholderTextColor={colors.textMuted}
+                textAlign="right"
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.saveButton, { backgroundColor: colors.primary }]} 
+              onPress={handleAddCustomer}
+              disabled={addCustomerMutation.isPending}
+            >
+              {addCustomerMutation.isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>إضافة العميل</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -108,32 +211,27 @@ export default function CRMScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
   },
   headerContainer: {
-    backgroundColor: '#fff',
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
     marginHorizontal: 20,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginBottom: 12,
+    height: 44,
   },
   searchIcon: {
     marginRight: 8,
@@ -142,7 +240,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 14,
-    color: '#333',
   },
   filtersContainer: {
     flexDirection: 'row',
@@ -152,24 +249,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  filterBtnActive: {
-    backgroundColor: '#f0f8ff',
-    borderColor: '#1a5fa8',
-  },
+  filterBtnActive: {},
   filterText: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
-  filterTextActive: {
-    color: '#1a5fa8',
-    fontWeight: 'bold',
-  },
+  filterTextActive: {},
   listContent: {
     padding: 20,
     paddingBottom: 40,
@@ -191,5 +280,68 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: '#999',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalBody: {
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 8,
+    fontWeight: '500',
+    textAlign: 'right',
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    height: 50,
+    fontSize: 15,
+  },
+  saveButton: {
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

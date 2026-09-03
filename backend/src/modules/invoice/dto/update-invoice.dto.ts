@@ -36,4 +36,20 @@ export class UpdateInvoiceDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  editReason?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  expectedDeliveryAt?: Date;
+
+  @IsOptional()
+  @IsString()
+  walkInLocation?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  createdAt?: Date;
 }

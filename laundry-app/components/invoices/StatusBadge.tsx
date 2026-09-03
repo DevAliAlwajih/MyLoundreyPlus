@@ -12,21 +12,22 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStyle = () => {
     switch (status) {
       case 'draft':
-        return { bg: '#e2e3e5', text: '#383d41' };
+        return { bg: '#f3f4f6', text: '#6b7280' };      // رمادي — مسودة
       case 'received':
-        return { bg: '#cce5ff', text: '#004085' };
-      case 'washing':
-        return { bg: '#d1ecf1', text: '#0c5460' };
-      case 'ironing':
-        return { bg: '#fff3cd', text: '#856404' };
-      case 'ready':
-        return { bg: '#d4edda', text: '#155724' };
+        return { bg: '#dbeafe', text: '#1e40af' };      // أزرق — قيد التجهيز
       case 'completed':
-        return { bg: '#d4edda', text: '#155724' }; // Or a different shade of green
+        return { bg: '#d1fae5', text: '#065f46' };      // أخضر — تم التسليم
       case 'cancelled':
-        return { bg: '#f8d7da', text: '#721c24' };
+        return { bg: '#fee2e2', text: '#991b1b' };      // أحمر — ملغي
+      // حالات قديمة للتوافقية مع بيانات موجودة
+      case 'washing':
+        return { bg: '#dbeafe', text: '#1e40af' };
+      case 'ironing':
+        return { bg: '#dbeafe', text: '#1e40af' };
+      case 'ready':
+        return { bg: '#d1fae5', text: '#065f46' };
       default:
-        return { bg: '#e2e3e5', text: '#383d41' };
+        return { bg: '#f3f4f6', text: '#6b7280' };
     }
   };
 

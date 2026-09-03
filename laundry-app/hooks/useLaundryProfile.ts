@@ -3,6 +3,29 @@ import api from '../lib/axios';
 import { useLaundryStore, LaundryProfile, LaundryHoliday } from '../stores/laundryStore';
 import { useAuthStore } from '../stores/authStore';
 
+const formatProfileData = (data: any) => {
+  if (data && data.workingHours && !Array.isArray(data.workingHours)) {
+    const whObj = data.workingHours as any;
+    const days: ('sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday')[] = [
+      'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
+    ];
+    
+    data.workingHours = days.map(day => {
+      const backendDay = whObj[day];
+      if (backendDay) {
+        return {
+          day,
+          isOpen: !backendDay.closed,
+          openTime: backendDay.open || '08:00',
+          closeTime: backendDay.close || '22:00',
+        };
+      }
+      return { day, isOpen: false, openTime: '08:00', closeTime: '22:00' };
+    });
+  }
+  return data;
+};
+
 export const useProfile = () => {
   const { setProfile } = useLaundryStore();
 
@@ -11,8 +34,10 @@ export const useProfile = () => {
     queryFn: async () => {
       const response = await api.get('/my-laundry');
       const data = response.data?.data as LaundryProfile;
-      setProfile(data);
-      return data;
+
+      const formattedData = formatProfileData(data);
+      setProfile(formattedData);
+      return formattedData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -21,14 +46,21 @@ export const useProfile = () => {
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
   const updateRememberedAccount = useAuthStore((s) => s.updateRememberedAccount);
+  const setProfile = useLaundryStore((s) => s.setProfile);
 
   return useMutation({
     mutationFn: async (data: Partial<LaundryProfile>) => {
       const response = await api.patch('/my-laundry', data);
       return response.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-laundry-profile'] });
+      
+      // Update local store immediately so changes reflect on screen exit/return
+      if (response?.data) {
+        const formattedData = formatProfileData(response.data);
+        setProfile(formattedData);
+      }
       
       const updates: any = {};
       if (variables.name !== undefined) updates.laundryName = variables.name;

@@ -6,7 +6,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.myloundreyplus.c
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type'              : 'application/json',
     'ngrok-skip-browser-warning': 'true', // يتجاوز صفحة تحذير ngrok المجاني

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AdminAd } from '../../hooks/usePromotions';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface AdminAdCardProps {
   ad: AdminAd;
@@ -10,21 +11,22 @@ interface AdminAdCardProps {
 
 export const AdminAdCard: React.FC<AdminAdCardProps> = ({ ad }) => {
   const { i18n } = useTranslation();
+  const { colors } = useThemeStore();
 
   const startDate = new Date(ad.startDate).toLocaleDateString(i18n.language);
   const endDate = new Date(ad.endDate).toLocaleDateString(i18n.language);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       {ad.imageUrl && (
         <Image source={{ uri: ad.imageUrl }} style={styles.image} resizeMode="cover" />
       )}
       <View style={styles.content}>
-        <Text style={styles.title}>{ad.title}</Text>
-        <Text style={styles.description}>{ad.description}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{ad.title}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>{ad.description}</Text>
         <View style={styles.datesRow}>
-          <Ionicons name="time-outline" size={14} color="#888" />
-          <Text style={styles.datesText}>{startDate} - {endDate}</Text>
+          <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+          <Text style={[styles.datesText, { color: colors.textSecondary }]}>{startDate} - {endDate}</Text>
         </View>
       </View>
     </View>
@@ -33,11 +35,9 @@ export const AdminAdCard: React.FC<AdminAdCardProps> = ({ ad }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#eee',
     overflow: 'hidden',
   },
   image: {
@@ -50,13 +50,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 6,
     textAlign: 'left',
   },
   description: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 12,
     lineHeight: 20,
     textAlign: 'left',
@@ -67,7 +65,6 @@ const styles = StyleSheet.create({
   },
   datesText: {
     fontSize: 12,
-    color: '#888',
     marginLeft: 6,
   },
 });

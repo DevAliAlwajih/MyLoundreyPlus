@@ -42,10 +42,10 @@ export default function LoginPage() {
       
       const result = response.data.data || response.data;
       const user = result.user;
-      const tokens = result.tokens;
+      const accessToken = result.accessToken;
 
       console.log('DEBUG - Extracted User:', user);
-      console.log('DEBUG - Extracted Tokens:', tokens);
+      console.log('DEBUG - Extracted Access Token:', accessToken);
 
       if (!user || user.role !== 'admin') {
         console.error('DEBUG - Authorization Failed. Role:', user?.role);
@@ -53,8 +53,8 @@ export default function LoginPage() {
       }
 
       // تخزين التوكن
-      localStorage.setItem('adminToken', tokens.accessToken);
-      login(tokens.accessToken);
+      localStorage.setItem('adminToken', accessToken);
+      login(accessToken);
       navigate('/');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'فشل تسجيل الدخول'

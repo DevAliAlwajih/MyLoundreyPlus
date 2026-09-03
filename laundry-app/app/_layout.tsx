@@ -7,8 +7,20 @@ import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { initI18n } from '../i18n'; // Bootstrap i18n
+import * as Notifications from 'expo-notifications';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// Setup notification handler to display notifications in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 // Use existing colors if present or define primary
 const COLORS = {
@@ -83,6 +95,18 @@ export default function RootLayout() {
       console.log('[RootLayout Auth Check] -> No action taken', isPreviewMode ? '(preview mode)' : '');
     }
   }, [isAuthenticated, isReady, isLoading, segments]);
+
+  // Listen to foreground notifications to refresh data in real-time
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      console.log('Received foreground notification:', notification);
+      // Invalidate notifications query to fetch the new one and update unread count
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   if (!isReady || isLoading) {
     return (

@@ -21,14 +21,14 @@ export declare class PromotionController {
             isExpired: boolean;
             isUpcoming: boolean;
             id: string;
+            title: string;
+            startDate: Date | null;
+            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            laundryId: string;
-            startDate: Date | null;
-            endDate: Date | null;
             description: string | null;
+            laundryId: string;
             imageUrl: string | null;
         }[];
         meta: {
@@ -42,14 +42,14 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
+            title: string;
+            startDate: Date | null;
+            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            laundryId: string;
-            startDate: Date | null;
-            endDate: Date | null;
             description: string | null;
+            laundryId: string;
             imageUrl: string | null;
         };
     }>;
@@ -64,14 +64,14 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
+            title: string;
+            startDate: Date | null;
+            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            laundryId: string;
-            startDate: Date | null;
-            endDate: Date | null;
             description: string | null;
+            laundryId: string;
             imageUrl: string | null;
         };
     }>;
@@ -83,10 +83,10 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
             title: string;
             startDate: Date;
             endDate: Date;
+            createdAt: Date;
             description: string;
             imageUrl: string;
         }[];
@@ -95,14 +95,14 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
+            title: string;
+            startDate: Date | null;
+            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            laundryId: string;
-            startDate: Date | null;
-            endDate: Date | null;
             description: string | null;
+            laundryId: string;
             imageUrl: string | null;
         };
     }>;

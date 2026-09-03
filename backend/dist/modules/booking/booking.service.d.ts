@@ -13,17 +13,17 @@ export declare class BookingService {
             id: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
             status: string;
+            invoice_id: string;
+            created_at: Date;
             notes: string;
             booking_date: Date;
             booking_time: Date;
-            invoice_id: string;
-            created_at: Date;
         };
     }>;
     getMyBookings(customerId: string, query: QueryBookingDto): Promise<{
@@ -32,17 +32,17 @@ export declare class BookingService {
             id: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
             status: string;
+            invoice_id: string;
+            created_at: Date;
             notes: string;
             booking_date: Date;
             booking_time: Date;
-            invoice_id: string;
-            created_at: Date;
         }[];
         meta: {
             page: number;
@@ -57,17 +57,17 @@ export declare class BookingService {
             id: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
             status: string;
+            invoice_id: string;
+            created_at: Date;
             notes: string;
             booking_date: Date;
             booking_time: Date;
-            invoice_id: string;
-            created_at: Date;
         };
     }>;
     cancelBooking(customerId: string, bookingId: string): Promise<{
@@ -78,18 +78,18 @@ export declare class BookingService {
         success: boolean;
         data: {
             id: string;
-            status: string;
             users: {
                 id: string;
                 phoneNumber: string;
                 uniqueId: string;
                 fullName: string;
             };
+            status: string;
+            invoice_id: string;
+            created_at: Date;
             notes: string;
             booking_date: Date;
             booking_time: Date;
-            invoice_id: string;
-            created_at: Date;
         }[];
         meta: {
             page: number;
@@ -102,18 +102,18 @@ export declare class BookingService {
         success: boolean;
         data: {
             id: string;
-            status: string;
             users: {
                 id: string;
                 phoneNumber: string;
                 uniqueId: string;
                 fullName: string;
             };
+            status: string;
+            invoice_id: string;
+            created_at: Date;
             notes: string;
             booking_date: Date;
             booking_time: Date;
-            invoice_id: string;
-            created_at: Date;
         };
     }>;
     updateBookingStatus(laundryId: string, bookingId: string, dto: UpdateBookingStatusDto): Promise<{

@@ -119,4 +119,9 @@ __decorate([
     (0, class_transformer_1.Type)(() => Date),
     __metadata("design:type", Date)
 ], CreateInvoiceDto.prototype, "expectedDeliveryAt", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['draft', 'received'], { message: "status يجب أن يكون 'draft' أو 'received'" }),
+    __metadata("design:type", String)
+], CreateInvoiceDto.prototype, "status", void 0);
 //# sourceMappingURL=create-invoice.dto.js.map

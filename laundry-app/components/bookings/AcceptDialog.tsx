@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Booking } from '../../stores/bookingStore';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface AcceptDialogProps {
   visible: boolean;
@@ -20,6 +21,7 @@ export const AcceptDialog: React.FC<AcceptDialogProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [notes, setNotes] = useState('');
+  const { colors } = useThemeStore();
 
   const handleClose = () => {
     setNotes('');
@@ -46,30 +48,31 @@ export const AcceptDialog: React.FC<AcceptDialogProps> = ({
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={styles.dialog}>
+            <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
               {/* Icon */}
               <View style={styles.iconContainer}>
                 <Ionicons name="checkmark-circle" size={44} color="#2ecc71" />
               </View>
 
-              <Text style={styles.title}>{t('bookings.confirmAccept')}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{t('bookings.confirmAccept')}</Text>
 
               {/* Booking Details */}
-              <View style={styles.detailsBox}>
+              <View style={[styles.detailsBox, { backgroundColor: colors.background }]}>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>{t('bookings.customer')}</Text>
-                  <Text style={styles.detailValue}>{booking.customerName}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>{t('bookings.customer')}</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{booking.customerName}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>{t('bookings.appointment')}</Text>
-                  <Text style={styles.detailValue}>{scheduledDate}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>{t('bookings.appointment')}</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{scheduledDate}</Text>
                 </View>
               </View>
 
               {/* Optional Notes */}
               <TextInput
-                style={styles.notesInput}
+                style={[styles.notesInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                 placeholder={t('bookings.notesOptional')}
+                placeholderTextColor={colors.textSecondary}
                 value={notes}
                 onChangeText={setNotes}
                 multiline
@@ -78,8 +81,8 @@ export const AcceptDialog: React.FC<AcceptDialogProps> = ({
 
               {/* Actions */}
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={handleClose}>
-                  <Text style={styles.cancelText}>{t('common.cancel')}</Text>
+                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border, backgroundColor: colors.background }]} onPress={handleClose}>
+                  <Text style={[styles.cancelText, { color: colors.textSecondary }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.acceptBtn, isSubmitting && styles.disabledBtn]}
@@ -109,7 +112,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   dialog: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -122,13 +124,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#333',
     textAlign: 'center',
     marginBottom: 20,
   },
   detailsBox: {
     width: '100%',
-    backgroundColor: '#f8f9fa',
     borderRadius: 10,
     padding: 14,
     marginBottom: 16,
@@ -140,12 +140,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#888',
   },
   detailValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     flex: 1,
     textAlign: 'right',
     marginLeft: 8,
@@ -153,14 +151,12 @@ const styles = StyleSheet.create({
   notesInput: {
     width: '100%',
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     padding: 12,
     minHeight: 70,
     textAlignVertical: 'top',
     fontSize: 14,
     marginBottom: 20,
-    color: '#333',
   },
   actions: {
     flexDirection: 'row',
@@ -171,13 +167,11 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
   },
   cancelText: {
-    color: '#666',
     fontSize: 15,
   },
   acceptBtn: {

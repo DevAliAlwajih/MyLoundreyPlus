@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useInvoiceStore, PaymentType } from '../../../stores/invoiceStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useCatalogMenu, useCreateInvoice, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
+import { useCustomers } from '../../../hooks/useCRM';
 import { QRScannerModal } from '../../../components/invoices/QRScannerModal';
 import { UniqueIdModal } from '../../../components/invoices/UniqueIdModal';
 import { useThemeStore } from '../../../stores/themeStore';
@@ -30,6 +32,19 @@ export default function NewInvoiceScreen() {
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [idModalVisible, setIdModalVisible] = useState(false);
   const [loadingCustomer, setLoadingCustomer] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCustomerSearch(store.customerName);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [store.customerName]);
+
+  const { data: customersData, isFetching: loadingCustomersData } = useCustomers(debouncedCustomerSearch);
 
   useEffect(() => {
     store.clearCart();
@@ -38,6 +53,14 @@ export default function NewInvoiceScreen() {
       if (params.prefillNotes) store.setNotes(params.prefillNotes);
     }
   }, []);
+
+  // Set dynamic tax based on laundry settings reactively
+  useEffect(() => {
+    if (laundryStore.profile) {
+      const taxRate = laundryStore.profile.tax_enabled ? (laundryStore.profile.tax_rate || 0) : 0;
+      store.setTaxPercent(taxRate);
+    }
+  }, [laundryStore.profile?.tax_enabled, laundryStore.profile?.tax_rate]);
 
   const categories = useMemo(() => {
     return menuData || [];
@@ -109,14 +132,15 @@ export default function NewInvoiceScreen() {
       paymentType: store.paymentType,
       isUrgent: store.isUrgent,
       notes: store.notes,
+      expectedDeliveryAt: store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt).toISOString() : undefined,
       discountPercent: store.discountPercent,
+      status,   // تمرير الحالة صراحةً للباكند
       items: store.cart.map((c) => ({
         itemId: c.itemId,
         quantity: c.quantity,
         unitPrice: c.unitPrice,
         serviceType: c.serviceType,
         processingType: c.processingType,
-        expectedDeliveryAt: c.expectedDeliveryAt,
         notes: c.notes,
       }))
     };
@@ -183,11 +207,39 @@ export default function NewInvoiceScreen() {
         <TextInput
           style={styles.input}
           value={store.customerName}
-          onChangeText={(val) => store.setCustomer(val, store.customerPhone, store.customerLocation, store.customerId)}
+          onChangeText={(val) => {
+            store.setCustomer(val, store.customerPhone, store.customerLocation, undefined);
+            setShowCustomerDropdown(true);
+          }}
+          onFocus={() => setShowCustomerDropdown(true)}
+          onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
           placeholder="علي محمد الوجيه"
           placeholderTextColor={colors.textMuted}
           textAlign={i18n.language === 'ar' ? 'right' : 'left'}
         />
+        {showCustomerDropdown && store.customerName.length > 0 && !store.customerId && (
+          <View style={styles.dropdownContainer}>
+            {loadingCustomersData ? (
+               <ActivityIndicator size="small" color={colors.primary} style={{ margin: 10 }} />
+            ) : customersData && customersData.length > 0 ? (
+               customersData.slice(0, 5).map(cust => (
+                 <TouchableOpacity 
+                    key={cust.customerId} 
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                       store.setCustomer(cust.customerName, cust.customerPhone || '', '', cust.customerId);
+                       setShowCustomerDropdown(false);
+                    }}
+                 >
+                    <Text style={styles.dropdownItemName}>{cust.customerName}</Text>
+                    <Text style={styles.dropdownItemPhone}>{cust.customerPhone}</Text>
+                 </TouchableOpacity>
+               ))
+            ) : (
+               <Text style={styles.dropdownEmptyText}>لا يوجد عملاء مطابقين</Text>
+            )}
+          </View>
+        )}
       </View>
  
       <View style={styles.inputContainer}>
@@ -445,6 +497,32 @@ export default function NewInvoiceScreen() {
           </View>
         </View>
       )}
+
+      <View style={[styles.urgencyDivider, { marginTop: 16, marginBottom: 16, height: 1, backgroundColor: colors.border }]} />
+      <View style={styles.deliveryDateContainer}>
+        <Text style={styles.deliveryDateLabel}>تاريخ التسليم المتوقع (اختياري)</Text>
+        <TouchableOpacity style={styles.deliveryDateBtn} onPress={() => setShowDatePicker(true)}>
+          <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+          <Text style={styles.deliveryDateText}>
+            {store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt).toLocaleDateString('ar-SA') : 'تحديد تاريخ'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      {showDatePicker && (
+        <DateTimePicker
+          value={store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt) : new Date()}
+          mode="date"
+          display="default"
+          minimumDate={new Date()}
+          onChange={(event, date) => {
+            setShowDatePicker(Platform.OS === 'ios');
+            if (date) {
+              store.setExpectedDeliveryAt(date.toISOString());
+            }
+          }}
+        />
+      )}
     </View>
   );
 
@@ -513,10 +591,10 @@ export default function NewInvoiceScreen() {
 
       <View style={styles.actionButtonsRow}>
         <TouchableOpacity style={styles.draftBtn} onPress={() => handleCreate('draft')} disabled={createMutation.isPending}>
-          <Text style={styles.draftBtnText}>حفظ كمسودة</Text>
+          <Text style={styles.draftBtnText}>💾 حفظ كمسودة</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.createBtn} onPress={() => handleCreate('received')} disabled={createMutation.isPending}>
-          {createMutation.isPending ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.createBtnText}>✓ إنشاء الفاتورة</Text>}
+          {createMutation.isPending ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.createBtnText}>✓ إنشاء + قيد التجهيز</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -626,6 +704,37 @@ const getStyles = (colors: any) => StyleSheet.create({
   input: {
     borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 10, fontSize: 14, color: colors.text, backgroundColor: colors.background,
   },
+  dropdownContainer: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownItemName: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  dropdownItemPhone: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  dropdownEmptyText: {
+    padding: 12,
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
 
   // Part B
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -734,6 +843,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   urgencyFeeInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 8, backgroundColor: colors.background },
   urgencyFeeInput: { paddingVertical: 4, paddingHorizontal: 4, fontSize: 13, minWidth: 50, textAlign: 'center', color: colors.text },
   urgencyFeeCurrency: { fontSize: 12, color: colors.textSecondary },
+  deliveryDateContainer: { marginTop: 4 },
+  deliveryDateLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, fontWeight: '500' },
+  deliveryDateBtn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 12, backgroundColor: colors.background },
+  deliveryDateText: { fontSize: 14, color: colors.text, marginLeft: 8 },
 
   // Part E
   totalsContainer: { marginBottom: 16 },

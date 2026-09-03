@@ -6,23 +6,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useInvoices } from '../../../hooks/useInvoices';
 import { InvoiceCard } from '../../../components/invoices/InvoiceCard';
-
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-};
+import { useThemeStore } from '../../../stores/themeStore';
 
 const STATUS_FILTERS = [
-  { id: '', labelKey: 'invoice.status.all' },
-  { id: 'ready', labelKey: 'invoice.status.ready' },
-  { id: 'received', labelKey: 'invoice.status.notReady' },
-  { id: 'washing', labelKey: 'invoice.status.processing' },
-  { id: 'completed', labelKey: 'invoice.status.delivered' },
+  { id: '',          labelKey: 'invoice.status.all' },
+  { id: 'draft',     labelKey: 'invoice.status.draft' },
+  { id: 'received',  labelKey: 'invoice.status.received' },
+  { id: 'completed', labelKey: 'invoice.status.completed' },
+  { id: 'cancelled', labelKey: 'invoice.status.cancelled' },
 ];
 
 export default function InvoiceListScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
   
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>(''); // empty means all
@@ -38,12 +35,13 @@ export default function InvoiceListScreen() {
   };
 
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+    <View style={[styles.headerContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder={t('invoice.searchPlaceholder')}
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
           onSubmitEditing={() => refetch()}
@@ -60,10 +58,18 @@ export default function InvoiceListScreen() {
             const isSelected = selectedStatus === item.id;
             return (
               <TouchableOpacity
-                style={[styles.filterChip, isSelected && styles.filterChipSelected]}
+                style={[
+                  styles.filterChip,
+                  { backgroundColor: colors.background },
+                  isSelected && { backgroundColor: colors.primary + '15', borderColor: colors.primary }
+                ]}
                 onPress={() => handleFilterPress(item.id)}
               >
-                <Text style={[styles.filterText, isSelected && styles.filterTextSelected]}>
+                <Text style={[
+                  styles.filterText,
+                  { color: colors.textSecondary },
+                  isSelected && { color: colors.primary, fontWeight: 'bold' }
+                ]}>
                   {item.id === '' ? t('invoice.status.all') : t(item.labelKey)}
                 </Text>
               </TouchableOpacity>
@@ -75,11 +81,11 @@ export default function InvoiceListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('invoice.title')}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.title, { color: colors.text }]}>{t('invoice.title')}</Text>
         <TouchableOpacity onPress={() => router.push('/(app)/invoices/items')}>
-          <Ionicons name="list" size={24} color="#1a5fa8" />
+          <Ionicons name="list" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -87,12 +93,12 @@ export default function InvoiceListScreen() {
 
       {isLoading && !isRefetching ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
         <View style={styles.centerContainer}>
           <Text style={styles.errorText}>{t('invoice.failedToLoad')}</Text>
-          <TouchableOpacity onPress={() => refetch()}><Text style={styles.retryText}>{t('common.retry')}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => refetch()}><Text style={{ color: colors.primary, fontWeight: 'bold' }}>{t('common.retry')}</Text></TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -109,15 +115,15 @@ export default function InvoiceListScreen() {
           onRefresh={refetch}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="document-text-outline" size={60} color="#ccc" />
-              <Text style={styles.emptyText}>{t('invoice.noInvoices')}</Text>
+              <Ionicons name="document-text-outline" size={60} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('invoice.noInvoices')}</Text>
             </View>
           }
         />
       )}
 
       <TouchableOpacity 
-        style={styles.fab} 
+        style={[styles.fab, { backgroundColor: colors.primary }]} 
         onPress={() => router.push('/(app)/invoices/new')}
       >
         <Ionicons name="add" size={28} color="#fff" />
@@ -129,7 +135,6 @@ export default function InvoiceListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
   header: {
     flexDirection: 'row',
@@ -137,23 +142,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
   },
   headerContainer: {
-    backgroundColor: '#fff',
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
     marginHorizontal: 20,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -166,7 +166,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 14,
-    color: '#333',
     textAlign: 'right',
   },
   filtersContainer: {
@@ -176,23 +175,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  filterChipSelected: {
-    backgroundColor: '#f0f8ff',
-    borderColor: '#1a5fa8',
-  },
   filterText: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
-  },
-  filterTextSelected: {
-    color: '#1a5fa8',
-    fontWeight: 'bold',
   },
   listContent: {
     padding: 20,
@@ -227,7 +216,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#1a5fa8',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

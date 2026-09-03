@@ -19,4 +19,5 @@ export declare class CreateInvoiceDto {
     isUrgent?: boolean;
     notes?: string;
     expectedDeliveryAt?: Date;
+    status?: 'draft' | 'received';
 }

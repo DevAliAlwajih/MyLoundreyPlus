@@ -36,7 +36,7 @@ let InvoiceLaundryController = class InvoiceLaundryController {
         return this.invoiceService.findOne(id, req.user.laundryId ?? req.user.id);
     }
     update(req, id, dto) {
-        return this.invoiceService.updateInvoice(id, req.user.laundryId ?? req.user.id, dto);
+        return this.invoiceService.updateInvoice(id, req.user.laundryId ?? req.user.id, req.user.id, dto);
     }
     updateStatus(req, id, dto) {
         return this.invoiceService.updateStatus(id, req.user.laundryId ?? req.user.id, req.user.id, dto);

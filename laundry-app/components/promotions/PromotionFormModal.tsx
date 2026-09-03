@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { Promotion, useCreatePromotion, useUpdatePromotion, useUploadPromotionImage } from '../../hooks/usePromotions';
+import { useThemeStore } from '../../stores/themeStore';
 
 const getSchema = (t: any) => z.object({
   title: z.string().min(3, t('promotions.validationTitle')),
@@ -34,6 +35,7 @@ export const PromotionFormModal: React.FC<PromotionFormModalProps> = ({ visible,
   const uploadImageMutation = useUploadPromotionImage();
 
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
   const schema = getSchema(t);
 
   const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
@@ -112,52 +114,52 @@ export const PromotionFormModal: React.FC<PromotionFormModalProps> = ({ visible,
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.sheet, { backgroundColor: colors.surface }]}>
             <View style={styles.header}>
-              <Text style={styles.title}>{promotion ? t('promotions.editOffer') : t('promotions.newOffer')}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{promotion ? t('promotions.editOffer') : t('promotions.newOffer')}</Text>
               <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               
-              <Text style={styles.label}>{t('promotions.titleLabel')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('promotions.titleLabel')}</Text>
               <Controller
                 control={control}
                 name="title"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput style={[styles.input, errors.title && styles.inputError]} value={value} onChangeText={onChange} />
+                  <TextInput style={[styles.input, { borderColor: colors.border, color: colors.text }, errors.title && styles.inputError]} value={value} onChangeText={onChange} />
                 )}
               />
               {errors.title && <Text style={styles.errorText}>{errors.title.message}</Text>}
 
-              <Text style={styles.label}>{t('promotions.descLabel')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('promotions.descLabel')}</Text>
               <Controller
                 control={control}
                 name="description"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput style={[styles.input, { minHeight: 80 }]} value={value} onChangeText={onChange} multiline textAlignVertical="top" />
+                  <TextInput style={[styles.input, { minHeight: 80, borderColor: colors.border, color: colors.text }]} value={value} onChangeText={onChange} multiline textAlignVertical="top" />
                 )}
               />
 
-              <Text style={styles.label}>{t('promotions.imageLabel')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('promotions.imageLabel')}</Text>
               <View style={styles.imageSection}>
                 {imageUrl ? (
                   <View style={styles.imageContainer}>
                     <Image source={{ uri: imageUrl }} style={styles.imagePreview} />
                     <TouchableOpacity style={styles.removeImageBtn} onPress={() => setValue('imageUrl', '')}>
-                      <Ionicons name="close-circle" size={24} color="#e74c3c" />
+                      <Ionicons name="close-circle" size={24} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <TouchableOpacity style={styles.uploadBtn} onPress={handlePickImage} disabled={uploadImageMutation.isPending}>
+                  <TouchableOpacity style={[styles.uploadBtn, { borderColor: colors.primary, backgroundColor: colors.primary + '11' }]} onPress={handlePickImage} disabled={uploadImageMutation.isPending}>
                     {uploadImageMutation.isPending ? (
-                      <ActivityIndicator color="#1a5fa8" />
+                      <ActivityIndicator color={colors.primary} />
                     ) : (
                       <>
-                        <Ionicons name="cloud-upload-outline" size={24} color="#1a5fa8" />
-                        <Text style={styles.uploadText}>{t('promotions.uploadImage')}</Text>
+                        <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+                        <Text style={[styles.uploadText, { color: colors.primary }]}>{t('promotions.uploadImage')}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -166,15 +168,15 @@ export const PromotionFormModal: React.FC<PromotionFormModalProps> = ({ visible,
 
               <View style={styles.row}>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{t('promotions.from')}</Text>
-                  <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStart(true)}>
-                    <Text style={styles.dateText}>{startDate}</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>{t('promotions.from')}</Text>
+                  <TouchableOpacity style={[styles.dateBtn, { borderColor: colors.border }]} onPress={() => setShowStart(true)}>
+                    <Text style={[styles.dateText, { color: colors.text }]}>{startDate}</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.col}>
-                  <Text style={styles.label}>{t('promotions.to')}</Text>
-                  <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEnd(true)}>
-                    <Text style={styles.dateText}>{endDate}</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>{t('promotions.to')}</Text>
+                  <TouchableOpacity style={[styles.dateBtn, { borderColor: colors.border }]} onPress={() => setShowEnd(true)}>
+                    <Text style={[styles.dateText, { color: colors.text }]}>{endDate}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -197,7 +199,7 @@ export const PromotionFormModal: React.FC<PromotionFormModalProps> = ({ visible,
                 />
               )}
 
-              <TouchableOpacity style={[styles.submitBtn, isPending && styles.disabledBtn]} onPress={handleSubmit(onSubmit)} disabled={isPending}>
+              <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.primary }, isPending && styles.disabledBtn]} onPress={handleSubmit(onSubmit)} disabled={isPending}>
                 {isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>{t('promotions.saveOffer')}</Text>}
               </TouchableOpacity>
               
@@ -217,7 +219,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -235,18 +236,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#555',
     marginBottom: 6,
     textAlign: 'left',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
     marginBottom: 16,
-    color: '#333',
     textAlign: 'left',
   },
   inputError: {
@@ -263,16 +261,13 @@ const styles = StyleSheet.create({
   },
   uploadBtn: {
     borderWidth: 1,
-    borderColor: '#1a5fa8',
     borderStyle: 'dashed',
     borderRadius: 8,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fbff',
   },
   uploadText: {
-    color: '#1a5fa8',
     marginTop: 8,
     fontSize: 14,
     fontWeight: '500',
@@ -306,7 +301,6 @@ const styles = StyleSheet.create({
   },
   dateBtn: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -314,10 +308,8 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 15,
-    color: '#333',
   },
   submitBtn: {
-    backgroundColor: '#1a5fa8',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',

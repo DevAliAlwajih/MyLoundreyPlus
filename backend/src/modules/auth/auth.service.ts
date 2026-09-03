@@ -69,12 +69,33 @@ export class AuthService {
           },
         });
 
+        // جلب الإعدادات الافتراضية للعمولة من app_settings
+        const [rateRow, balanceRow, trialDaysRow, debtLimitRow] = await Promise.all([
+          tx.app_settings.findUnique({ where: { key: 'default_commission_rate' } }),
+          tx.app_settings.findUnique({ where: { key: 'default_initial_balance' } }),
+          tx.app_settings.findUnique({ where: { key: 'default_trial_days' } }),
+          tx.app_settings.findUnique({ where: { key: 'default_debt_limit' } }),
+        ]);
+
+        const defaultRate      = rateRow      ? Number(rateRow.value)      : 10;
+        const initialBalance   = balanceRow   ? Number(balanceRow.value)   : 2000;
+        const trialDays        = trialDaysRow  ? Number(trialDaysRow.value)  : 30;
+        const debtLimit        = debtLimitRow  ? Number(debtLimitRow.value)  : 5000;
+
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+
         await tx.laundry.create({
           data: {
-            name       : dto.laundryName,
-            phoneNumber: fullPhone,
-            ownerId    : user.id,
-            status     : 'pending',
+            name                     : dto.laundryName,
+            phoneNumber              : fullPhone,
+            ownerId                  : user.id,
+            status                   : 'pending',
+            billing_type             : 'commission',
+            commission_rate          : defaultRate,
+            balance                  : initialBalance,
+            debt_limit               : debtLimit,
+            trial_commission_ends_at : trialEndsAt,
           },
         });
 

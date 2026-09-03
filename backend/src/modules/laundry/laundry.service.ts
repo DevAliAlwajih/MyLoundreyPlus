@@ -12,6 +12,7 @@ import { UpdateLaundryDto } from './dto/update-laundry.dto';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { CreateItemDto, UpdateItemDto, UpdatePriceDto } from './dto/item.dto';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
+import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 
 // ─────────────────────────────────────────
 // Haversine Formula — حساب المسافة بالكيلومتر
@@ -28,9 +29,9 @@ function haversineKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) *
+    Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c * 100) / 100; // تقريب لـ 2 خانة عشرية
 }
@@ -61,7 +62,7 @@ export class LaundryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
-  ) {}
+  ) { }
 
   // ──────────────────────────────────────────────
   // 1. GET /laundries — قائمة المغاسل العامة
@@ -325,22 +326,22 @@ export class LaundryService {
     const updated = await this.prisma.laundry.update({
       where: { id: laundry.id },
       data: {
-        ...(dto.name !== undefined          && { name: dto.name }),
-        ...(dto.nameAr !== undefined        && { nameAr: dto.nameAr }),
-        ...(dto.phoneNumber !== undefined   && { phoneNumber: dto.phoneNumber }),
-        ...(dto.address !== undefined       && { address: dto.address }),
-        ...(dto.city !== undefined          && { city: dto.city }),
-        ...(dto.country !== undefined       && { country: dto.country }),
-        ...(dto.latitude !== undefined      && { latitude: dto.latitude }),
-        ...(dto.longitude !== undefined     && { longitude: dto.longitude }),
-        ...(dto.workingHours !== undefined  && { workingHours: dto.workingHours }),
-        ...(dto.logoUrl !== undefined       && { logoUrl: dto.logoUrl }),
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.nameAr !== undefined && { nameAr: dto.nameAr }),
+        ...(dto.phoneNumber !== undefined && { phoneNumber: dto.phoneNumber }),
+        ...(dto.address !== undefined && { address: dto.address }),
+        ...(dto.city !== undefined && { city: dto.city }),
+        ...(dto.country !== undefined && { country: dto.country }),
+        ...(dto.latitude !== undefined && { latitude: dto.latitude }),
+        ...(dto.longitude !== undefined && { longitude: dto.longitude }),
+        ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),
+        ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
         // إعدادات الضريبة
-        ...(dto.tax_enabled !== undefined   && { tax_enabled: dto.tax_enabled }),
-        ...(dto.tax_rate !== undefined      && { tax_rate: dto.tax_rate }),
+        ...(dto.tax_enabled !== undefined && { tax_enabled: dto.tax_enabled }),
+        ...(dto.tax_rate !== undefined && { tax_rate: dto.tax_rate }),
         // إعدادات الاستعجال
         ...(dto.urgency_enabled !== undefined && { urgency_enabled: dto.urgency_enabled }),
-        ...(dto.urgency_fee !== undefined   && { urgency_fee: dto.urgency_fee }),
+        ...(dto.urgency_fee !== undefined && { urgency_fee: dto.urgency_fee }),
         updatedAt: new Date(),
       },
       select: {
@@ -393,15 +394,15 @@ export class LaundryService {
         items: {
           orderBy: { sortOrder: 'asc' },
           select: {
-            id            : true,
-            nameAr        : true,
-            nameEn        : true,
-            basePrice     : true,
-            washing_price : true,
-            ironing_price : true,
-            isActive      : true,
-            sortOrder     : true,
-            laundryPrices : {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            basePrice: true,
+            washing_price: true,
+            ironing_price: true,
+            isActive: true,
+            sortOrder: true,
+            laundryPrices: {
               where: { laundryId: laundry.id },
               select: { price: true, isAvailable: true },
               take: 1,
@@ -412,25 +413,25 @@ export class LaundryService {
     });
 
     const menuData = categories.map((cat) => ({
-      categoryId  : cat.id,
+      categoryId: cat.id,
       categoryName: cat.name,
-      sortOrder   : cat.sortOrder,
-      isActive    : cat.isActive,
+      sortOrder: cat.sortOrder,
+      isActive: cat.isActive,
       items: cat.items.map((item) => {
         const lp = item.laundryPrices[0] ?? null;
         return {
-          itemId          : item.id,
-          nameAr          : item.nameAr,
-          nameEn          : item.nameEn,
+          itemId: item.id,
+          nameAr: item.nameAr,
+          nameEn: item.nameEn,
           // غسيل + كوي (السعر الافتراضي — من المغسلة أولاً)
           fullServicePrice: lp ? Number(lp.price) : Number(item.basePrice),
           // غسيل فقط
-          washingPrice    : item.washing_price ? Number(item.washing_price) : null,
+          washingPrice: item.washing_price ? Number(item.washing_price) : null,
           // كوي فقط
-          ironingPrice    : item.ironing_price ? Number(item.ironing_price) : null,
-          isAvailable     : lp?.isAvailable ?? true,
-          isActive        : item.isActive,
-          sortOrder       : item.sortOrder,
+          ironingPrice: item.ironing_price ? Number(item.ironing_price) : null,
+          isAvailable: lp?.isAvailable ?? true,
+          isActive: item.isActive,
+          sortOrder: item.sortOrder,
         };
       }),
     }));
@@ -530,23 +531,23 @@ export class LaundryService {
     const item = await this.prisma.item.create({
       data: {
         categoryId,
-        nameAr        : dto.nameAr,
-        nameEn        : dto.nameEn || dto.nameAr,
-        basePrice     : dto.basePrice,
-        washing_price : dto.washing_price,
-        ironing_price : dto.ironing_price,
-        sortOrder     : dto.sortOrder ?? 0,
-        isActive      : dto.isActive ?? true,
+        nameAr: dto.nameAr,
+        nameEn: dto.nameEn || dto.nameAr,
+        basePrice: dto.basePrice,
+        washing_price: dto.washing_price,
+        ironing_price: dto.ironing_price,
+        sortOrder: dto.sortOrder ?? 0,
+        isActive: dto.isActive ?? true,
       },
       select: {
-        id            : true,
-        nameAr        : true,
-        nameEn        : true,
-        basePrice     : true,
-        washing_price : true,
-        ironing_price : true,
-        sortOrder     : true,
-        isActive      : true,
+        id: true,
+        nameAr: true,
+        nameEn: true,
+        basePrice: true,
+        washing_price: true,
+        ironing_price: true,
+        sortOrder: true,
+        isActive: true,
       },
     });
 
@@ -580,23 +581,23 @@ export class LaundryService {
     const updated = await this.prisma.item.update({
       where: { id: itemId },
       data: {
-        ...(dto.nameAr !== undefined        && { nameAr: dto.nameAr }),
-        ...(dto.nameEn !== undefined        && { nameEn: dto.nameEn }),
-        ...(dto.basePrice !== undefined     && { basePrice: dto.basePrice }),
+        ...(dto.nameAr !== undefined && { nameAr: dto.nameAr }),
+        ...(dto.nameEn !== undefined && { nameEn: dto.nameEn }),
+        ...(dto.basePrice !== undefined && { basePrice: dto.basePrice }),
         ...(dto.washing_price !== undefined && { washing_price: dto.washing_price }),
         ...(dto.ironing_price !== undefined && { ironing_price: dto.ironing_price }),
-        ...(dto.sortOrder !== undefined     && { sortOrder: dto.sortOrder }),
-        ...(dto.isActive !== undefined      && { isActive: dto.isActive }),
+        ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       },
       select: {
-        id            : true,
-        nameAr        : true,
-        nameEn        : true,
-        basePrice     : true,
-        washing_price : true,
-        ironing_price : true,
-        sortOrder     : true,
-        isActive      : true,
+        id: true,
+        nameAr: true,
+        nameEn: true,
+        basePrice: true,
+        washing_price: true,
+        ironing_price: true,
+        sortOrder: true,
+        isActive: true,
       },
     });
 
@@ -779,6 +780,94 @@ export class LaundryService {
   }
 
   // ──────────────────────────────────────────────
+  // 14. Wallet & Commission Transactions
+  // ──────────────────────────────────────────────
+
+  async getWallet(ownerId: string) {
+    const laundry = await this.prisma.laundry.findFirst({
+      where: { ownerId },
+      select: {
+        id: true,
+        balance: true,
+        billing_type: true,
+        commission_rate: true,
+        trial_commission_ends_at: true,
+      },
+    });
+
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    let actualCommissionRate = laundry.commission_rate ? Number(laundry.commission_rate) : null;
+
+    if (actualCommissionRate === null && laundry.billing_type === 'commission') {
+      const defaultRateSetting = await this.prisma.app_settings.findUnique({
+        where: { key: 'default_commission_rate' },
+      });
+      actualCommissionRate = defaultRateSetting?.value ? Number(defaultRateSetting.value) : 10;
+    }
+
+    return {
+      success: true,
+      data: {
+        balance: Number(laundry.balance),
+        billingType: laundry.billing_type,
+        commissionRate: actualCommissionRate,
+        trialCommissionEndsAt: laundry.trial_commission_ends_at,
+      },
+    };
+  }
+
+  async getWalletTransactions(ownerId: string, page: number = 1, limit: number = 20) {
+    const laundry = await this.getLaundryByOwner(ownerId);
+
+    const skip = (page - 1) * limit;
+
+    const [transactions, total] = await Promise.all([
+      this.prisma.commissionTransaction.findMany({
+        where: { laundry_id: laundry.id },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: Number(limit),
+        include: {
+          invoice: {
+            select: { invoiceNumber: true },
+          },
+        },
+      }),
+      this.prisma.commissionTransaction.count({
+        where: { laundry_id: laundry.id },
+      }),
+    ]);
+
+    const formattedTransactions = transactions.map((t) => ({
+      id: t.id,
+      invoiceId: t.invoice_id,
+      invoiceNumber: t.invoice?.invoiceNumber,
+      invoiceTotal: Number(t.invoice_total),
+      commissionRate: Number(t.commission_rate),
+      commissionAmount: Number(t.commission_amount),
+      balanceAfter: Number(t.balance_after),
+      createdAt: t.created_at,
+    }));
+
+    return {
+      success: true,
+      data: formattedTransactions,
+      meta: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // ──────────────────────────────────────────────
   // Helper خاص — جلب المغسلة بـ ownerId
   // ──────────────────────────────────────────────
   private async getLaundryByOwner(ownerId: string) {
@@ -805,7 +894,7 @@ export class LaundryService {
 
   async getReports(ownerId: string, period?: string, from?: string, to?: string) {
     const laundry = await this.getLaundryByOwner(ownerId);
-    
+
     const today = new Date();
     let startDate = new Date();
     let endDate = new Date();
@@ -833,7 +922,7 @@ export class LaundryService {
           break;
       }
     }
-    
+
     // 1. Payment Breakdown (within date range, excluding cancelled)
     const paymentGroups = await this.prisma.invoice.groupBy({
       by: ['paymentType'],
@@ -844,7 +933,7 @@ export class LaundryService {
       },
       _sum: { totalAmount: true },
     });
-    
+
     // 2. Status Summary (within date range)
     const statusGroups = await this.prisma.invoice.groupBy({
       by: ['status'],
@@ -864,7 +953,7 @@ export class LaundryService {
       },
       _sum: { totalAmount: true, paidAmount: true },
     });
-    
+
     const totalDeferredOutstanding = (Number(debtResult._sum.totalAmount || 0) - Number(debtResult._sum.paidAmount || 0));
 
     let cash = 0;
@@ -928,22 +1017,40 @@ export class LaundryService {
     const searchFilter = search ? `%${search}%` : null;
 
     const query = Prisma.sql`
+      WITH InvoiceStats AS (
+        SELECT 
+          customer_id,
+          walk_in_phone,
+          MAX(walk_in_name) as walk_in_name,
+          COUNT(id)::int AS total_invoices,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)::int AS completed_invoices,
+          SUM(CASE WHEN payment_type = 'deferred' AND (total_amount - paid_amount) > 0 THEN (total_amount - paid_amount) ELSE 0 END) AS deferred_balance,
+          MAX(created_at) AS last_visit
+        FROM invoices
+        WHERE laundry_id = ${laundryId}::uuid
+        GROUP BY customer_id, walk_in_phone
+      ),
+      LocalProfiles AS (
+        SELECT * FROM laundry_customer_profiles
+        WHERE laundry_id = ${laundryId}::uuid
+      )
       SELECT 
-        COALESCE(u.id::text, i.walk_in_phone) AS "customerId",
-        COALESCE(u.full_name, i.walk_in_name) AS "customerName",
-        COALESCE(u.phone_number, i.walk_in_phone) AS "customerPhone",
-        COUNT(i.id)::int AS "totalInvoices",
-        SUM(CASE WHEN i.status = 'completed' THEN 1 ELSE 0 END)::int AS "completedInvoices",
-        SUM(CASE WHEN i.payment_type = 'deferred' AND (i.total_amount - i.paid_amount) > 0 THEN (i.total_amount - i.paid_amount) ELSE 0 END) AS "deferredBalance",
-        MAX(i.created_at) AS "lastVisit"
-      FROM invoices i
-      LEFT JOIN users u ON i.customer_id = u.id
-      WHERE i.laundry_id = ${laundryId}::uuid
-        ${searchFilter ? Prisma.sql`AND (u.full_name ILIKE ${searchFilter} OR u.phone_number ILIKE ${searchFilter} OR i.walk_in_name ILIKE ${searchFilter} OR i.walk_in_phone ILIKE ${searchFilter})` : Prisma.empty}
-        ${from_date ? Prisma.sql`AND i.created_at >= ${new Date(from_date)}` : Prisma.empty}
-        ${to_date ? Prisma.sql`AND i.created_at <= ${new Date(to_date)}` : Prisma.empty}
-      GROUP BY "customerId", "customerName", "customerPhone"
-      ${has_debt ? Prisma.sql`HAVING SUM(CASE WHEN i.payment_type = 'deferred' AND (i.total_amount - i.paid_amount) > 0 THEN (i.total_amount - i.paid_amount) ELSE 0 END) > 0` : Prisma.empty}
+        COALESCE(u.id::text, istats.walk_in_phone, lcp.customer_id::text, lcp.phone) AS "customerId",
+        COALESCE(lcp.local_name, u.full_name, istats.walk_in_name) AS "customerName",
+        COALESCE(lcp.local_phone, u.phone_number, istats.walk_in_phone, lcp.phone) AS "customerPhone",
+        COALESCE(istats.total_invoices, 0)::int AS "totalInvoices",
+        COALESCE(istats.completed_invoices, 0)::int AS "completedInvoices",
+        COALESCE(istats.deferred_balance, 0) AS "deferredBalance",
+        COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) AS "lastVisit"
+      FROM InvoiceStats istats
+      FULL OUTER JOIN LocalProfiles lcp 
+        ON COALESCE(istats.customer_id::text, istats.walk_in_phone) = COALESCE(lcp.customer_id::text, lcp.phone)
+      LEFT JOIN users u ON u.id = COALESCE(istats.customer_id, lcp.customer_id)
+      WHERE 1=1
+        ${searchFilter ? Prisma.sql`AND (lcp.local_name ILIKE ${searchFilter} OR lcp.local_phone ILIKE ${searchFilter} OR u.full_name ILIKE ${searchFilter} OR u.phone_number ILIKE ${searchFilter} OR istats.walk_in_name ILIKE ${searchFilter} OR istats.walk_in_phone ILIKE ${searchFilter})` : Prisma.empty}
+        ${from_date ? Prisma.sql`AND COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) >= ${new Date(from_date)}` : Prisma.empty}
+        ${to_date ? Prisma.sql`AND COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) <= ${new Date(to_date)}` : Prisma.empty}
+        ${has_debt ? Prisma.sql`AND COALESCE(istats.deferred_balance, 0) > 0` : Prisma.empty}
       ORDER BY "lastVisit" DESC
     `;
 
@@ -956,59 +1063,80 @@ export class LaundryService {
     const laundry = await this.getLaundryByOwner(ownerId);
     const laundryId = laundry.id;
 
-    // Determine if customerId is a UUID (registered user) or phone (walk-in)
+    // Determine if customerId is a UUID (registered user) or phone/name (walk-in)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId);
 
-    let whereClause: any = { laundryId };
+    // 1. Fetch local profile first (may exist even without invoices)
+    const localProfile = await this.prisma.laundryCustomerProfile.findFirst({
+      where: isUuid
+        ? { laundryId, customerId }
+        : { laundryId, phone: customerId }
+    });
+
+    // 2. Build invoice search condition
+    let invoiceWhereClause: any = { laundryId };
     if (isUuid) {
-      whereClause.customerId = customerId;
+      invoiceWhereClause.customerId = customerId;
     } else {
-      whereClause.walk_in_phone = customerId;
+      invoiceWhereClause.OR = [
+        { walk_in_phone: customerId },
+        {
+          walk_in_name: customerId,
+          OR: [{ walk_in_phone: "" }, { walk_in_phone: null }]
+        }
+      ];
     }
 
     const invoices = await this.prisma.invoice.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
+      where: invoiceWhereClause,
+      orderBy: { createdAt: "desc" },
       include: {
         customer: { select: { fullName: true, phoneNumber: true } },
         items: true,
       }
     });
 
-    if (invoices.length === 0) {
+    // 3. If no local profile AND no invoices -> 404
+    if (invoices.length === 0 && !localProfile) {
       throw new NotFoundException({
         success: false,
-        error: { code: 'CUSTOMER_NOT_FOUND', message: 'العميل غير موجود' }
+        error: { code: "CUSTOMER_NOT_FOUND", message: "العميل غير موجود" }
       });
     }
 
-    const firstInvoice = invoices[0];
-    const customerName = firstInvoice.customer?.fullName || firstInvoice.walk_in_name;
-    const customerPhone = firstInvoice.customer?.phoneNumber || firstInvoice.walk_in_phone;
+    // 4. Determine base customer data
+    const firstInvoice = invoices.length > 0 ? invoices[0] : null;
+    const originalName = firstInvoice?.customer?.fullName || firstInvoice?.walk_in_name || null;
+    const originalPhone = firstInvoice?.customer?.phoneNumber || firstInvoice?.walk_in_phone || null;
 
+    const customerName = localProfile?.localName || originalName || "";
+    const customerPhone = localProfile?.localPhone || originalPhone || "";
+    const customerNotes = localProfile?.notes || null;
+
+    // 5. Compute stats from invoices
     let deferredBalance = 0;
     let totalSpent = 0;
-    let completedInvoices = 0;
+    let completedInvoicesCount = 0;
 
     const mappedInvoices = invoices.map(inv => {
       const dueAmount = Number(inv.totalAmount) - Number(inv.paidAmount);
-      if (inv.paymentType === 'deferred' && dueAmount > 0) {
+      if (inv.paymentType === "deferred" && dueAmount > 0) {
         deferredBalance += dueAmount;
       }
       totalSpent += Number(inv.paidAmount);
-      if (inv.status === 'completed') {
-        completedInvoices++;
+      if (inv.status === "completed") {
+        completedInvoicesCount++;
       }
 
       return {
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         status: inv.status,
-        customerName: inv.customer?.fullName || inv.walk_in_name || '',
-        customerPhone: inv.customer?.phoneNumber || inv.walk_in_phone || '',
+        customerName: inv.customer?.fullName || inv.walk_in_name || "",
+        customerPhone: inv.customer?.phoneNumber || inv.walk_in_phone || "",
         paymentType: inv.paymentType,
         isUrgent: inv.urgency_fee && Number(inv.urgency_fee) > 0 ? true : false,
-        notes: inv.notes || '',
+        notes: inv.notes || "",
         subtotal: Number(inv.subtotal),
         discountPercent: 0,
         discountAmount: Number(inv.discount),
@@ -1021,13 +1149,13 @@ export class LaundryService {
         dueAmount: dueAmount,
         items: inv.items.map(item => ({
           id: item.id,
-          itemId: item.itemId || '',
+          itemId: item.itemId || "",
           itemName: item.itemName,
           itemNameAr: item.item_name_ar || item.itemName,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           totalPrice: Number(item.subtotal),
-          notes: ''
+          notes: ""
         })),
         statusHistory: [],
         createdAt: inv.createdAt.toISOString(),
@@ -1039,26 +1167,26 @@ export class LaundryService {
       customerId,
       customerName,
       customerPhone,
+      notes: customerNotes,
       totalInvoices: invoices.length,
-      completedInvoices,
+      completedInvoices: completedInvoicesCount,
       deferredBalance,
-      lastVisit: invoices[0].createdAt.toISOString(),
+      lastVisit: firstInvoice ? firstInvoice.createdAt.toISOString() : null,
       totalSpent,
       invoices: mappedInvoices
     };
 
     return { success: true, data: customerDetail };
   }
-
   async remindCustomer(ownerId: string, customerId: string, channel: 'whatsapp' | 'app' | 'both') {
     const laundry = await this.getLaundryByOwner(ownerId);
-    
+
     // Check if the customerId is a registered UUID
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId);
 
     if ((channel === 'app' || channel === 'both') && isUuid) {
       const user = await this.prisma.user.findUnique({ where: { id: customerId } });
-      
+
       if (user) {
         await this.notificationService.sendToUser(
           user.id,
@@ -1070,5 +1198,40 @@ export class LaundryService {
     }
 
     return { success: true, message: 'تم إرسال التذكير / رابط واتساب جاهز' };
+  }
+
+  async updateCustomerProfile(ownerId: string, customerId: string, dto: UpdateCustomerProfileDto) {
+    const laundry = await this.getLaundryByOwner(ownerId);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId);
+
+    const data = {
+      localName: dto.localName,
+      localPhone: dto.localPhone,
+      notes: dto.notes,
+    };
+
+    if (isUuid) {
+      const profile = await this.prisma.laundryCustomerProfile.upsert({
+        where: { laundryId_customerId: { laundryId: laundry.id, customerId } },
+        update: data,
+        create: {
+          laundryId: laundry.id,
+          customerId,
+          ...data,
+        },
+      });
+      return { success: true, data: profile };
+    } else {
+      const profile = await this.prisma.laundryCustomerProfile.upsert({
+        where: { laundryId_phone: { laundryId: laundry.id, phone: customerId } },
+        update: data,
+        create: {
+          laundryId: laundry.id,
+          phone: customerId,
+          ...data,
+        },
+      });
+      return { success: true, data: profile };
+    }
   }
 }

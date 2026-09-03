@@ -4,7 +4,9 @@ import {
   ForbiddenException,
   UnprocessableEntityException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateInvoiceDto, InvoiceItemLineDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceStatusDto } from './dto/update-invoice-status.dto';
@@ -14,13 +16,14 @@ import { NotificationService } from '../notification/notification.service';
 
 // ─── State Machine ─────────────────────────────────
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  draft:     ['received', 'cancelled'],
-  received:  ['washing',  'cancelled'],
-  washing:   ['ironing',  'cancelled'],
-  ironing:   ['ready',    'cancelled'],
-  ready:     ['completed','cancelled'],
+  draft:     ['received', 'cancelled'],   // مسودة → قيد التجهيز أو ملغي
+  received:  ['completed', 'cancelled'],  // قيد التجهيز → تم التسليم أو ملغي
   completed: [],
-  cancelled: ['received'],
+  cancelled: [],
+  // حالات قديمة للتوافقية مع بيانات موجودة
+  washing:   ['completed', 'cancelled'],
+  ironing:   ['completed', 'cancelled'],
+  ready:     ['completed', 'cancelled'],
 };
 
 // ─── Select Presets ────────────────────────────────
@@ -71,7 +74,10 @@ const INVOICE_LIST_SELECT = {
   paidAmount: true,
   dueAmount: true,
   createdAt: true,
+  is_edited: true,
   walk_in_name: true,
+  walk_in_phone: true,
+  customerId: true,
   customer: {
     select: { id: true, fullName: true, uniqueId: true, phoneNumber: true },
   },
@@ -182,6 +188,7 @@ export class InvoiceService {
       const inv = await tx.invoice.create({
         data: {
           invoiceNumber: generatedInvoiceNumber,
+          status: dto.status || 'received',
           laundry: { connect: { id: laundryId } },
           customer: customerId ? { connect: { id: customerId } } : undefined,
           paymentType  : dto.paymentType as any,
@@ -226,7 +233,7 @@ export class InvoiceService {
       ];
     }
 
-    const [invoices, total] = await this.prisma.$transaction([
+    const [invoices, total, localProfiles] = await this.prisma.$transaction([
       this.prisma.invoice.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -235,16 +242,36 @@ export class InvoiceService {
         select: INVOICE_LIST_SELECT,
       }),
       this.prisma.invoice.count({ where }),
+      this.prisma.laundryCustomerProfile.findMany({ where: { laundryId } }),
     ]);
+
+    const profileByCustomerId = new Map<string, any>();
+    const profileByPhone = new Map<string, any>();
+
+    for (const p of localProfiles) {
+      if (p.customerId) profileByCustomerId.set(p.customerId, p);
+      if (p.phone) profileByPhone.set(p.phone, p);
+    }
 
     return {
       success: true,
-      data: invoices.map((inv) => ({
-        ...inv,
-        totalAmount : toNum(inv.totalAmount),
-        paidAmount  : toNum(inv.paidAmount),
-        dueAmount   : inv.dueAmount !== null ? toNum(inv.dueAmount) : null,
-      })),
+      data: invoices.map((inv) => {
+        const lp = inv.customerId
+          ? profileByCustomerId.get(inv.customerId)
+          : (inv.walk_in_phone ? profileByPhone.get(inv.walk_in_phone) : null);
+
+        const customerName = lp?.localName || inv.customer?.fullName || inv.walk_in_name || '';
+        const customerPhone = lp?.localPhone || inv.customer?.phoneNumber || inv.walk_in_phone || '';
+
+        return {
+          ...inv,
+          customerName,
+          customerPhone,
+          totalAmount : toNum(inv.totalAmount),
+          paidAmount  : toNum(inv.paidAmount),
+          dueAmount   : inv.dueAmount !== null ? toNum(inv.dueAmount) : null,
+        };
+      }),
       meta: {
         page,
         limit,
@@ -270,29 +297,127 @@ export class InvoiceService {
   // ────────────────────────────────────────────────────
   // 4. PATCH /invoices/:id — تعديل الفاتورة
   // ────────────────────────────────────────────────────
-  async updateInvoice(invoiceId: string, laundryId: string, dto: UpdateInvoiceDto) {
+  async updateInvoice(invoiceId: string, laundryId: string, editorId: string, dto: UpdateInvoiceDto) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id: invoiceId, laundryId },
-      select: { id: true, status: true, discount: true },
+      select: { id: true, status: true, discount: true, totalAmount: true, customerId: true, paymentType: true },
     });
     if (!invoice) this.throwNotFound();
 
-    if (['completed', 'cancelled'].includes(invoice.status)) {
-      throw new UnprocessableEntityException({
-        success: false,
-        error: {
-          code: 'INVOICE_CANNOT_EDIT',
-          message: `لا يمكن تعديل فاتورة بحالة ${invoice.status}`,
-        },
-      });
-    }
+    const isCompleted = invoice.status === 'completed';
+    const isDeferred = invoice.paymentType === 'deferred';
+    const oldTotal = Number(invoice.totalAmount);
+
+    let newTotal = oldTotal;
+    let subtotal = 0;
+    let lines = [];
+    const newDiscount = dto.discount !== undefined ? Number(dto.discount) : toNum(invoice.discount);
 
     if (dto.items && dto.items.length > 0) {
-      const { lines, subtotal } = await this.buildItemLines(laundryId, dto.items);
-      const newDiscount   = dto.discount !== undefined ? Number(dto.discount) : toNum(invoice.discount);
-      const newTotal      = Math.max(0, subtotal - newDiscount);
+      const buildRes = await this.buildItemLines(laundryId, dto.items);
+      lines = buildRes.lines;
+      subtotal = buildRes.subtotal;
+      
+      // In a real scenario we might re-calculate tax/urgency. 
+      // For simplicity, we just adjust total based on items and discount here.
+      // Assuming tax and urgency are unchanged or not included in this simple calculation
+      const invoiceFull = await this.prisma.invoice.findUnique({where: {id: invoiceId}, select: {tax_amount: true, urgency_fee: true}});
+      newTotal = Math.max(0, subtotal - newDiscount) + Number(invoiceFull?.tax_amount || 0) + Number(invoiceFull?.urgency_fee || 0);
+    } else {
+      newTotal = Math.max(0, oldTotal + toNum(invoice.discount) - newDiscount); // Adjust total if only discount changes
+    }
 
-      await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Audit Log Snapshot
+      const beforeSnapshot = await tx.invoice.findUnique({ where: { id: invoiceId }, include: { items: true } });
+      await tx.invoiceEditLog.create({
+        data: {
+          invoice_id: invoiceId,
+          edited_by: editorId,
+          edit_reason: dto.editReason || 'User edited invoice',
+          changes_snapshot: JSON.parse(JSON.stringify(beforeSnapshot)),
+        },
+      });
+
+      // 2. Adjust Commission if Completed
+      if (isCompleted && newTotal !== oldTotal) {
+        const laundry = await tx.laundry.findUnique({
+          where: { id: laundryId },
+          select: { billing_type: true, commission_rate: true },
+        });
+
+        if (laundry && laundry.billing_type === 'commission') {
+          // 2.1 Fetch the last charge transaction (safely skipping refunds thanks to the 'type' field)
+          const lastChargeTx = await tx.commissionTransaction.findFirst({
+            where: { invoice_id: invoiceId, type: 'charge' },
+            orderBy: { created_at: 'desc' },
+          });
+
+          if (lastChargeTx) {
+            // 2.2 Revert the previous commission (Refund)
+            if (Number(lastChargeTx.commission_amount) > 0) {
+              const refundAmount = Number(lastChargeTx.commission_amount);
+              const [refundedLaundry] = await tx.$queryRaw<{ balance: any }[]>(
+                Prisma.sql`
+                  UPDATE laundries
+                  SET balance = balance + ${refundAmount}::numeric
+                  WHERE id = ${laundryId}::uuid
+                  RETURNING balance
+                `
+              );
+              
+              await tx.commissionTransaction.create({
+                data: {
+                  laundry_id: laundryId,
+                  invoice_id: invoiceId,
+                  invoice_total: Number(lastChargeTx.invoice_total),
+                  commission_rate: Number(lastChargeTx.commission_rate),
+                  commission_amount: -refundAmount, // Negative to indicate refund
+                  balance_after: Number(refundedLaundry.balance),
+                  type: 'refund',
+                },
+              });
+            }
+
+            // 2.3 Calculate and apply the new commission (Charge)
+            let rate = laundry.commission_rate ? Number(laundry.commission_rate) : null;
+            if (rate === null) {
+              const defaultRateSetting = await tx.app_settings.findUnique({
+                where: { key: 'default_commission_rate' },
+              });
+              rate = defaultRateSetting && defaultRateSetting.value ? Number(defaultRateSetting.value) : 10;
+            }
+
+            const newCommissionAmount = Number((newTotal * (rate / 100)).toFixed(2));
+            
+            if (newCommissionAmount > 0) {
+              const [chargedLaundry] = await tx.$queryRaw<{ balance: any }[]>(
+                Prisma.sql`
+                  UPDATE laundries
+                  SET balance = balance - ${newCommissionAmount}::numeric
+                  WHERE id = ${laundryId}::uuid
+                  RETURNING balance
+                `
+              );
+
+              await tx.commissionTransaction.create({
+                data: {
+                  laundry_id: laundryId,
+                  invoice_id: invoiceId,
+                  invoice_total: newTotal,
+                  commission_rate: rate,
+                  commission_amount: newCommissionAmount,
+                  balance_after: Number(chargedLaundry.balance),
+                  type: 'charge',
+                },
+              });
+            }
+          }
+        }
+      }
+
+      // 3. Update Invoice Data
+      if (dto.items && dto.items.length > 0) {
         await tx.invoiceItem.deleteMany({ where: { invoiceId } });
         await tx.invoiceItem.createMany({
           data: lines.map((l) => ({ ...l, invoiceId })),
@@ -301,24 +426,45 @@ export class InvoiceService {
           where: { id: invoiceId },
           data: {
             subtotal,
-            discount   : newDiscount,
+            discount: newDiscount,
             totalAmount: newTotal,
+            is_edited: true,
             ...(dto.paymentType && { paymentType: dto.paymentType as any }),
             ...(dto.paidAmount !== undefined && { paidAmount: dto.paidAmount }),
             ...(dto.notes !== undefined && { notes: dto.notes }),
+            ...(dto.expectedDeliveryAt !== undefined && { expected_delivery_at: dto.expectedDeliveryAt }),
+            ...(dto.walkInLocation !== undefined && { walk_in_location: dto.walkInLocation }),
+            ...(dto.createdAt !== undefined && { createdAt: dto.createdAt }),
           },
         });
-      });
-    } else {
-      await this.prisma.invoice.update({
-        where: { id: invoiceId },
-        data: {
-          ...(dto.paymentType !== undefined && { paymentType: dto.paymentType as any }),
-          ...(dto.paidAmount  !== undefined && { paidAmount: dto.paidAmount }),
-          ...(dto.discount    !== undefined && { discount: dto.discount }),
-          ...(dto.notes       !== undefined && { notes: dto.notes }),
-        },
-      });
+      } else {
+        await tx.invoice.update({
+          where: { id: invoiceId },
+          data: {
+            totalAmount: newTotal,
+            is_edited: true,
+            ...(dto.paymentType !== undefined && { paymentType: dto.paymentType as any }),
+            ...(dto.paidAmount  !== undefined && { paidAmount: dto.paidAmount }),
+            ...(dto.discount    !== undefined && { discount: newDiscount }),
+            ...(dto.walkInLocation !== undefined && { walk_in_location: dto.walkInLocation }),
+            ...(dto.createdAt !== undefined && { createdAt: dto.createdAt }),
+          },
+        });
+      }
+    });
+    
+    // إرسال إشعار لصاحب المغسلة بتعديل الفاتورة
+    const invoiceInfo = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      select: { invoiceNumber: true }
+    });
+    if (invoiceInfo) {
+      this.notificationService.sendToLaundryOwner(
+        laundryId,
+        'تم تعديل الفاتورة ✏️',
+        `تم تعديل بيانات الفاتورة رقم ${invoiceInfo.invoiceNumber}`,
+        { type: 'invoice_updated', referenceId: invoiceId }
+      ).catch(err => console.error('Notification error:', err));
     }
 
     return this.findOne(invoiceId, laundryId);
@@ -335,7 +481,7 @@ export class InvoiceService {
   ) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id: invoiceId, laundryId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, totalAmount: true },
     });
     if (!invoice) this.throwNotFound();
 
@@ -375,6 +521,71 @@ export class InvoiceService {
         },
       });
 
+      // ─── منطق العمولة (Commission Logic) ───
+      if (isCompleting) {
+        const laundry = await tx.laundry.findUnique({
+          where: { id: laundryId },
+          select: { billing_type: true, trial_commission_ends_at: true, commission_rate: true },
+        });
+
+        if (laundry && laundry.billing_type === 'commission') {
+          const now = new Date();
+          const trialEnds = laundry.trial_commission_ends_at;
+
+          // التحقق من انتهاء الفترة التجريبية (إن وجدت)
+          if (!trialEnds || trialEnds < now) {
+            // حماية من الخصم المزدوج
+            const existingTx = await tx.commissionTransaction.findFirst({
+              where: { invoice_id: invoiceId },
+            });
+
+            if (!existingTx) {
+              // تحديد نسبة العمولة
+              let rate = laundry.commission_rate ? Number(laundry.commission_rate) : null;
+              if (rate === null) {
+                const defaultRateSetting = await tx.app_settings.findUnique({
+                  where: { key: 'default_commission_rate' },
+                });
+                if (defaultRateSetting && defaultRateSetting.value) {
+                  rate = Number(defaultRateSetting.value);
+                } else {
+                  rate = 10;
+                  Logger.warn('default_commission_rate not found in app_settings. Using fallback 10%', 'InvoiceService');
+                }
+              }
+
+              const invoiceTotal = Number(invoice.totalAmount);
+              const commissionAmount = Number((invoiceTotal * (rate / 100)).toFixed(2));
+
+              if (commissionAmount > 0) {
+                // الخصم الذري لـ balance
+                const [updatedLaundry] = await tx.$queryRaw<{ balance: any }[]>(
+                  Prisma.sql`
+                    UPDATE laundries
+                    SET balance = balance - ${commissionAmount}::numeric
+                    WHERE id = ${laundryId}::uuid
+                    RETURNING balance
+                  `
+                );
+                const balanceAfter = Number(updatedLaundry.balance);
+
+                // تسجيل المعاملة
+                await tx.commissionTransaction.create({
+                  data: {
+                    laundry_id: laundryId,
+                    invoice_id: invoiceId,
+                    invoice_total: invoiceTotal,
+                    commission_rate: rate,
+                    commission_amount: commissionAmount,
+                    balance_after: balanceAfter,
+                  },
+                });
+              }
+            }
+          }
+        }
+      }
+
       return inv;
     });
 
@@ -392,6 +603,23 @@ export class InvoiceService {
           invoiceId,
         )
         .catch((err) => console.error('Notification error:', err));
+        
+      // إرسال إشعارات لصاحب المغسلة بناءً على الحالة
+      if (dto.status === 'completed') {
+        this.notificationService.sendToLaundryOwner(
+          laundryId,
+          'فاتورة مسلمة ✅',
+          `تم تسليم الفاتورة رقم ${fullInvoice.invoiceNumber} بنجاح`,
+          { type: 'invoice_completed', referenceId: invoiceId }
+        ).catch(err => console.error('Notification error:', err));
+      } else if (dto.status === 'cancelled') {
+        this.notificationService.sendToLaundryOwner(
+          laundryId,
+          'تم إلغاء فاتورة ❌',
+          `تم إلغاء الفاتورة رقم ${fullInvoice.invoiceNumber}`,
+          { type: 'invoice_cancelled', referenceId: invoiceId }
+        ).catch(err => console.error('Notification error:', err));
+      }
     }
 
     return { success: true, data: this.formatDetail(updated) };
@@ -627,8 +855,13 @@ export class InvoiceService {
 
   /** تحويل القيم العشرية لـ number في الـ response */
   private formatDetail(invoice: any) {
+    const customerName = invoice.customer?.fullName || invoice.walk_in_name || '';
+    const customerPhone = invoice.customer?.phoneNumber || invoice.walk_in_phone || '';
+
     return {
       ...invoice,
+      customerName,
+      customerPhone,
       subtotal   : toNum(invoice.subtotal),
       discount   : toNum(invoice.discount),
       tax_amount : toNum(invoice.tax_amount),

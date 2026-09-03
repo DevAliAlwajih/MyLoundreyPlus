@@ -5,4 +5,8 @@ export declare class UpdateInvoiceDto {
     paidAmount?: number;
     discount?: number;
     notes?: string;
+    editReason?: string;
+    expectedDeliveryAt?: Date;
+    walkInLocation?: string;
+    createdAt?: Date;
 }

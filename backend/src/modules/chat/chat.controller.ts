@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -87,6 +88,13 @@ export class ChatController {
 
   @UseGuards(RolesGuard)
   @Roles('laundry')
+  @Get('laundry/conversations')
+  getLaundryConversations(@Req() req: any) {
+    return this.chatService.getLaundryConversations(this.getLaundryId(req));
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('laundry')
   @Get('laundry/:customerId/messages')
   getLaundryMessages(
     @Req() req: any,
@@ -151,5 +159,71 @@ export class ChatController {
     @Param('laundryId', ParseUUIDPipe) laundryId: string,
   ) {
     return this.chatService.markAsRead(req.user.id, laundryId);
+  }
+
+  // ────────────────────────────────────────────────────
+  // 4. حذف رسالة (لصاحبها فقط)
+  // ────────────────────────────────────────────────────
+
+  @Delete('messages/:messageId')
+  deleteMessage(
+    @Req() req: any,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+  ) {
+    return this.chatService.deleteMessage(messageId, req.user.id);
+  }
+
+  // ────────────────────────────────────────────────────
+  // 5. محادثة الدعم الفني (لوحة تحكم الإدارة)
+  // ────────────────────────────────────────────────────
+
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Get('admin/support/conversations')
+  getAdminSupportConversations() {
+    return this.chatService.getAdminSupportConversations();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Get('admin/support/:type/:targetId/messages')
+  getAdminSupportMessages(
+    @Param('type') type: 'customer' | 'laundry',
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+    @Query() query: QueryMessagesDto,
+  ) {
+    if (type !== 'customer' && type !== 'laundry') {
+      throw new BadRequestException('Invalid type');
+    }
+    return this.chatService.getAdminSupportMessages(type, targetId, query);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Post('admin/support/:type/:targetId/messages')
+  sendMessageFromAdmin(
+    @Req() req: any,
+    @Param('type') type: 'customer' | 'laundry',
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+    @Body() dto: SendMessageDto,
+  ) {
+    if (type !== 'customer' && type !== 'laundry') {
+      throw new BadRequestException('Invalid type');
+    }
+    return this.chatService.sendMessageFromAdmin(req.user.id, type, targetId, dto);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @Patch('admin/support/:type/:targetId/read')
+  markAdminSupportMessagesAsRead(
+    @Req() req: any,
+    @Param('type') type: 'customer' | 'laundry',
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    if (type !== 'customer' && type !== 'laundry') {
+      throw new BadRequestException('Invalid type');
+    }
+    return this.chatService.markAdminSupportMessagesAsRead(req.user.id, type, targetId);
   }
 }

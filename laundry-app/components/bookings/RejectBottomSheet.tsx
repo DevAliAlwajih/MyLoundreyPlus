@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Booking } from '../../stores/bookingStore';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface RejectBottomSheetProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export const RejectBottomSheet: React.FC<RejectBottomSheetProps> = ({
   const { t, i18n } = useTranslation();
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
+  const { colors } = useThemeStore();
 
   const handleClose = () => {
     setReason('');
@@ -63,43 +65,45 @@ export const RejectBottomSheet: React.FC<RejectBottomSheetProps> = ({
         <View style={styles.overlay}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.sheet}
+            style={[styles.sheet, { backgroundColor: colors.surface }]}
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>{t('bookings.rejectTitle')}</Text>
+              <Text style={[styles.title, { color: colors.text }]}>{t('bookings.rejectTitle')}</Text>
               <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {/* Booking Info */}
-              <View style={styles.infoBox}>
+              <View style={[styles.infoBox, { backgroundColor: colors.background }]}>
                 <View style={styles.infoRow}>
-                  <Ionicons name="person-outline" size={16} color="#666" />
-                  <Text style={styles.infoText}>{booking.customerName}</Text>
+                  <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>{booking.customerName}</Text>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons name="calendar-outline" size={16} color="#666" />
-                  <Text style={styles.infoText}>{scheduledDate}</Text>
+                  <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>{scheduledDate}</Text>
                 </View>
               </View>
 
               {/* Preset Chips */}
-              <Text style={styles.label}>{t('bookings.rejectReason')}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('bookings.rejectReason')}</Text>
               <View style={styles.presetContainer}>
                 {PRESET_KEYS.map((key) => (
                   <TouchableOpacity
                     key={key}
                     style={[
                       styles.presetChip,
+                      { borderColor: colors.border, backgroundColor: colors.background },
                       reason === t(`bookings.presetReasons.${key}`) && styles.presetChipActive,
                     ]}
                     onPress={() => handlePreset(key)}
                   >
                     <Text style={[
                       styles.presetText,
+                      { color: colors.textSecondary },
                       reason === t(`bookings.presetReasons.${key}`) && styles.presetTextActive,
                     ]}>
                       {t(`bookings.presetReasons.${key}`)}
@@ -110,10 +114,11 @@ export const RejectBottomSheet: React.FC<RejectBottomSheetProps> = ({
 
               {/* Reason Input */}
               <TextInput
-                style={[styles.textArea, error ? styles.textAreaError : null]}
+                style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }, error ? styles.textAreaError : null]}
                 value={reason}
                 onChangeText={(v) => { setReason(v); setError(''); }}
                 placeholder={t('bookings.writeReasonHere')}
+                placeholderTextColor={colors.textSecondary}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -123,8 +128,8 @@ export const RejectBottomSheet: React.FC<RejectBottomSheetProps> = ({
 
               {/* Actions */}
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={handleClose}>
-                  <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
+                <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border, backgroundColor: colors.background }]} onPress={handleClose}>
+                  <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.rejectBtn, isSubmitting && styles.disabledBtn]}
@@ -152,7 +157,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -168,10 +172,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   infoBox: {
-    backgroundColor: '#f8f9fa',
     borderRadius: 10,
     padding: 14,
     marginBottom: 20,
@@ -183,14 +185,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: '#555',
     marginLeft: 8,
     flex: 1,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#555',
     marginBottom: 10,
     textAlign: 'right',
   },
@@ -201,12 +201,10 @@ const styles = StyleSheet.create({
   },
   presetChip: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     margin: 4,
-    backgroundColor: '#fff',
   },
   presetChipActive: {
     backgroundColor: '#fdecea',
@@ -214,7 +212,6 @@ const styles = StyleSheet.create({
   },
   presetText: {
     fontSize: 13,
-    color: '#555',
   },
   presetTextActive: {
     color: '#e74c3c',
@@ -222,12 +219,10 @@ const styles = StyleSheet.create({
   },
   textArea: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
     padding: 12,
     minHeight: 100,
     fontSize: 15,
-    color: '#333',
     marginBottom: 6,
   },
   textAreaError: {
@@ -248,13 +243,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
   },
   cancelBtnText: {
-    color: '#666',
     fontSize: 16,
   },
   rejectBtn: {

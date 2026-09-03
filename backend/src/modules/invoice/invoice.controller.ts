@@ -56,7 +56,7 @@ export class InvoiceLaundryController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateInvoiceDto,
   ) {
-    return this.invoiceService.updateInvoice(id, req.user.laundryId ?? req.user.id, dto);
+    return this.invoiceService.updateInvoice(id, req.user.laundryId ?? req.user.id, req.user.id, dto);
   }
 
   /** PATCH /api/v1/invoices/:id/status — State Machine */

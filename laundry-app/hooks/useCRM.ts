@@ -50,3 +50,18 @@ export const useRemindCustomer = () => {
     },
   });
 };
+
+export const useUpdateCustomerProfile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ customerId, data }: { customerId: string; data: { localName?: string; localPhone?: string; notes?: string } }) => {
+      const response = await api.patch(`/my-laundry/customers/${encodeURIComponent(customerId)}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customerDetail', variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['customerDetail'] });
+    },
+  });
+};

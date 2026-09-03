@@ -43,11 +43,13 @@ export interface StatusHistory {
 export interface Invoice {
   id: string;
   invoiceNumber: string;
-  status: 'draft' | 'received' | 'washing' | 'ironing' | 'ready' | 'completed' | 'cancelled';
+  status: 'draft' | 'received' | 'completed' | 'cancelled' | 'washing' | 'ironing' | 'ready';
   customerName: string;
   customerPhone: string;
+  customerLocation?: string;
   paymentType: 'cash' | 'card' | 'deferred' | 'electronic';
   isUrgent: boolean;
+  isEdited: boolean;
   notes: string;
   subtotal: number;
   discountPercent: number;
@@ -70,10 +72,12 @@ function normalizeInvoice(raw: any): Invoice {
     id: raw.id,
     invoiceNumber: raw.invoiceNumber ?? raw.invoice_number ?? '--',
     status: raw.status,
-    customerName: raw.customer?.fullName ?? raw.walk_in_name ?? '--',
-    customerPhone: raw.customer?.phoneNumber ?? raw.walk_in_phone ?? '',
+    customerName: raw.customerName ?? raw.customer?.fullName ?? raw.walk_in_name ?? '--',
+    customerPhone: raw.customerPhone ?? raw.customer?.phoneNumber ?? raw.walk_in_phone ?? '',
+    customerLocation: raw.walk_in_location ?? '',
     paymentType: raw.paymentType ?? raw.payment_type ?? 'cash',
     isUrgent: toNum(raw.urgency_fee) > 0,
+    isEdited: !!(raw.is_edited),
     notes: raw.notes ?? '',
     subtotal: toNum(raw.subtotal),
     discountPercent: toNum(raw.discountPercent ?? raw.discount_percent),
@@ -92,7 +96,7 @@ function normalizeInvoice(raw: any): Invoice {
       unitPrice: toNum(item.unitPrice ?? item.unit_price),
       totalPrice: toNum(item.subtotal ?? item.totalPrice ?? item.total_price ?? (toNum(item.unitPrice ?? item.unit_price) * toNum(item.quantity))),
       notes: item.notes ?? '',
-      service_type: item.service_type,
+      service_type: item.service_type === 'washing' ? 'washing_only' : item.service_type === 'ironing' ? 'ironing_only' : item.service_type,
     })),
     statusHistory: (raw.statusHistory ?? raw.statusLogs ?? []).map((h: any) => ({
       status: h.newStatus ?? h.status,
@@ -112,7 +116,11 @@ export const useInvoices = (filters: any) => {
     queryKey: ['invoices', filters],
     queryFn: async () => {
       const response = await api.get('/invoices', { params: filters });
-      return response.data?.data as Invoice[]; // Assuming paginated structure or flat list
+      const rawData = response.data?.data;
+      if (Array.isArray(rawData)) {
+        return rawData.map(normalizeInvoice);
+      }
+      return [];
     },
   });
 };
@@ -139,6 +147,29 @@ export const useCreateInvoice = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customerDetail'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
+  });
+};
+
+// Update Invoice
+export const useUpdateInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await api.patch(`/invoices/${id}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customerDetail'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
     },
   });
 };
@@ -154,6 +185,10 @@ export const useUpdateInvoiceStatus = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customerDetail'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
     },
   });
 };

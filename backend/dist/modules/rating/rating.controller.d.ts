@@ -19,6 +19,8 @@ export declare class RatingController {
     getMyRatings(req: any): Promise<{
         success: boolean;
         data: {
+            id: string;
+            createdAt: Date;
             laundry: {
                 id: string;
                 name: string;
@@ -27,8 +29,6 @@ export declare class RatingController {
             invoice: {
                 invoiceNumber: string;
             };
-            id: string;
-            createdAt: Date;
             stars: number;
             comment: string;
         }[];

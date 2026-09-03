@@ -14,5 +14,12 @@ services:
       # هذا السطر سيقوم بتشغيل ملف السكيما تلقائياً عند أول تشغيل للقاعدة
       - ../MyLoundreyPlus.sql:/docker-entrypoint-initdb.d/init.sql
 
+  redis:
+    image: redis:alpine
+    container_name: MyLoundreyPlus_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
 volumes:
   pgdata:

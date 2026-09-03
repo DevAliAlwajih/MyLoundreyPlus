@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useThemeStore } from '../../../stores/themeStore';
 
 const PRIMARY = '#1a5fa8';
 const BG = '#f4f6fb';
@@ -16,6 +17,7 @@ const BG = '#f4f6fb';
 export default function ConversationsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
 
   const options = [
     {
@@ -25,8 +27,8 @@ export default function ConversationsScreen() {
       subtitleAr: 'تواصل مع فريق دعم المنصة',
       subtitleEn: 'Contact the platform support team',
       icon: 'headset' as const,
-      iconBg: '#e8f0fb',
-      iconColor: PRIMARY,
+      iconBg: colors.primary + '22',
+      iconColor: colors.primary,
       route: '/conversation-modal/support',
     },
     {
@@ -36,9 +38,9 @@ export default function ConversationsScreen() {
       subtitleAr: 'قائمة عملائك وسجل التواصل معهم',
       subtitleEn: 'Your customers list and communication history',
       icon: 'people' as const,
-      iconBg: '#f0fdf4',
+      iconBg: '#15803d22',
       iconColor: '#15803d',
-      route: '/(app)/crm',
+      route: '/(app)/conversations/customers',
     },
   ];
 
@@ -46,14 +48,14 @@ export default function ConversationsScreen() {
   const isAr = i18n.language === 'ar';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('nav.conversations')}</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('nav.conversations')}</Text>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {isAr
             ? 'اختر وجهة المحادثة'
             : 'Select a conversation destination'}
@@ -62,7 +64,7 @@ export default function ConversationsScreen() {
         {options.map((opt) => (
           <TouchableOpacity
             key={opt.id}
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.surface }]}
             onPress={() => router.push(opt.route as any)}
             activeOpacity={0.75}
           >
@@ -70,17 +72,17 @@ export default function ConversationsScreen() {
               <Ionicons name={opt.icon} size={28} color={opt.iconColor} />
             </View>
             <View style={styles.cardText}>
-              <Text style={styles.cardTitle}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
                 {isAr ? opt.titleAr : opt.titleEn}
               </Text>
-              <Text style={styles.cardSubtitle}>
+              <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
                 {isAr ? opt.subtitleAr : opt.subtitleEn}
               </Text>
             </View>
             <Ionicons
               name={isAr ? 'chevron-back' : 'chevron-forward'}
               size={20}
-              color="#9ca3af"
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         ))}
@@ -90,19 +92,16 @@ export default function ConversationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+  container: { flex: 1 },
 
   header: {
-    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
   },
 
   content: {
@@ -112,7 +111,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -120,7 +118,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -142,8 +139,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 4,
   },
-  cardSubtitle: { fontSize: 13, color: '#6b7280', lineHeight: 18 },
+  cardSubtitle: { fontSize: 13, lineHeight: 18 },
 });

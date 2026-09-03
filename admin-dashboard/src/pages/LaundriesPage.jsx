@@ -106,7 +106,7 @@ export default function LaundriesPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">{label('إدارة المغاسل', 'Laundries Management')}</h1>
-          <p className="page-subtitle">{label(`${LAUNDRIES.length} مغسلة مسجلة في النظام`, `${LAUNDRIES.length} registered laundries`)}</p>
+          <p className="page-subtitle">{label(`${laundries.length} مغسلة مسجلة في النظام`, `${laundries.length} registered laundries`)}</p>
         </div>
         <div className="flex gap-8">
           <button className="btn btn-primary" onClick={() => { setSelectedLaundry(null); setShowModal(true) }}>
@@ -256,7 +256,7 @@ export default function LaundriesPage() {
           )}
         </div>
         <div className="card-footer flex items-center justify-between">
-          <span className="fs-sm text-muted">{label(`عرض ${filtered.length} من ${LAUNDRIES.length}`, `Showing ${filtered.length} of ${LAUNDRIES.length}`)}</span>
+          <span className="fs-sm text-muted">{label(`عرض ${filtered.length} من ${laundries.length}`, `Showing ${filtered.length} of ${laundries.length}`)}</span>
           <div className="pagination">
             <button className="page-btn" disabled>‹</button>
             <button className="page-btn active">1</button>

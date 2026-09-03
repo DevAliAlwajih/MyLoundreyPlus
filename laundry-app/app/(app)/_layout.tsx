@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 import { StackActions } from '@react-navigation/native';
-
-const PRIMARY = '#1a5fa8';
-const INACTIVE = '#9ca3af';
+import { useThemeStore } from '../../stores/themeStore';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -23,22 +21,23 @@ function TabIcon({
 
 export default function AppLayout() {
   const { t } = useTranslation();
+  const { colors, themeMode } = useThemeStore();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: INACTIVE,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopColor: '#e5e7eb',
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 88 : 64,
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           paddingTop: 8,
           elevation: 8,
-          shadowColor: '#000',
+          shadowColor: themeMode === 'dark' ? 'transparent' : '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.06,
           shadowRadius: 8,
@@ -72,10 +71,10 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            try {
+            const state = navigation.getState();
+            const currentRoute = state.routes.find((r) => r.key === e.target);
+            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
-            } catch (e) {
-              // Ignore if no stack to pop
             }
           },
         })}
@@ -92,10 +91,10 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            try {
+            const state = navigation.getState();
+            const currentRoute = state.routes.find((r) => r.key === e.target);
+            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
-            } catch (e) {
-              // Ignore if no stack to pop
             }
           },
         })}
@@ -112,10 +111,10 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            try {
+            const state = navigation.getState();
+            const currentRoute = state.routes.find((r) => r.key === e.target);
+            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
-            } catch (e) {
-              // Ignore if no stack to pop
             }
           },
         })}
@@ -127,6 +126,8 @@ export default function AppLayout() {
       <Tabs.Screen name="profile" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="promotions" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="reports" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="wallet" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="notifications" options={{ href: null, tabBarStyle: { display: 'none' } }} />
 
 
     </Tabs>

@@ -13,6 +13,8 @@ export declare class InvoiceLaundryController {
     findAll(req: any, query: QueryInvoiceDto): Promise<{
         success: boolean;
         data: {
+            customerName: any;
+            customerPhone: any;
             totalAmount: number;
             paidAmount: number;
             dueAmount: number;
@@ -26,8 +28,11 @@ export declare class InvoiceLaundryController {
             };
             status: import(".prisma/client").$Enums.invoice_status;
             invoiceNumber: string;
+            customerId: string;
             paymentType: import(".prisma/client").$Enums.payment_type;
             walk_in_name: string;
+            walk_in_phone: string;
+            is_edited: boolean;
         }[];
         meta: {
             page: number;
@@ -58,8 +63,8 @@ export declare class InvoiceLaundryController {
             status: import(".prisma/client").$Enums.invoice_status;
             paymentType: import(".prisma/client").$Enums.payment_type;
             laundry: {
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 address: string;
                 city: string;
             };
@@ -98,14 +103,14 @@ export declare class InvoiceCustomerController {
             totalAmount: number;
             paidAmount: number;
             dueAmount: number;
+            id: string;
+            createdAt: Date;
             laundry: {
                 id: string;
                 name: string;
                 city: string;
                 logoUrl: string;
             };
-            id: string;
-            createdAt: Date;
             status: import(".prisma/client").$Enums.invoice_status;
             invoiceNumber: string;
             paymentType: import(".prisma/client").$Enums.payment_type;

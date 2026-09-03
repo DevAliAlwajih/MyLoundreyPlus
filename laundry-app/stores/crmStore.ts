@@ -8,12 +8,13 @@ export interface Customer {
   totalInvoices: number;
   completedInvoices: number;
   deferredBalance: number;
-  lastVisit: string;
+  lastVisit: string | null;
 }
 
 export interface CustomerDetail extends Customer {
   totalSpent: number;
   invoices: Invoice[];
+  notes?: string | null;
 }
 
 interface CRMStore {

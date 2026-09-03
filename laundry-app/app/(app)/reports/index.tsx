@@ -9,15 +9,12 @@ import { KPICard } from '../../../components/reports/KPICard';
 import { PaymentBreakdownRow } from '../../../components/reports/PaymentBreakdownRow';
 import { TopItemsTable } from '../../../components/reports/TopItemsTable';
 import { RevenueChart } from '../../../components/reports/RevenueChart';
-
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-};
+import { useThemeStore } from '../../../stores/themeStore';
 
 export default function ReportsScreen() {
   const { t } = useTranslation();
   const { period } = useReportStore();
+  const { colors } = useThemeStore();
   
   const { data: report, isLoading, isError, refetch } = useReports();
 
@@ -27,7 +24,7 @@ export default function ReportsScreen() {
     if (isLoading) {
       return (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -37,7 +34,7 @@ export default function ReportsScreen() {
         <View style={styles.center}>
           <Text style={styles.errorText}>{t('reports.failedToLoad')}</Text>
           <TouchableOpacity onPress={() => refetch()}>
-            <Text style={{ color: COLORS.primary }}>{t('common.retry')}</Text>
+            <Text style={{ color: colors.primary }}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -75,15 +72,15 @@ export default function ReportsScreen() {
         {/* Revenue Chart (Period Only) */}
         {isPeriodView && (report as PeriodReport).dailyBreakdown && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('reports.revenueChart')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('reports.revenueChart')}</Text>
             <RevenueChart dailyBreakdown={(report as PeriodReport).dailyBreakdown} />
           </View>
         )}
 
         {/* Payment Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('reports.paymentBreakdown')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('reports.paymentBreakdown')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <PaymentBreakdownRow 
               type="cash" 
               amount={report.breakdown.cash.amount} 
@@ -113,16 +110,16 @@ export default function ReportsScreen() {
 
         {/* Invoice Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('reports.invoiceStatus')}</Text>
-          <View style={[styles.card, styles.statusCard]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('reports.invoiceStatus')}</Text>
+          <View style={[styles.card, styles.statusCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.statusItem}>
-              <Text style={styles.statusLabel}>{t('reports.statusCompleted')}: {report.completedCount} ✅</Text>
+              <Text style={[styles.statusLabel, { color: colors.text }]}>{t('reports.statusCompleted')}: {report.completedCount} ✅</Text>
             </View>
             <View style={styles.statusItem}>
-              <Text style={styles.statusLabel}>{t('reports.statusCancelled')}: {report.cancelledCount} ❌</Text>
+              <Text style={[styles.statusLabel, { color: colors.text }]}>{t('reports.statusCancelled')}: {report.cancelledCount} ❌</Text>
             </View>
             <View style={styles.statusItem}>
-              <Text style={styles.statusLabel}>{t('reports.statusPending')}: {report.pendingCount} 🔄</Text>
+              <Text style={[styles.statusLabel, { color: colors.text }]}>{t('reports.statusPending')}: {report.pendingCount} 🔄</Text>
             </View>
           </View>
         </View>
@@ -130,8 +127,8 @@ export default function ReportsScreen() {
         {/* Top Items */}
         {report.topItems && report.topItems.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('reports.topItems')}</Text>
-            <View style={styles.card}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('reports.topItems')}</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <TopItemsTable items={report.topItems} />
             </View>
           </View>
@@ -142,9 +139,9 @@ export default function ReportsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('reports.title')}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.title, { color: colors.text }]}>{t('reports.title')}</Text>
       </View>
       
       <PeriodSelector />
@@ -157,17 +154,14 @@ export default function ReportsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
   },
   scrollContent: {
     padding: 16,
@@ -196,16 +190,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 12,
     textAlign: 'left',
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#eee',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -223,6 +214,5 @@ const styles = StyleSheet.create({
   statusLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#444',
   },
 });

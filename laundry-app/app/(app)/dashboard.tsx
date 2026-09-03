@@ -22,10 +22,12 @@ import api from '../../lib/axios';
 import { useLaundryStore } from '../../stores/laundryStore';
 import { useBookings } from '../../hooks/useBookings';
 import { useInvoices } from '../../hooks/useInvoices';
+import { useWallet } from '../../hooks/useWallet';
+import { AdCarousel } from '../../components/dashboard/AdCarousel';
+import { useThemeStore } from '../../stores/themeStore';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const PRIMARY = '#1a5fa8';
-const BG = '#f4f6fb';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -58,34 +60,8 @@ const QUICK_ACTIONS = [
   { key: 'promotions', iconName: 'megaphone' as const, route: '/(app)/promotions', labelAr: 'العروض', labelEn: 'Promotions' },
 ];
 
-// ── Ad-banner slides (static until backend ads endpoint is wired) ──────────
-
-const AD_SLIDES = [
-  {
-    id: '1',
-    badge: 'إعلان',
-    title: 'خصم 20% على اشتراك المنصة',
-    subtitle: 'عرض العيد الوطني — لفترة محدودة',
-    bg: '#e8f0fb',
-    accent: PRIMARY,
-  },
-  {
-    id: '2',
-    badge: 'جديد',
-    title: 'ميزة الحجز الإلكتروني متاحة الآن',
-    subtitle: 'اجعل عملاءك يحجزون بسهولة عبر التطبيق',
-    bg: '#edf7f0',
-    accent: '#1a8a4a',
-  },
-  {
-    id: '3',
-    badge: 'تذكير',
-    title: 'اكتمل ملفك التجاري؟',
-    subtitle: 'أضف موقعك وساعات العمل لزيادة الظهور',
-    bg: '#fdf3e8',
-    accent: '#d97706',
-  },
-];
+// ── Ad Carousel ──────────────────────────────────────────────────────────────
+// The AdCarousel component is now dynamically rendered from components/dashboard/AdCarousel
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
@@ -98,11 +74,14 @@ function StatCard({
   value: string;
   loading: boolean;
 }) {
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors);
+  
   return (
     <View style={styles.statCard}>
       <Text style={styles.statLabel}>{label}</Text>
       {loading ? (
-        <ActivityIndicator size="small" color={PRIMARY} style={{ marginTop: 6 }} />
+        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 6 }} />
       ) : (
         <Text style={styles.statValue}>{value}</Text>
       )}
@@ -110,62 +89,13 @@ function StatCard({
   );
 }
 
-function AdBanner() {
-  const flatRef = useRef<FlatList>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
 
-  const onScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const idx = Math.round(e.nativeEvent.contentOffset.x / (SCREEN_W - 32));
-      setActiveIdx(idx);
-    },
-    [],
-  );
-
-  return (
-    <View style={styles.adWrapper}>
-      <FlatList
-        ref={flatRef}
-        data={AD_SLIDES}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        inverted={I18nManager.isRTL}
-        renderItem={({ item }) => (
-          <View style={[styles.adSlide, { backgroundColor: item.bg }]}>
-            <View style={styles.adContent}>
-              <View style={[styles.adBadge, { borderColor: item.accent }]}>
-                <Text style={[styles.adBadgeText, { color: item.accent }]}>{item.badge}</Text>
-              </View>
-              <Text style={[styles.adTitle, { color: item.accent }]}>{item.title}</Text>
-              <Text style={styles.adSubtitle}>{item.subtitle}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={item.accent} />
-          </View>
-        )}
-      />
-      {/* Dot indicators */}
-      <View style={styles.dots}>
-        {AD_SLIDES.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              i === activeIdx && styles.dotActive,
-            ]}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
 
 function QuickActions({ onPress }: { onPress: (route: string) => void }) {
   const { i18n } = useTranslation();
   const isAr = i18n.language === 'ar';
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors);
 
   return (
     <View style={styles.quickGrid}>
@@ -177,7 +107,7 @@ function QuickActions({ onPress }: { onPress: (route: string) => void }) {
           accessibilityLabel={isAr ? action.labelAr : action.labelEn}
         >
           <View style={styles.quickIconWrap}>
-            <Ionicons name={action.iconName} size={24} color={PRIMARY} />
+            <Ionicons name={action.iconName} size={24} color={colors.primary} />
           </View>
           <Text style={styles.quickLabel}>{isAr ? action.labelAr : action.labelEn}</Text>
         </TouchableOpacity>
@@ -193,6 +123,8 @@ export default function DashboardScreen() {
   const { i18n } = useTranslation();
   const isAr = i18n.language === 'ar';
   const queryClient = useQueryClient();
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors);
 
   const [isFocused, setIsFocused] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -210,11 +142,15 @@ export default function DashboardScreen() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }),
       queryClient.invalidateQueries({ queryKey: ['bookings'] }),
       queryClient.invalidateQueries({ queryKey: ['invoices'] }),
+      queryClient.invalidateQueries({ queryKey: ['wallet'] }),
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }),
+      queryClient.invalidateQueries({ queryKey: ['ads'] }),
     ]);
     setRefreshing(false);
   }, [queryClient]);
 
   const { profile } = useLaundryStore();
+  const { unreadCount } = useNotifications();
   const laundryName = isAr
     ? (profile?.nameAr || profile?.name || '—')
     : (profile?.name || '—');
@@ -243,8 +179,21 @@ export default function DashboardScreen() {
   const { data: pendingBookings } = useBookings('pending');
   const pendingCount = pendingBookings?.length ?? 0;
 
-  // Recent invoices (latest 3)
-  const { data: recentInvoices, isLoading: invLoading } = useInvoices({});
+  // Wallet
+  const { data: walletData, isLoading: walletLoading } = useWallet();
+  const balance = Number(walletData?.balance || 0);
+  const isNegative = balance < 0;
+
+  // Recent invoices (latest 3) — تُحدَّث عند كل عودة للشاشة
+  const { data: recentInvoices, isLoading: invLoading, refetch: refetchInvoices } = useInvoices({});
+
+  // أعد تحميل الفواتير كلما انتقل المستخدم إلى الداشبورد
+  useFocusEffect(
+    useCallback(() => {
+      refetchInvoices();
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    }, [refetchInvoices, queryClient])
+  );
 
   const navigate = (route: string) => router.push(route as any);
 
@@ -257,8 +206,8 @@ export default function DashboardScreen() {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            colors={[PRIMARY]} 
-            tintColor={PRIMARY}
+            colors={[colors.primary]} 
+            tintColor={colors.primary}
           />
         }
       >
@@ -270,10 +219,17 @@ export default function DashboardScreen() {
           </View>
           <TouchableOpacity
             style={styles.bellBtn}
-            onPress={() => router.push('/(app)/settings')}
+            onPress={() => router.push('/(app)/notifications')}
             accessibilityLabel="الإشعارات"
           >
-            <Ionicons name="notifications-outline" size={22} color={PRIMARY} />
+            <Ionicons name="notifications-outline" size={22} color={colors.primary} />
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -291,8 +247,30 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* ── Ad Banner ── */}
-        <AdBanner />
+        {/* ── Wallet Card ── */}
+        <TouchableOpacity
+          style={styles.walletCard}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(app)/wallet')}
+        >
+          <View style={styles.walletIconWrap}>
+            <Ionicons name="wallet-outline" size={24} color={colors.primary} />
+          </View>
+          <View style={styles.walletInfo}>
+            <Text style={styles.walletLabel}>رصيد المحفظة</Text>
+            {walletLoading ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+            ) : (
+              <Text style={[styles.walletBalance, isNegative && styles.walletBalanceNegative]}>
+                {fmtCurrency(balance)}
+              </Text>
+            )}
+          </View>
+          <Ionicons name={isAr ? "chevron-back" : "chevron-forward"} size={20} color="#9ca3af" />
+        </TouchableOpacity>
+
+        {/* ── Ad Carousel ── */}
+        <AdCarousel />
 
         {/* ── Pending Bookings Alert ── */}
         {pendingCount > 0 && (
@@ -326,7 +304,7 @@ export default function DashboardScreen() {
         </View>
 
         {invLoading ? (
-          <ActivityIndicator color={PRIMARY} style={{ marginVertical: 20 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} />
         ) : !recentInvoices?.length ? (
           <View style={styles.emptyInv}>
             <Ionicons name="document-text-outline" size={40} color="#d1d5db" />
@@ -359,27 +337,35 @@ export default function DashboardScreen() {
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   draft:     { bg: '#f3f4f6', text: '#6b7280', label: 'مسودة' },
-  received:  { bg: '#eff6ff', text: '#1d4ed8', label: 'تم الاستلام' },
-  washing:   { bg: '#eff6ff', text: PRIMARY,    label: 'قيد الغسيل' },
-  ironing:   { bg: '#f5f3ff', text: '#7c3aed', label: 'قيد الكوي' },
-  ready:     { bg: '#f0fdf4', text: '#15803d', label: 'جاهزة' },
-  completed: { bg: '#f0fdf4', text: '#15803d', label: 'مكتمل' },
-  cancelled: { bg: '#fef2f2', text: '#dc2626', label: 'ملغي' },
+  received:  { bg: '#dbeafe', text: '#1e40af', label: 'قيد التجهيز' },
+  washing:   { bg: '#dbeafe', text: '#1e40af', label: 'قيد التجهيز' },
+  ironing:   { bg: '#dbeafe', text: '#1e40af', label: 'قيد التجهيز' },
+  ready:     { bg: '#d1fae5', text: '#065f46', label: 'قيد التجهيز' },
+  completed: { bg: '#d1fae5', text: '#065f46', label: 'تم التسليم' },
+  cancelled: { bg: '#fee2e2', text: '#991b1b', label: 'ملغي' },
 };
 
 function InvoiceStatusBadge({ status }: { status: string }) {
   const cfg = STATUS_COLORS[status] ?? STATUS_COLORS.draft;
+  const { colors, themeMode } = useThemeStore();
+  const styles = getStyles(colors);
+  
+  // Adjust badge colors slightly for dark mode for better contrast
+  const isDark = themeMode === 'dark';
+  const bgColor = isDark ? cfg.bg + '30' : cfg.bg; // Add transparency for dark mode
+  const textColor = isDark ? (cfg.text === '#6b7280' ? '#9ca3af' : cfg.text) : cfg.text;
+
   return (
-    <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
+    <View style={[styles.badge, { backgroundColor: bgColor }]}>
+      <Text style={[styles.badgeText, { color: textColor }]}>{cfg.label}</Text>
     </View>
   );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
 
   // Header
@@ -389,85 +375,115 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  greeting: { fontSize: 13, color: '#6b7280', marginBottom: 2 },
-  laundryName: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  greeting: { fontSize: 13, color: colors.textSecondary, marginBottom: 2 },
+  laundryName: { fontSize: 20, fontWeight: '700', color: colors.text },
   bellBtn: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#e8f0fb',
+    backgroundColor: colors.surfaceVariant || (colors.primary + '15'),
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    backgroundColor: '#ef4444',
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceVariant || (colors.primary + '15'),
+  },
+  unreadBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: colors.background === '#000000' || colors.background === '#121212' ? 0.3 : 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: colors.border ? 1 : 0,
+    borderColor: colors.border,
   },
-  statLabel: { fontSize: 12, color: '#6b7280', marginBottom: 4 },
-  statValue: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  statLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
+  statValue: { fontSize: 20, fontWeight: '700', color: colors.text },
 
-  // Ad Banner
-  adWrapper: { marginBottom: 14 },
-  adSlide: {
-    width: SCREEN_W - 32,
+  // Wallet
+  walletCard: {
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: colors.background === '#000000' || colors.background === '#121212' ? 0.3 : 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    gap: 12,
+    borderWidth: colors.border ? 1 : 0,
+    borderColor: colors.border,
   },
-  adContent: { flex: 1 },
-  adBadge: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 6,
-  },
-  adBadgeText: { fontSize: 10, fontWeight: '600' },
-  adTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  adSubtitle: { fontSize: 11, color: '#6b7280' },
-  dots: {
-    flexDirection: 'row',
+  walletIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceVariant || (colors.primary + '15'),
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    marginTop: 8,
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#d1d5db',
+  walletInfo: {
+    flex: 1,
   },
-  dotActive: { backgroundColor: PRIMARY, width: 16 },
+  walletLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  walletBalance: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#15803d',
+  },
+  walletBalanceNegative: {
+    color: '#dc2626',
+  },
 
   // Alert
   alertBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.background === '#000000' || colors.background === '#121212' ? '#78350f30' : '#fef3c7',
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#b4530930',
   },
-  alertText: { flex: 1, fontSize: 13, color: '#92400e', fontWeight: '600' },
+  alertText: { flex: 1, fontSize: 13, color: colors.background === '#000000' || colors.background === '#121212' ? '#fde68a' : '#92400e', fontWeight: '600' },
 
   // Quick Access
   sectionLabel: {
     fontSize: 13,
-    color: '#6b7280',
+    color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: 10,
   },
@@ -486,11 +502,11 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#e8f0fb',
+    backgroundColor: colors.surfaceVariant || (colors.primary + '15'),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  quickLabel: { fontSize: 11, color: '#374151', fontWeight: '500', textAlign: 'center' },
+  quickLabel: { fontSize: 11, color: colors.text, fontWeight: '500', textAlign: 'center' },
 
   // Section header
   sectionHeader: {
@@ -499,11 +515,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  seeAll: { fontSize: 12, color: PRIMARY, fontWeight: '600' },
+  seeAll: { fontSize: 12, color: colors.primary, fontWeight: '600' },
 
   // Invoice card
   invCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
@@ -511,12 +527,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: colors.background === '#000000' || colors.background === '#121212' ? 0.3 : 0.04,
     shadowRadius: 3,
     elevation: 1,
+    borderWidth: colors.border ? 1 : 0,
+    borderColor: colors.border,
   },
-  invCustomer: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  invNum: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  invCustomer: { fontSize: 14, fontWeight: '600', color: colors.text },
+  invNum: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -526,5 +544,5 @@ const styles = StyleSheet.create({
 
   // Empty
   emptyInv: { alignItems: 'center', paddingVertical: 24, gap: 8 },
-  emptyInvText: { fontSize: 14, color: '#9ca3af' },
+  emptyInvText: { fontSize: 14, color: colors.textSecondary },
 });

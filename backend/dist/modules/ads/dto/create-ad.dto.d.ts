@@ -9,6 +9,7 @@ export declare class CreateAdDto {
     bodyText?: string;
     linkUrl?: string;
     targetAudience?: AdTarget;
+    adFee?: number;
     sortOrder?: number;
     startDate?: string;
     endDate?: string;

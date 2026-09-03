@@ -23,6 +23,7 @@ import { UpdateLaundryDto } from './dto/update-laundry.dto';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { CreateItemDto, UpdateItemDto, UpdatePriceDto } from './dto/item.dto';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
+import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -171,6 +172,32 @@ export class LaundryOwnerController {
   @Get('menu')
   getMyMenu(@Req() req: any) {
     return this.laundryService.getMyMenu(req.user.id);
+  }
+
+  // ─── Wallet & Commission ───
+
+  /**
+   * GET /api/v1/my-laundry/wallet
+   * بيانات المحفظة ونسبة العمولة
+   */
+  @Get('wallet')
+  getWallet(@Req() req: any) {
+    return this.laundryService.getWallet(req.user.id);
+  }
+
+  /**
+   * GET /api/v1/my-laundry/wallet/transactions
+   * سجل حركات العمولة للمغسلة
+   */
+  @Get('wallet/transactions')
+  getWalletTransactions(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 20;
+    return this.laundryService.getWalletTransactions(req.user.id, p, l);
   }
 
   // ─── Categories ───
@@ -324,5 +351,18 @@ export class LaundryOwnerController {
     @Body('channel') channel: 'whatsapp' | 'app' | 'both',
   ) {
     return this.laundryService.remindCustomer(req.user.id, customerId, channel);
+  }
+
+  /**
+   * PATCH /api/v1/my-laundry/customers/:customerId
+   * تحديث بيانات العميل الخاصة بالمغسلة
+   */
+  @Patch('customers/:customerId')
+  updateCustomerProfile(
+    @Req() req: any,
+    @Param('customerId') customerId: string,
+    @Body() dto: UpdateCustomerProfileDto,
+  ) {
+    return this.laundryService.updateCustomerProfile(req.user.id, customerId, dto);
   }
 }

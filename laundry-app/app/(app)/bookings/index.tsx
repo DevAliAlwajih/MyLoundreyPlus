@@ -13,6 +13,7 @@ import { useInvoiceStore } from '../../../stores/invoiceStore';
 import { BookingCard } from '../../../components/bookings/BookingCard';
 import { AcceptDialog } from '../../../components/bookings/AcceptDialog';
 import { RejectBottomSheet } from '../../../components/bookings/RejectBottomSheet';
+import { useThemeStore } from '../../../stores/themeStore';
 
 type TabKey = 'pending' | 'confirmed' | 'completed' | 'rejected';
 
@@ -26,6 +27,7 @@ const TABS: { key: TabKey; labelKey: string; emptyKey: string }[] = [
 export default function BookingsScreen() {
   const { t } = useTranslation();
   const { selectedDate, setSelectedDate } = useBookingStore();
+  const { colors } = useThemeStore();
 
   const [activeTab, setActiveTab] = useState<TabKey>('pending');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -101,10 +103,10 @@ export default function BookingsScreen() {
         return (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, isActive && styles.tabActive]}
+            style={[styles.tab, isActive && { borderBottomColor: colors.primary }]}
             onPress={() => setActiveTab(tab.key)}
           >
-            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.textSecondary }, isActive && { color: colors.primary, fontWeight: 'bold' }]}>
               {t(tab.labelKey)}
             </Text>
             {tab.key === 'pending' && pendingCount > 0 && (
@@ -119,13 +121,13 @@ export default function BookingsScreen() {
   );
 
   const renderDateFilter = () => (
-    <View style={styles.dateFilterRow}>
+    <View style={[styles.dateFilterRow, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <TouchableOpacity
-        style={styles.dateFilterBtn}
+        style={[styles.dateFilterBtn, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}
         onPress={() => setShowDatePicker(true)}
       >
-        <Ionicons name="calendar-outline" size={16} color="#1a5fa8" />
-        <Text style={styles.dateFilterText}>
+        <Ionicons name="calendar-outline" size={16} color={colors.primary} />
+        <Text style={[styles.dateFilterText, { color: colors.primary }]}>
           {selectedDate
             ? new Date(selectedDate).toLocaleDateString('ar-SA')
             : t('bookings.filterByDate')}
@@ -152,14 +154,34 @@ export default function BookingsScreen() {
   const activeTab_ = TABS.find(t => t.key === activeTab)!;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('bookings.title')}</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('bookings.title')}</Text>
       </View>
 
       {/* Top Tab Bar */}
-      {renderTabBar()}
+      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, isActive && { borderBottomColor: colors.primary }]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text style={[styles.tabText, { color: colors.textSecondary }, isActive && { color: colors.primary, fontWeight: 'bold' }]}>
+                {t(tab.labelKey)}
+              </Text>
+              {tab.key === 'pending' && pendingCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{pendingCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       {/* Date Filter */}
       {renderDateFilter()}
@@ -167,7 +189,7 @@ export default function BookingsScreen() {
       {/* List */}
       {isLoading && !isRefetching ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1a5fa8" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -185,8 +207,8 @@ export default function BookingsScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-clear-outline" size={60} color="#ccc" />
-              <Text style={styles.emptyText}>{t(activeTab_.emptyKey)}</Text>
+              <Ionicons name="calendar-clear-outline" size={60} color={colors.textSecondary} style={{ opacity: 0.5 }} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t(activeTab_.emptyKey)}</Text>
             </View>
           }
         />
@@ -216,25 +238,19 @@ export default function BookingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   tab: {
     flex: 1,
@@ -245,17 +261,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabActive: {
-    borderBottomColor: '#1a5fa8',
-  },
   tabText: {
     fontSize: 12,
-    color: '#888',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#1a5fa8',
-    fontWeight: 'bold',
   },
   badge: {
     backgroundColor: '#e74c3c',
@@ -277,23 +284,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   dateFilterBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f8ff',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#cce5ff',
   },
   dateFilterText: {
     fontSize: 13,
-    color: '#1a5fa8',
     marginLeft: 6,
   },
   clearDateBtn: {
@@ -316,6 +318,5 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#999',
   },
 });

@@ -163,6 +163,39 @@ let ProfileService = class ProfileService {
         });
         return { success: true, message: 'تم إلغاء تفعيل الجهاز' };
     }
+    async getNotificationPrefs(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { notification_prefs: true },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'PROFILE_NOT_FOUND', message: 'المستخدم غير موجود' },
+            });
+        }
+        const defaultPrefs = {
+            newBooking: true,
+            invoiceStatus: true,
+            paymentReceived: true,
+            systemAlerts: true,
+        };
+        return {
+            success: true,
+            data: user.notification_prefs || defaultPrefs,
+        };
+    }
+    async updateNotificationPrefs(userId, prefs) {
+        const updated = await this.prisma.user.update({
+            where: { id: userId },
+            data: { notification_prefs: prefs },
+            select: { notification_prefs: true },
+        });
+        return {
+            success: true,
+            data: updated.notification_prefs,
+        };
+    }
 };
 exports.ProfileService = ProfileService;
 exports.ProfileService = ProfileService = __decorate([

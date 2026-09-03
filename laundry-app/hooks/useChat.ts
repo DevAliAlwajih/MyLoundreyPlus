@@ -1,36 +1,51 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/axios';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export interface ChatMessage {
   id: string;
-  laundryId?: string;
-  customerId?: string;
+  senderId: string;
+  senderName?: string;
   senderRole: 'laundry' | 'customer' | 'admin';
   message?: string;
   attachmentUrl?: string;
   attachmentType?: 'image' | 'pdf';
   isRead: boolean;
-  createdAt: string;
+  sentAt: string; // ISO string from sent_at
 }
 
-export interface ChatResponse {
-  success: boolean;
-  data: ChatMessage[];
+// ─── Helper: نحوّل الرسالة من شكل الباكند إلى شكل الفرونت ────────────────────
+
+function mapMessage(raw: any): ChatMessage {
+  return {
+    id: raw.id,
+    senderId: raw.sender_id,
+    senderName: raw.users_chat_messages_sender_idTousers?.fullName,
+    senderRole: raw.users_chat_messages_sender_idTousers?.role ?? 'customer',
+    message: raw.message ?? undefined,
+    attachmentUrl: raw.attachment_url ?? undefined,
+    attachmentType: raw.attachment_type ?? undefined,
+    isRead: raw.is_read,
+    sentAt: raw.sent_at,
+  };
 }
+
+// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export const useChatMessages = (targetId: string, isFocused: boolean) => {
   const isSupport = targetId === 'support';
-  const endpoint = isSupport 
-    ? '/chat/support/messages' 
+  const endpoint = isSupport
+    ? '/chat/support/messages'
     : `/chat/laundry/${targetId}/messages`;
 
   return useQuery({
     queryKey: ['chat-messages', targetId],
     queryFn: async () => {
-      const response = await api.get<ChatResponse>(endpoint);
-      return response.data.data;
+      const response = await api.get<{ success: boolean; data: any[] }>(endpoint);
+      return (response.data.data ?? []).map(mapMessage);
     },
-    refetchInterval: isFocused ? 5000 : false, // Poll every 5s if screen is focused
+    refetchInterval: isFocused ? 5000 : false,
     enabled: !!targetId,
   });
 };
@@ -38,12 +53,16 @@ export const useChatMessages = (targetId: string, isFocused: boolean) => {
 export const useSendMessage = (targetId: string) => {
   const queryClient = useQueryClient();
   const isSupport = targetId === 'support';
-  const endpoint = isSupport 
-    ? '/chat/support/messages' 
+  const endpoint = isSupport
+    ? '/chat/support/messages'
     : `/chat/laundry/${targetId}/messages`;
 
   return useMutation({
-    mutationFn: async (data: { message?: string; attachmentUrl?: string; attachmentType?: string }) => {
+    mutationFn: async (data: {
+      message?: string;
+      attachmentUrl?: string;
+      attachmentType?: string;
+    }) => {
       const response = await api.post(endpoint, data);
       return response.data;
     },
@@ -53,15 +72,29 @@ export const useSendMessage = (targetId: string) => {
   });
 };
 
+export const useDeleteMessage = (targetId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (messageId: string) => {
+      const response = await api.delete(`/chat/messages/${messageId}`);
+      return response.data;
+    },
+    onSuccess: (_, messageId) => {
+      // حذف الرسالة من الـ cache مباشرة بدون re-fetch
+      queryClient.setQueryData(
+        ['chat-messages', targetId],
+        (old: ChatMessage[] | undefined) =>
+          old ? old.filter((m) => m.id !== messageId) : [],
+      );
+    },
+  });
+};
+
 export const useMarkChatAsRead = (targetId: string) => {
   const queryClient = useQueryClient();
-  // Support messages might not have a mark-as-read endpoint in ChatController, 
-  // only laundry<->customer endpoints were defined for markAsRead.
-  // We'll skip calling it if it's support, or call it if it exists.
   const isSupport = targetId === 'support';
-  const endpoint = isSupport 
-    ? null // No endpoint for support read in ChatController currently
-    : `/chat/laundry/${targetId}/read`;
+  const endpoint = isSupport ? null : `/chat/laundry/${targetId}/read`;
 
   return useMutation({
     mutationFn: async () => {
@@ -77,32 +110,50 @@ export const useMarkChatAsRead = (targetId: string) => {
 
 export const useUploadChatAttachment = () => {
   return useMutation({
-    mutationFn: async (fileUri: string) => {
+    mutationFn: async (file: { uri: string; name: string; type: string }) => {
       const formData = new FormData();
-      
-      const filename = fileUri.split('/').pop() || 'attachment';
-      const isPdf = filename.toLowerCase().endsWith('.pdf');
-      
-      let type = 'image/jpeg'; // fallback
-      if (isPdf) {
-        type = 'application/pdf';
-      } else {
-        const match = /\.(\w+)$/.exec(filename);
-        type = match ? `image/${match[1]}` : `image/jpeg`;
-      }
 
       formData.append('attachment', {
-        uri: fileUri,
-        name: filename,
-        type,
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
       } as any);
 
       const response = await api.post('/chat/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
       });
+
       return response.data.data as { url: string; type: 'image' | 'pdf' };
+    },
+  });
+};
+
+export interface ConversationListResponse {
+  id: string;
+  customer: {
+    id: string;
+    fullName: string;
+    avatarUrl?: string;
+  };
+  lastMessage: {
+    id: string;
+    message?: string;
+    attachmentUrl?: string;
+    attachmentType?: string;
+    isRead: boolean;
+    sentAt: string;
+    senderId: string;
+  };
+  unreadCount: number;
+}
+
+export const useLaundryConversations = () => {
+  return useQuery({
+    queryKey: ['laundry-conversations'],
+    queryFn: async () => {
+      const response = await api.get<{ success: boolean; data: ConversationListResponse[] }>('/chat/laundry/conversations');
+      return response.data.data;
     },
   });
 };

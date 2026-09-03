@@ -20,6 +20,7 @@ var AdTarget;
 class CreateAdDto {
     constructor() {
         this.targetAudience = AdTarget.all;
+        this.adFee = 0;
         this.sortOrder = 0;
     }
 }
@@ -50,6 +51,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "targetAudience", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateAdDto.prototype, "adFee", void 0);
 __decorate([
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsOptional)(),

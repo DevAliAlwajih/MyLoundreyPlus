@@ -10,12 +10,18 @@ import {
   Req,
   UseGuards,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdsService } from './ads.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { QueryAdDto } from './dto/query-ad.dto';
+import { UploadService } from '../../upload/upload.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -24,7 +30,10 @@ import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 @ApiTags('Ads')
 @Controller('ads')
 export class AdsController {
-  constructor(private readonly adsService: AdsService) {}
+  constructor(
+    private readonly adsService: AdsService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   // ────────────────────────────────────────────────────
   // 🛡️ مسارات مدير النظام (Admin)
@@ -38,6 +47,33 @@ export class AdsController {
   @Get('admin/all')
   getAllAdsForAdmin(@Query() query: QueryAdDto) {
     return this.adsService.getAllAdsForAdmin(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: Upload ad image' })
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|webp|gif|mp4|webm|ogg)$/)) {
+          cb(
+            new BadRequestException('نوع الملف غير مدعوم — يُسمح فقط بالصور والفيديو (jpg, png, mp4...)'),
+            false,
+          );
+        } else {
+          cb(null, true);
+        }
+      },
+    }),
+  )
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('لم يتم إرسال أي صورة');
+    const url = await this.uploadService.saveImage(file, 'ads');
+    return { success: true, data: { url } };
   }
 
   @ApiBearerAuth()

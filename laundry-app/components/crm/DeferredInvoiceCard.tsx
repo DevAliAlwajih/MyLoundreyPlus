@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Invoice } from '../../hooks/useInvoices';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface DeferredInvoiceCardProps {
   invoice: Invoice;
@@ -10,6 +11,7 @@ interface DeferredInvoiceCardProps {
 
 export const DeferredInvoiceCard: React.FC<DeferredInvoiceCardProps> = ({ invoice, onRecordPayment }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
 
   // Assuming paidAmount exists on invoice, otherwise defaulting to 0 for frontend logic
   const paidAmount = (invoice as any).paidAmount || 0;
@@ -24,23 +26,23 @@ export const DeferredInvoiceCard: React.FC<DeferredInvoiceCardProps> = ({ invoic
   });
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
-        <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
-        <Text style={styles.dateText}>{formattedDate}</Text>
+        <Text style={[styles.invoiceNumber, { color: colors.text }]}>{invoice.invoiceNumber}</Text>
+        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{formattedDate}</Text>
       </View>
 
-      <View style={styles.row}>
+      <View style={[styles.row, { backgroundColor: colors.background }]}>
         <View style={styles.col}>
-          <Text style={styles.label}>{t('invoice.total')}</Text>
-          <Text style={styles.totalVal}>{invoice.total.toFixed(2)}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('invoice.total')}</Text>
+          <Text style={[styles.totalVal, { color: colors.text }]}>{invoice.total.toFixed(2)}</Text>
         </View>
         <View style={styles.col}>
-          <Text style={styles.label}>{t('crm.paidAmount')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('crm.paidAmount')}</Text>
           <Text style={styles.paidVal}>{paidAmount.toFixed(2)}</Text>
         </View>
         <View style={styles.col}>
-          <Text style={styles.label}>{t('crm.remaining')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('crm.remaining')}</Text>
           <Text style={styles.remVal}>{remaining.toFixed(2)}</Text>
         </View>
       </View>
@@ -57,12 +59,11 @@ export const DeferredInvoiceCard: React.FC<DeferredInvoiceCardProps> = ({ invoic
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e74c3c', // Red border to indicate debt
+    borderColor: '#e74c3c',
   },
   header: {
     flexDirection: 'row',
@@ -73,16 +74,13 @@ const styles = StyleSheet.create({
   invoiceNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
   dateText: {
     fontSize: 12,
-    color: '#888',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#f9f9f9',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
@@ -92,13 +90,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
   },
   totalVal: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
   },
   paidVal: {
     fontSize: 14,

@@ -8,6 +8,7 @@ import {
   IsEnum,
   IsInt,
   IsDateString,
+  IsNumber,
 } from 'class-validator';
 
 export enum AdTarget {
@@ -37,6 +38,10 @@ export class CreateAdDto {
   @IsEnum(AdTarget)
   @IsOptional()
   targetAudience?: AdTarget = AdTarget.all;
+
+  @IsNumber()
+  @IsOptional()
+  adFee?: number = 0;
 
   @IsInt()
   @IsOptional()

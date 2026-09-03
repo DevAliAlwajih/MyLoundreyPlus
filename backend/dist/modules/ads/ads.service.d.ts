@@ -10,30 +10,32 @@ export declare class AdsService {
         data: {
             id: string;
             title: string;
-            startDate: Date;
-            endDate: Date;
             mediaUrls: import("@prisma/client/runtime/library").JsonValue;
             bodyText: string;
             linkUrl: string;
             targetAudience: import(".prisma/client").$Enums.ad_target;
+            adFee: import("@prisma/client/runtime/library").Decimal;
+            startDate: Date;
+            endDate: Date;
         }[];
     }>;
     getAdDetails(id: string): Promise<{
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            sortOrder: number | null;
-            startDate: Date | null;
-            endDate: Date | null;
-            createdBy: string | null;
             mediaUrls: import("@prisma/client/runtime/library").JsonValue;
             bodyText: string | null;
             linkUrl: string | null;
             targetAudience: import(".prisma/client").$Enums.ad_target;
+            adFee: import("@prisma/client/runtime/library").Decimal | null;
+            sortOrder: number | null;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            createdBy: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     recordView(adId: string, userId?: string): Promise<{
@@ -43,36 +45,38 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            sortOrder: number | null;
-            startDate: Date | null;
-            endDate: Date | null;
-            createdBy: string | null;
             mediaUrls: import("@prisma/client/runtime/library").JsonValue;
             bodyText: string | null;
             linkUrl: string | null;
             targetAudience: import(".prisma/client").$Enums.ad_target;
+            adFee: import("@prisma/client/runtime/library").Decimal | null;
+            sortOrder: number | null;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            createdBy: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     updateAd(id: string, dto: UpdateAdDto): Promise<{
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            sortOrder: number | null;
-            startDate: Date | null;
-            endDate: Date | null;
-            createdBy: string | null;
             mediaUrls: import("@prisma/client/runtime/library").JsonValue;
             bodyText: string | null;
             linkUrl: string | null;
             targetAudience: import(".prisma/client").$Enums.ad_target;
+            adFee: import("@prisma/client/runtime/library").Decimal | null;
+            sortOrder: number | null;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            createdBy: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     deleteAd(id: string): Promise<{
@@ -91,18 +95,19 @@ export declare class AdsService {
         data: {
             viewsCount: number;
             id: string;
-            isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            sortOrder: number | null;
-            startDate: Date | null;
-            endDate: Date | null;
-            createdBy: string | null;
             mediaUrls: import("@prisma/client/runtime/library").JsonValue;
             bodyText: string | null;
             linkUrl: string | null;
             targetAudience: import(".prisma/client").$Enums.ad_target;
+            adFee: import("@prisma/client/runtime/library").Decimal | null;
+            sortOrder: number | null;
+            startDate: Date | null;
+            endDate: Date | null;
+            isActive: boolean;
+            createdBy: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         }[];
         meta: {
             total: number;

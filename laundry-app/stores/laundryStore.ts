@@ -68,7 +68,12 @@ interface LaundryStore {
 export const useLaundryStore = create<LaundryStore>((set) => ({
   profile: null,
   setProfile: (profile) => set({ profile }),
-  notificationPrefs: null,
+  notificationPrefs: {
+    newBooking: true,
+    invoiceStatus: true,
+    paymentReceived: true,
+    systemAlerts: true,
+  },
   subscription: null,
 
   fetchNotificationPrefs: async () => {
@@ -88,7 +93,6 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
       await api.patch('/profile/notifications', prefs);
     } catch (error) {
       console.warn('Could not update notification preferences', error);
-      throw error;
     }
   },
 

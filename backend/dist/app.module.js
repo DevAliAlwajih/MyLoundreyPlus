@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
+const schedule_1 = require("@nestjs/schedule");
 const prisma_module_1 = require("./prisma/prisma.module");
 const redis_module_1 = require("./common/redis/redis.module");
 const auth_module_1 = require("./modules/auth/auth.module");
@@ -41,6 +42,7 @@ exports.AppModule = AppModule = __decorate([
                 rootPath: (0, path_1.join)(__dirname, '..', 'uploads'),
                 serveRoot: '/uploads',
             }),
+            schedule_1.ScheduleModule.forRoot(),
             upload_module_1.UploadModule,
             prisma_module_1.PrismaModule,
             redis_module_1.RedisModule,

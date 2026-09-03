@@ -184,4 +184,45 @@ export class ProfileService {
 
     return { success: true, message: 'تم إلغاء تفعيل الجهاز' };
   }
+
+  // 6. الحصول على إعدادات الإشعارات
+  async getNotificationPrefs(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notification_prefs: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'PROFILE_NOT_FOUND', message: 'المستخدم غير موجود' },
+      });
+    }
+
+    const defaultPrefs = {
+      newBooking: true,
+      invoiceStatus: true,
+      paymentReceived: true,
+      systemAlerts: true,
+    };
+
+    return {
+      success: true,
+      data: user.notification_prefs || defaultPrefs,
+    };
+  }
+
+  // 7. تحديث إعدادات الإشعارات
+  async updateNotificationPrefs(userId: string, prefs: any) {
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { notification_prefs: prefs },
+      select: { notification_prefs: true },
+    });
+
+    return {
+      success: true,
+      data: updated.notification_prefs,
+    };
+  }
 }

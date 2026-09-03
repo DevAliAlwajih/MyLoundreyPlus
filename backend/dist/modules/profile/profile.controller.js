@@ -38,6 +38,12 @@ let ProfileController = class ProfileController {
     deactivateDevice(req, id) {
         return this.profileService.deactivateDevice(req.user.id, id);
     }
+    getNotificationPrefs(req) {
+        return this.profileService.getNotificationPrefs(req.user.id);
+    }
+    updateNotificationPrefs(req, prefs) {
+        return this.profileService.updateNotificationPrefs(req.user.id, prefs);
+    }
 };
 exports.ProfileController = ProfileController;
 __decorate([
@@ -78,6 +84,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ProfileController.prototype, "deactivateDevice", null);
+__decorate([
+    (0, common_1.Get)('notifications'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ProfileController.prototype, "getNotificationPrefs", null);
+__decorate([
+    (0, common_1.Patch)('notifications'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProfileController.prototype, "updateNotificationPrefs", null);
 exports.ProfileController = ProfileController = __decorate([
     (0, swagger_1.ApiTags)('Profile'),
     (0, swagger_1.ApiBearerAuth)(),

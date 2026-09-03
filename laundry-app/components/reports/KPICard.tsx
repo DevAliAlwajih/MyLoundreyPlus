@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface KPICardProps {
   title: string;
@@ -8,22 +9,24 @@ interface KPICardProps {
 }
 
 export const KPICard: React.FC<KPICardProps> = ({ title, value, bgType = 'neutral' }) => {
+  const { colors: themeColors, themeMode } = useThemeStore();
+
   const getColors = () => {
     switch (bgType) {
-      case 'primary': return { bg: '#1a5fa8', text: '#fff', label: '#e0f0ff' };
+      case 'primary': return { bg: themeColors.primary, text: '#fff', label: '#e0f0ff' };
       case 'danger': return { bg: '#e74c3c', text: '#fff', label: '#ffeaea' };
-      default: return { bg: '#f8f9fa', text: '#333', label: '#888' }; // neutral
+      default: return { bg: themeColors.surface, text: themeColors.text, label: themeColors.textSecondary }; // neutral
     }
   };
 
-  const colors = getColors();
+  const cardColors = getColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.label }]} numberOfLines={1}>
+    <View style={[styles.card, { backgroundColor: cardColors.bg }, bgType === 'neutral' && { borderWidth: 1, borderColor: themeColors.border }]}>
+      <Text style={[styles.title, { color: cardColors.label }]} numberOfLines={1}>
         {title}
       </Text>
-      <Text style={[styles.value, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={[styles.value, { color: cardColors.text }]} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
     </View>

@@ -153,6 +153,50 @@ export class AdminService {
     return { success: true, data: { status: dto.status } };
   }
 
+  // ────────────────────────────────────────────────────
+  // 💰 إعدادات الفوترة لكل مغسلة
+  // ────────────────────────────────────────────────────
+
+  async updateLaundryBilling(
+    laundryId: string,
+    dto: import('./dto/update-laundry-billing.dto').UpdateLaundryBillingDto,
+  ) {
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true, name: true },
+    });
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    const updateData: any = {};
+    if (dto.billing_type !== undefined)           updateData.billing_type = dto.billing_type;
+    if (dto.commission_rate !== undefined)         updateData.commission_rate = dto.commission_rate;
+    if (dto.debt_limit !== undefined)              updateData.debt_limit = dto.debt_limit;
+    if (dto.balance !== undefined)                 updateData.balance = dto.balance;
+    if (dto.trial_commission_ends_at !== undefined)
+      updateData.trial_commission_ends_at = new Date(dto.trial_commission_ends_at);
+
+    const updated = await this.prisma.laundry.update({
+      where: { id: laundryId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        billing_type: true,
+        commission_rate: true,
+        debt_limit: true,
+        balance: true,
+        trial_commission_ends_at: true,
+      },
+    });
+
+    return { success: true, data: updated };
+  }
+
   async getLaundryDevices(laundryId: string) {
     const laundry = await this.prisma.laundry.findUnique({
       where: { id: laundryId },
@@ -427,9 +471,9 @@ export class AdminService {
     });
 
     const settingsObj = settings.reduce((acc, s) => {
-      acc[s.key] = s.value;
+      acc[s.key] = { value: s.value, description: s.description };
       return acc;
-    }, {} as Record<string, string>);
+    }, {} as Record<string, any>);
 
     return { success: true, data: settingsObj };
   }

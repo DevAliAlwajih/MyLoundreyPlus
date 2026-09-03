@@ -14,21 +14,31 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
 const swagger_1 = require("@nestjs/swagger");
 const ads_service_1 = require("./ads.service");
 const create_ad_dto_1 = require("./dto/create-ad.dto");
 const update_ad_dto_1 = require("./dto/update-ad.dto");
 const query_ad_dto_1 = require("./dto/query-ad.dto");
+const upload_service_1 = require("../../upload/upload.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const optional_jwt_auth_guard_1 = require("../auth/guards/optional-jwt-auth.guard");
 let AdsController = class AdsController {
-    constructor(adsService) {
+    constructor(adsService, uploadService) {
         this.adsService = adsService;
+        this.uploadService = uploadService;
     }
     getAllAdsForAdmin(query) {
         return this.adsService.getAllAdsForAdmin(query);
+    }
+    async uploadImage(file) {
+        if (!file)
+            throw new common_1.BadRequestException('لم يتم إرسال أي صورة');
+        const url = await this.uploadService.saveImage(file, 'ads');
+        return { success: true, data: { url } };
     }
     createAd(req, dto) {
         return this.adsService.createAd(req.user.id, dto);
@@ -66,6 +76,29 @@ __decorate([
     __metadata("design:paramtypes", [query_ad_dto_1.QueryAdDto]),
     __metadata("design:returntype", void 0)
 ], AdsController.prototype, "getAllAdsForAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Upload ad image' }),
+    (0, common_1.Post)('upload'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image', {
+        storage: (0, multer_1.memoryStorage)(),
+        limits: { fileSize: 10 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            if (!file.mimetype.match(/\/(jpg|jpeg|png|webp|gif|mp4|webm|ogg)$/)) {
+                cb(new common_1.BadRequestException('نوع الملف غير مدعوم — يُسمح فقط بالصور والفيديو (jpg, png, mp4...)'), false);
+            }
+            else {
+                cb(null, true);
+            }
+        },
+    })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdsController.prototype, "uploadImage", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
@@ -145,6 +178,7 @@ __decorate([
 exports.AdsController = AdsController = __decorate([
     (0, swagger_1.ApiTags)('Ads'),
     (0, common_1.Controller)('ads'),
-    __metadata("design:paramtypes", [ads_service_1.AdsService])
+    __metadata("design:paramtypes", [ads_service_1.AdsService,
+        upload_service_1.UploadService])
 ], AdsController);
 //# sourceMappingURL=ads.controller.js.map

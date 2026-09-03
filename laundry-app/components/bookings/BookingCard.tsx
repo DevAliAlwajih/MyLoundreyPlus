@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Booking } from '../../stores/bookingStore';
 import { CountdownTimer, useIsExpired } from './CountdownTimer';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface BookingCardProps {
   booking: Booking;
@@ -16,6 +17,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const isExpired = useIsExpired(booking.createdAt);
+  const { colors, themeMode } = useThemeStore();
 
   const scheduledDate = new Date(booking.scheduledAt).toLocaleString(i18n.language, {
     weekday: 'long',
@@ -66,11 +68,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
   const renderAccepted = () => (
     <View style={styles.actionRow}>
       <TouchableOpacity
-        style={[styles.actionBtn, styles.cancelOutlinedBtn]}
+        style={[styles.actionBtn, styles.cancelOutlinedBtn, { borderColor: colors.border, backgroundColor: colors.background }]}
         onPress={() => onReject(booking)}
       >
-        <Ionicons name="ban-outline" size={18} color="#888" />
-        <Text style={styles.cancelOutlinedText}>{t('bookings.cancelBooking')}</Text>
+        <Ionicons name="ban-outline" size={18} color={colors.textSecondary} />
+        <Text style={[styles.cancelOutlinedText, { color: colors.textSecondary }]}>{t('bookings.cancelBooking')}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.actionBtn, styles.convertBtn]}
@@ -85,22 +87,22 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
   const renderCompleted = () => (
     booking.invoiceId ? (
       <TouchableOpacity
-        style={styles.linkedInvoiceRow}
+        style={[styles.linkedInvoiceRow, { backgroundColor: colors.primary + '15' }]}
         onPress={() => router.push(`/(app)/invoices/${booking.invoiceId}`)}
       >
-        <Ionicons name="receipt-outline" size={16} color="#1a5fa8" />
-        <Text style={styles.linkedInvoiceText}>
+        <Ionicons name="receipt-outline" size={16} color={colors.primary} />
+        <Text style={[styles.linkedInvoiceText, { color: colors.primary }]}>
           {t('bookings.linkedInvoice')}: {booking.invoiceNumber}
         </Text>
-        <Ionicons name="chevron-forward" size={16} color="#1a5fa8" />
+        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
       </TouchableOpacity>
     ) : null
   );
 
   const renderRejected = () => (
-    <View style={styles.rejectedNotice}>
-      <Ionicons name="information-circle-outline" size={16} color="#888" />
-      <Text style={styles.rejectedText}>{booking.notes || t('bookings.rejected')}</Text>
+    <View style={[styles.rejectedNotice, { backgroundColor: colors.background }]}>
+      <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} />
+      <Text style={[styles.rejectedText, { color: colors.textSecondary }]}>{booking.notes || t('bookings.rejected')}</Text>
     </View>
   );
 
@@ -108,35 +110,35 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
     switch (booking.status) {
       case 'pending': return '#f57c00';
       case 'confirmed': return '#2ecc71';
-      case 'completed': return '#1a5fa8';
+      case 'completed': return colors.primary;
       case 'rejected':
       case 'cancelled': return '#e74c3c';
-      default: return '#999';
+      default: return colors.textSecondary;
     }
   };
 
   return (
-    <View style={[styles.card, { borderLeftColor: getStatusColor(), borderLeftWidth: 4 }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, borderLeftColor: getStatusColor(), borderLeftWidth: 4 }]}>
       {/* Card Header */}
       <View style={styles.cardHeader}>
         <View style={styles.namePhoneCol}>
-          <Text style={styles.customerName}>{booking.customerName}</Text>
-          <Text style={styles.customerPhone}>{booking.customerPhone}</Text>
+          <Text style={[styles.customerName, { color: colors.text }]}>{booking.customerName}</Text>
+          <Text style={[styles.customerPhone, { color: colors.textSecondary }]}>{booking.customerPhone}</Text>
         </View>
         <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
       </View>
 
       {/* Scheduled Date */}
       <View style={styles.scheduleRow}>
-        <Ionicons name="calendar-outline" size={16} color="#555" />
-        <Text style={styles.scheduleText}>{scheduledDate}</Text>
+        <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+        <Text style={[styles.scheduleText, { color: colors.textSecondary }]}>{scheduledDate}</Text>
       </View>
 
       {/* Customer Notes */}
       {booking.notes ? (
-        <View style={styles.notesRow}>
-          <Ionicons name="chatbubble-outline" size={14} color="#888" />
-          <Text style={styles.notesText} numberOfLines={2}>{booking.notes}</Text>
+        <View style={[styles.notesRow, { borderBottomColor: colors.border }]}>
+          <Ionicons name="chatbubble-outline" size={14} color={colors.textSecondary} />
+          <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={2}>{booking.notes}</Text>
         </View>
       ) : null}
 
@@ -153,12 +155,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -177,11 +177,9 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
   customerPhone: {
     fontSize: 13,
-    color: '#888',
     marginTop: 2,
   },
   statusDot: {
@@ -197,7 +195,6 @@ const styles = StyleSheet.create({
   },
   scheduleText: {
     fontSize: 14,
-    color: '#555',
     marginLeft: 6,
     flex: 1,
   },
@@ -207,11 +204,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
   },
   notesText: {
     fontSize: 13,
-    color: '#666',
     marginLeft: 6,
     flex: 1,
     fontStyle: 'italic',
@@ -248,11 +243,8 @@ const styles = StyleSheet.create({
   },
   cancelOutlinedBtn: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
   },
   cancelOutlinedText: {
-    color: '#888',
     fontSize: 14,
     marginLeft: 6,
   },
@@ -262,27 +254,23 @@ const styles = StyleSheet.create({
   linkedInvoiceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f8ff',
     padding: 10,
     borderRadius: 8,
   },
   linkedInvoiceText: {
     flex: 1,
     fontSize: 14,
-    color: '#1a5fa8',
     fontWeight: '600',
     marginHorizontal: 8,
   },
   rejectedNotice: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#f9f9f9',
     padding: 10,
     borderRadius: 8,
   },
   rejectedText: {
     fontSize: 13,
-    color: '#888',
     flex: 1,
     marginLeft: 6,
   },

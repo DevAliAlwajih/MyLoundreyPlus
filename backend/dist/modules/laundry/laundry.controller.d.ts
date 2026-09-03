@@ -4,6 +4,7 @@ import { UpdateLaundryDto } from './dto/update-laundry.dto';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { CreateItemDto, UpdateItemDto, UpdatePriceDto } from './dto/item.dto';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
+import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 import { UploadService } from '../../upload/upload.service';
 import { PrismaService } from '../../prisma/prisma.service';
 export declare class LaundryPublicController {
@@ -37,17 +38,17 @@ export declare class LaundryPublicController {
             latitude: number;
             longitude: number;
             id: string;
+            createdAt: Date;
             name: string;
-            nameAr: string;
             phoneNumber: string;
+            country: string;
+            nameAr: string;
             address: string;
             city: string;
-            country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
         };
     }>;
     getMenu(id: string): Promise<{
@@ -90,17 +91,17 @@ export declare class LaundryOwnerController {
             latitude: number;
             longitude: number;
             id: string;
+            createdAt: Date;
             name: string;
-            nameAr: string;
             phoneNumber: string;
+            country: string;
+            nameAr: string;
             address: string;
             city: string;
-            country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal;
             urgency_enabled: boolean;
@@ -132,17 +133,17 @@ export declare class LaundryOwnerController {
             latitude: number;
             longitude: number;
             id: string;
+            createdAt: Date;
             name: string;
-            nameAr: string;
             phoneNumber: string;
+            country: string;
+            nameAr: string;
             address: string;
             city: string;
-            country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal;
             urgency_enabled: boolean;
@@ -169,22 +170,50 @@ export declare class LaundryOwnerController {
             }[];
         }[];
     }>;
+    getWallet(req: any): Promise<{
+        success: boolean;
+        data: {
+            balance: number;
+            billingType: import(".prisma/client").$Enums.billing_type;
+            commissionRate: number;
+            trialCommissionEndsAt: Date;
+        };
+    }>;
+    getWalletTransactions(req: any, page?: string, limit?: string): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            invoiceId: string;
+            invoiceNumber: string;
+            invoiceTotal: number;
+            commissionRate: number;
+            commissionAmount: number;
+            balanceAfter: number;
+            createdAt: Date;
+        }[];
+        meta: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
+    }>;
     createCategory(req: any, dto: CreateCategoryDto): Promise<{
         success: boolean;
         data: {
             id: string;
-            name: string;
             sortOrder: number;
             isActive: boolean;
+            name: string;
         };
     }>;
     updateCategory(req: any, id: string, dto: UpdateCategoryDto): Promise<{
         success: boolean;
         data: {
             id: string;
-            name: string;
             sortOrder: number;
             isActive: boolean;
+            name: string;
         };
     }>;
     deleteCategory(req: any, id: string): Promise<{
@@ -196,9 +225,9 @@ export declare class LaundryOwnerController {
         data: {
             basePrice: number;
             id: string;
-            nameAr: string;
             sortOrder: number;
             isActive: boolean;
+            nameAr: string;
             nameEn: string;
             washing_price: import("@prisma/client/runtime/library").Decimal;
             ironing_price: import("@prisma/client/runtime/library").Decimal;
@@ -209,9 +238,9 @@ export declare class LaundryOwnerController {
         data: {
             basePrice: number;
             id: string;
-            nameAr: string;
             sortOrder: number;
             isActive: boolean;
+            nameAr: string;
             nameEn: string;
             washing_price: import("@prisma/client/runtime/library").Decimal;
             ironing_price: import("@prisma/client/runtime/library").Decimal;
@@ -260,6 +289,7 @@ export declare class LaundryOwnerController {
             customerId: string;
             customerName: string;
             customerPhone: string;
+            notes: string;
             totalInvoices: number;
             completedInvoices: number;
             deferredBalance: number;
@@ -303,5 +333,19 @@ export declare class LaundryOwnerController {
     remindCustomer(req: any, customerId: string, channel: 'whatsapp' | 'app' | 'both'): Promise<{
         success: boolean;
         message: string;
+    }>;
+    updateCustomerProfile(req: any, customerId: string, dto: UpdateCustomerProfileDto): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            laundryId: string;
+            customerId: string | null;
+            notes: string | null;
+            phone: string | null;
+            localName: string | null;
+            localPhone: string | null;
+        };
     }>;
 }

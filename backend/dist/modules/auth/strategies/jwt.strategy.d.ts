@@ -9,11 +9,11 @@ export declare class JwtStrategy extends JwtStrategy_base {
     validate(payload: any): Promise<{
         laundryId: string;
         id: string;
+        isActive: boolean;
         phoneNumber: string;
         uniqueId: string;
         fullName: string;
         role: import(".prisma/client").$Enums.user_role;
-        isActive: boolean;
     }>;
 }
 export {};

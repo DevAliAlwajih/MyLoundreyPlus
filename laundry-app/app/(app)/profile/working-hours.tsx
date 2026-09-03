@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, 
-  ActivityIndicator, Alert, Modal, TextInput 
+  ActivityIndicator, Alert, Modal, TextInput, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +17,7 @@ import {
 import { WorkingHourRow } from '../../../components/profile/WorkingHourRow';
 import { useThemeStore } from '../../../stores/themeStore';
 import { StatusBar } from 'expo-status-bar';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 
 
@@ -49,15 +50,30 @@ export default function WorkingHoursScreen() {
   
   const [hours, setHours] = useState<WorkingHour[]>(initialHours);
 
+  // Sync state if profile loads after component mounts (e.g. after restart)
+  React.useEffect(() => {
+    setHours(initialHours);
+  }, [initialHours]);
+
   // Exceptional Holidays Hooks
   const { data: holidays = [], isLoading: isLoadingHolidays } = useLaundryHolidays(true);
   const addHolidayMutation = useAddHoliday();
   const deleteHolidayMutation = useDeleteHoliday();
 
-  // Modal State
   const [modalVisible, setModalVisible] = useState(false);
   const [holidayDate, setHolidayDate] = useState('');
   const [holidayReason, setHolidayReason] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateObject, setDateObject] = useState(new Date());
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDateObject(selectedDate);
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      setHolidayDate(dateStr);
+    }
+  };
 
   // Handlers for Weekly Hours
   const handleRowChange = (updatedItem: WorkingHour) => {
@@ -65,7 +81,20 @@ export default function WorkingHoursScreen() {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ workingHours: hours }, {
+    // الباكند يتوقع Object مفاتيحه أسماء الأيام، وليس Array
+    const workingHoursObj = hours.reduce<Record<string, { open: string; close: string; closed?: boolean }>>(
+      (acc, h) => {
+        acc[h.day] = {
+          open:   h.openTime  || '08:00',
+          close:  h.closeTime || '22:00',
+          closed: !h.isOpen,
+        };
+        return acc;
+      },
+      {}
+    );
+
+    updateMutation.mutate({ workingHours: workingHoursObj as any }, {
       onSuccess: () => {
         Alert.alert(t('common.success'), t('profile.updateSuccess'), [
           { text: t('common.ok'), onPress: () => router.back() }
@@ -209,15 +238,26 @@ export default function WorkingHoursScreen() {
 
             <View style={styles.modalBody}>
               <Text style={[styles.label, isRTL && styles.textRight]}>
-                {t('workingHours.holidayDate')} (YYYY-MM-DD)
+                {t('workingHours.holidayDate')}
               </Text>
-              <TextInput
-                style={[styles.input, isRTL && styles.textRight]}
-                placeholder="2026-07-09"
-                value={holidayDate}
-                onChangeText={setHolidayDate}
-                keyboardType="numeric"
-              />
+              <TouchableOpacity 
+                style={[styles.input, isRTL && styles.rowReverse, { justifyContent: 'center' }]} 
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={[{ color: holidayDate ? colors.text : colors.textSecondary }, isRTL && styles.textRight]}>
+                  {holidayDate || 'اختر التاريخ'}
+                </Text>
+              </TouchableOpacity>
+              
+              {showDatePicker && (
+                <DateTimePicker
+                  value={dateObject}
+                  mode="date"
+                  display="default"
+                  onChange={onDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
 
               <Text style={[styles.label, isRTL && styles.textRight, { marginTop: 16 }]}>
                 {t('workingHours.holidayReason')}

@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const admin_service_1 = require("./admin.service");
 const query_admin_dto_1 = require("./dto/query-admin.dto");
 const update_laundry_status_dto_1 = require("./dto/update-laundry-status.dto");
+const update_laundry_billing_dto_1 = require("./dto/update-laundry-billing.dto");
 const update_user_status_dto_1 = require("./dto/update-user-status.dto");
 const update_setting_dto_1 = require("./dto/update-setting.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -50,6 +51,9 @@ let AdminController = class AdminController {
     }
     updateLaundryStatus(req, id, dto) {
         return this.adminService.updateLaundryStatus(id, req.user.id, dto);
+    }
+    updateLaundryBilling(id, dto) {
+        return this.adminService.updateLaundryBilling(id, dto);
     }
     getLaundryDevices(id) {
         return this.adminService.getLaundryDevices(id);
@@ -138,6 +142,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, update_laundry_status_dto_1.UpdateLaundryStatusDto]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "updateLaundryStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update laundry billing settings (commission rate, debt limit, balance, trial period)' }),
+    (0, common_1.Patch)('laundries/:id/billing'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_laundry_billing_dto_1.UpdateLaundryBillingDto]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateLaundryBilling", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Get laundry devices' }),
     (0, common_1.Get)('laundries/:id/devices'),

@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch, Animated, TouchableOpacity, Alert } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, Animated } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Promotion, useTogglePromotion, useDeletePromotion } from '../../hooks/usePromotions';
+import { useThemeStore } from '../../stores/themeStore';
 
 interface PromotionCardProps {
   promotion: Promotion;
@@ -12,6 +12,7 @@ interface PromotionCardProps {
 
 export const PromotionCard: React.FC<PromotionCardProps> = ({ promotion, onEdit }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useThemeStore();
   const toggleMutation = useTogglePromotion();
   const deleteMutation = useDeletePromotion();
 
@@ -47,37 +48,13 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({ promotion, onEdit 
   };
 
   const handleToggle = (val: boolean) => {
-    toggleMutation.mutate({ id: promotion.id, isActive: val });
-  };
-
-  const renderRightActions = (progress: any, dragX: any) => {
-    const scale = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.editAction} onPress={() => onEdit(promotion)}>
-          <Animated.View style={{ transform: [{ scale }] }}>
-            <Ionicons name="pencil" size={24} color="#fff" />
-          </Animated.View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteAction} onPress={handleDelete}>
-          <Animated.View style={{ transform: [{ scale }] }}>
-            <Ionicons name="trash" size={24} color="#fff" />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
-    );
+    toggleMutation.mutate(promotion.id);
   };
 
   return (
-    <Swipeable renderRightActions={renderRightActions}>
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           <View style={[styles.badge, { backgroundColor: statusColor }]}>
             <Text style={styles.badgeText}>{statusBadge}</Text>
           </View>
@@ -92,43 +69,51 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({ promotion, onEdit 
         )}
         
         {promotion.description && (
-          <Text style={styles.descriptionText} numberOfLines={2}>
+          <Text style={[styles.descriptionText, { color: colors.textSecondary }]} numberOfLines={2}>
             {promotion.description}
           </Text>
         )}
 
         <View style={styles.datesRow}>
-          <Ionicons name="calendar-outline" size={14} color="#888" />
-          <Text style={styles.datesText}>
+          <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+          <Text style={[styles.datesText, { color: colors.textSecondary }]}>
             {startDate.toLocaleDateString(i18n.language)} - {endDate.toLocaleDateString(i18n.language)}
           </Text>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.toggleLabel}>
-            {promotion.isActive ? t('promotions.enabled') : t('promotions.disabled')}
-          </Text>
-          <Switch
-            value={promotion.isActive}
-            onValueChange={handleToggle}
-            trackColor={{ false: '#767577', true: '#81b0ff' }}
-            thumbColor={promotion.isActive ? '#1a5fa8' : '#f4f3f4'}
-            disabled={toggleMutation.isPending}
-          />
+        <View style={[styles.footer, { borderTopColor: colors.border }]}>
+          <View style={styles.footerActions}>
+            <TouchableOpacity onPress={() => onEdit(promotion)} style={styles.actionIconBtn}>
+              <Ionicons name="pencil" size={20} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDelete} style={styles.actionIconBtn}>
+              <Ionicons name="trash" size={20} color="#e74c3c" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footerToggleRow}>
+            <Text style={[styles.toggleLabel, { color: colors.textSecondary }]}>
+              {promotion.isActive ? t('promotions.enabled') : t('promotions.disabled')}
+            </Text>
+            <Switch
+              value={promotion.isActive}
+              onValueChange={handleToggle}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={promotion.isActive ? colors.primary : '#f4f3f4'}
+              disabled={toggleMutation.isPending}
+            />
+          </View>
         </View>
       </View>
-    </Swipeable>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
   },
   header: {
     flexDirection: 'row',
@@ -139,7 +124,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     flex: 1,
   },
   badge: {
@@ -161,7 +145,6 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -172,39 +155,31 @@ const styles = StyleSheet.create({
   },
   datesText: {
     fontSize: 13,
-    color: '#666',
     marginLeft: 6,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#eee',
     paddingTop: 12,
+  },
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  actionIconBtn: {
+    padding: 6,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 8,
+  },
+  footerToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   toggleLabel: {
     fontSize: 14,
-    color: '#666',
     marginRight: 8,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    width: 140,
-    marginBottom: 12,
-  },
-  editAction: {
-    flex: 1,
-    backgroundColor: '#3498db',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteAction: {
-    flex: 1,
-    backgroundColor: '#e74c3c',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
   },
 });

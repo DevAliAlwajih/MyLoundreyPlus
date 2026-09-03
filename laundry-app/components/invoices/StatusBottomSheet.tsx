@@ -22,10 +22,7 @@ export const StatusBottomSheet: React.FC<StatusBottomSheetProps> = ({
   const getNextStates = (status: string): string[] => {
     switch (status) {
       case 'draft': return ['received', 'cancelled'];
-      case 'received': return ['washing', 'cancelled'];
-      case 'washing': return ['ironing', 'cancelled'];
-      case 'ironing': return ['ready', 'cancelled'];
-      case 'ready': return ['completed', 'cancelled'];
+      case 'received': return ['completed', 'cancelled'];
       default: return [];
     }
   };

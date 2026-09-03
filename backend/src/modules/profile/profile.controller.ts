@@ -39,4 +39,14 @@ export class ProfileController {
   ) {
     return this.profileService.deactivateDevice(req.user.id, id);
   }
+
+  @Get('notifications')
+  getNotificationPrefs(@Req() req: any) {
+    return this.profileService.getNotificationPrefs(req.user.id);
+  }
+
+  @Patch('notifications')
+  updateNotificationPrefs(@Req() req: any, @Body() prefs: any) {
+    return this.profileService.updateNotificationPrefs(req.user.id, prefs);
+  }
 }

@@ -120,7 +120,7 @@ let LaundryService = class LaundryService {
                 error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
             });
         }
-        if (laundry.status !== 'active') {
+        if (laundry.status === 'banned') {
             throw new common_1.ForbiddenException({
                 success: false,
                 error: { code: 'LAUNDRY_INACTIVE', message: 'المغسلة غير متاحة حالياً' },
@@ -147,7 +147,7 @@ let LaundryService = class LaundryService {
                 error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
             });
         }
-        if (laundry.status !== 'active') {
+        if (laundry.status === 'banned') {
             throw new common_1.ForbiddenException({
                 success: false,
                 error: { code: 'LAUNDRY_INACTIVE', message: 'المغسلة غير متاحة حالياً' },
@@ -599,6 +599,80 @@ let LaundryService = class LaundryService {
         });
         return { success: true, message: 'تم حذف الإجازة بنجاح' };
     }
+    async getWallet(ownerId) {
+        const laundry = await this.prisma.laundry.findFirst({
+            where: { ownerId },
+            select: {
+                id: true,
+                balance: true,
+                billing_type: true,
+                commission_rate: true,
+                trial_commission_ends_at: true,
+            },
+        });
+        if (!laundry) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+            });
+        }
+        let actualCommissionRate = laundry.commission_rate ? Number(laundry.commission_rate) : null;
+        if (actualCommissionRate === null && laundry.billing_type === 'commission') {
+            const defaultRateSetting = await this.prisma.app_settings.findUnique({
+                where: { key: 'default_commission_rate' },
+            });
+            actualCommissionRate = defaultRateSetting?.value ? Number(defaultRateSetting.value) : 10;
+        }
+        return {
+            success: true,
+            data: {
+                balance: Number(laundry.balance),
+                billingType: laundry.billing_type,
+                commissionRate: actualCommissionRate,
+                trialCommissionEndsAt: laundry.trial_commission_ends_at,
+            },
+        };
+    }
+    async getWalletTransactions(ownerId, page = 1, limit = 20) {
+        const laundry = await this.getLaundryByOwner(ownerId);
+        const skip = (page - 1) * limit;
+        const [transactions, total] = await Promise.all([
+            this.prisma.commissionTransaction.findMany({
+                where: { laundry_id: laundry.id },
+                orderBy: { created_at: 'desc' },
+                skip,
+                take: Number(limit),
+                include: {
+                    invoice: {
+                        select: { invoiceNumber: true },
+                    },
+                },
+            }),
+            this.prisma.commissionTransaction.count({
+                where: { laundry_id: laundry.id },
+            }),
+        ]);
+        const formattedTransactions = transactions.map((t) => ({
+            id: t.id,
+            invoiceId: t.invoice_id,
+            invoiceNumber: t.invoice?.invoiceNumber,
+            invoiceTotal: Number(t.invoice_total),
+            commissionRate: Number(t.commission_rate),
+            commissionAmount: Number(t.commission_amount),
+            balanceAfter: Number(t.balance_after),
+            createdAt: t.created_at,
+        }));
+        return {
+            success: true,
+            data: formattedTransactions,
+            meta: {
+                page: Number(page),
+                limit: Number(limit),
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
     async getLaundryByOwner(ownerId) {
         const laundry = await this.prisma.laundry.findFirst({
             where: { ownerId },
@@ -724,22 +798,40 @@ let LaundryService = class LaundryService {
         const laundryId = laundry.id;
         const searchFilter = search ? `%${search}%` : null;
         const query = client_1.Prisma.sql `
+      WITH InvoiceStats AS (
+        SELECT 
+          customer_id,
+          walk_in_phone,
+          MAX(walk_in_name) as walk_in_name,
+          COUNT(id)::int AS total_invoices,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)::int AS completed_invoices,
+          SUM(CASE WHEN payment_type = 'deferred' AND (total_amount - paid_amount) > 0 THEN (total_amount - paid_amount) ELSE 0 END) AS deferred_balance,
+          MAX(created_at) AS last_visit
+        FROM invoices
+        WHERE laundry_id = ${laundryId}::uuid
+        GROUP BY customer_id, walk_in_phone
+      ),
+      LocalProfiles AS (
+        SELECT * FROM laundry_customer_profiles
+        WHERE laundry_id = ${laundryId}::uuid
+      )
       SELECT 
-        COALESCE(u.id::text, i.walk_in_phone) AS "customerId",
-        COALESCE(u.full_name, i.walk_in_name) AS "customerName",
-        COALESCE(u.phone_number, i.walk_in_phone) AS "customerPhone",
-        COUNT(i.id)::int AS "totalInvoices",
-        SUM(CASE WHEN i.status = 'completed' THEN 1 ELSE 0 END)::int AS "completedInvoices",
-        SUM(CASE WHEN i.payment_type = 'deferred' AND (i.total_amount - i.paid_amount) > 0 THEN (i.total_amount - i.paid_amount) ELSE 0 END) AS "deferredBalance",
-        MAX(i.created_at) AS "lastVisit"
-      FROM invoices i
-      LEFT JOIN users u ON i.customer_id = u.id
-      WHERE i.laundry_id = ${laundryId}::uuid
-        ${searchFilter ? client_1.Prisma.sql `AND (u.full_name ILIKE ${searchFilter} OR u.phone_number ILIKE ${searchFilter} OR i.walk_in_name ILIKE ${searchFilter} OR i.walk_in_phone ILIKE ${searchFilter})` : client_1.Prisma.empty}
-        ${from_date ? client_1.Prisma.sql `AND i.created_at >= ${new Date(from_date)}` : client_1.Prisma.empty}
-        ${to_date ? client_1.Prisma.sql `AND i.created_at <= ${new Date(to_date)}` : client_1.Prisma.empty}
-      GROUP BY "customerId", "customerName", "customerPhone"
-      ${has_debt ? client_1.Prisma.sql `HAVING SUM(CASE WHEN i.payment_type = 'deferred' AND (i.total_amount - i.paid_amount) > 0 THEN (i.total_amount - i.paid_amount) ELSE 0 END) > 0` : client_1.Prisma.empty}
+        COALESCE(u.id::text, istats.walk_in_phone, lcp.customer_id::text, lcp.phone) AS "customerId",
+        COALESCE(lcp.local_name, u.full_name, istats.walk_in_name) AS "customerName",
+        COALESCE(lcp.local_phone, u.phone_number, istats.walk_in_phone, lcp.phone) AS "customerPhone",
+        COALESCE(istats.total_invoices, 0)::int AS "totalInvoices",
+        COALESCE(istats.completed_invoices, 0)::int AS "completedInvoices",
+        COALESCE(istats.deferred_balance, 0) AS "deferredBalance",
+        COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) AS "lastVisit"
+      FROM InvoiceStats istats
+      FULL OUTER JOIN LocalProfiles lcp 
+        ON COALESCE(istats.customer_id::text, istats.walk_in_phone) = COALESCE(lcp.customer_id::text, lcp.phone)
+      LEFT JOIN users u ON u.id = COALESCE(istats.customer_id, lcp.customer_id)
+      WHERE 1=1
+        ${searchFilter ? client_1.Prisma.sql `AND (lcp.local_name ILIKE ${searchFilter} OR lcp.local_phone ILIKE ${searchFilter} OR u.full_name ILIKE ${searchFilter} OR u.phone_number ILIKE ${searchFilter} OR istats.walk_in_name ILIKE ${searchFilter} OR istats.walk_in_phone ILIKE ${searchFilter})` : client_1.Prisma.empty}
+        ${from_date ? client_1.Prisma.sql `AND COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) >= ${new Date(from_date)}` : client_1.Prisma.empty}
+        ${to_date ? client_1.Prisma.sql `AND COALESCE(istats.last_visit, lcp.updated_at, lcp.created_at) <= ${new Date(to_date)}` : client_1.Prisma.empty}
+        ${has_debt ? client_1.Prisma.sql `AND COALESCE(istats.deferred_balance, 0) > 0` : client_1.Prisma.empty}
       ORDER BY "lastVisit" DESC
     `;
         const customers = await this.prisma.$queryRaw(query);
@@ -749,51 +841,65 @@ let LaundryService = class LaundryService {
         const laundry = await this.getLaundryByOwner(ownerId);
         const laundryId = laundry.id;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId);
-        let whereClause = { laundryId };
+        const localProfile = await this.prisma.laundryCustomerProfile.findFirst({
+            where: isUuid
+                ? { laundryId, customerId }
+                : { laundryId, phone: customerId }
+        });
+        let invoiceWhereClause = { laundryId };
         if (isUuid) {
-            whereClause.customerId = customerId;
+            invoiceWhereClause.customerId = customerId;
         }
         else {
-            whereClause.walk_in_phone = customerId;
+            invoiceWhereClause.OR = [
+                { walk_in_phone: customerId },
+                {
+                    walk_in_name: customerId,
+                    OR: [{ walk_in_phone: "" }, { walk_in_phone: null }]
+                }
+            ];
         }
         const invoices = await this.prisma.invoice.findMany({
-            where: whereClause,
-            orderBy: { createdAt: 'desc' },
+            where: invoiceWhereClause,
+            orderBy: { createdAt: "desc" },
             include: {
                 customer: { select: { fullName: true, phoneNumber: true } },
                 items: true,
             }
         });
-        if (invoices.length === 0) {
+        if (invoices.length === 0 && !localProfile) {
             throw new common_1.NotFoundException({
                 success: false,
-                error: { code: 'CUSTOMER_NOT_FOUND', message: 'العميل غير موجود' }
+                error: { code: "CUSTOMER_NOT_FOUND", message: "العميل غير موجود" }
             });
         }
-        const firstInvoice = invoices[0];
-        const customerName = firstInvoice.customer?.fullName || firstInvoice.walk_in_name;
-        const customerPhone = firstInvoice.customer?.phoneNumber || firstInvoice.walk_in_phone;
+        const firstInvoice = invoices.length > 0 ? invoices[0] : null;
+        const originalName = firstInvoice?.customer?.fullName || firstInvoice?.walk_in_name || null;
+        const originalPhone = firstInvoice?.customer?.phoneNumber || firstInvoice?.walk_in_phone || null;
+        const customerName = localProfile?.localName || originalName || "";
+        const customerPhone = localProfile?.localPhone || originalPhone || "";
+        const customerNotes = localProfile?.notes || null;
         let deferredBalance = 0;
         let totalSpent = 0;
-        let completedInvoices = 0;
+        let completedInvoicesCount = 0;
         const mappedInvoices = invoices.map(inv => {
             const dueAmount = Number(inv.totalAmount) - Number(inv.paidAmount);
-            if (inv.paymentType === 'deferred' && dueAmount > 0) {
+            if (inv.paymentType === "deferred" && dueAmount > 0) {
                 deferredBalance += dueAmount;
             }
             totalSpent += Number(inv.paidAmount);
-            if (inv.status === 'completed') {
-                completedInvoices++;
+            if (inv.status === "completed") {
+                completedInvoicesCount++;
             }
             return {
                 id: inv.id,
                 invoiceNumber: inv.invoiceNumber,
                 status: inv.status,
-                customerName: inv.customer?.fullName || inv.walk_in_name || '',
-                customerPhone: inv.customer?.phoneNumber || inv.walk_in_phone || '',
+                customerName: inv.customer?.fullName || inv.walk_in_name || "",
+                customerPhone: inv.customer?.phoneNumber || inv.walk_in_phone || "",
                 paymentType: inv.paymentType,
                 isUrgent: inv.urgency_fee && Number(inv.urgency_fee) > 0 ? true : false,
-                notes: inv.notes || '',
+                notes: inv.notes || "",
                 subtotal: Number(inv.subtotal),
                 discountPercent: 0,
                 discountAmount: Number(inv.discount),
@@ -806,13 +912,13 @@ let LaundryService = class LaundryService {
                 dueAmount: dueAmount,
                 items: inv.items.map(item => ({
                     id: item.id,
-                    itemId: item.itemId || '',
+                    itemId: item.itemId || "",
                     itemName: item.itemName,
                     itemNameAr: item.item_name_ar || item.itemName,
                     quantity: item.quantity,
                     unitPrice: Number(item.unitPrice),
                     totalPrice: Number(item.subtotal),
-                    notes: ''
+                    notes: ""
                 })),
                 statusHistory: [],
                 createdAt: inv.createdAt.toISOString(),
@@ -823,10 +929,11 @@ let LaundryService = class LaundryService {
             customerId,
             customerName,
             customerPhone,
+            notes: customerNotes,
             totalInvoices: invoices.length,
-            completedInvoices,
+            completedInvoices: completedInvoicesCount,
             deferredBalance,
-            lastVisit: invoices[0].createdAt.toISOString(),
+            lastVisit: firstInvoice ? firstInvoice.createdAt.toISOString() : null,
             totalSpent,
             invoices: mappedInvoices
         };
@@ -842,6 +949,39 @@ let LaundryService = class LaundryService {
             }
         }
         return { success: true, message: 'تم إرسال التذكير / رابط واتساب جاهز' };
+    }
+    async updateCustomerProfile(ownerId, customerId, dto) {
+        const laundry = await this.getLaundryByOwner(ownerId);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId);
+        const data = {
+            localName: dto.localName,
+            localPhone: dto.localPhone,
+            notes: dto.notes,
+        };
+        if (isUuid) {
+            const profile = await this.prisma.laundryCustomerProfile.upsert({
+                where: { laundryId_customerId: { laundryId: laundry.id, customerId } },
+                update: data,
+                create: {
+                    laundryId: laundry.id,
+                    customerId,
+                    ...data,
+                },
+            });
+            return { success: true, data: profile };
+        }
+        else {
+            const profile = await this.prisma.laundryCustomerProfile.upsert({
+                where: { laundryId_phone: { laundryId: laundry.id, phone: customerId } },
+                update: data,
+                create: {
+                    laundryId: laundry.id,
+                    phone: customerId,
+                    ...data,
+                },
+            });
+            return { success: true, data: profile };
+        }
     }
 };
 exports.LaundryService = LaundryService;

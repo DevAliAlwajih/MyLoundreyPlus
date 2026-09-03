@@ -11,8 +11,8 @@ export declare class NotificationService {
         data?: Record<string, string>;
     }): Promise<{
         id: string;
-        userId: string;
         title: string;
+        userId: string;
         body: string;
         type: string | null;
         referenceId: string | null;
@@ -21,8 +21,8 @@ export declare class NotificationService {
     }>;
     sendInvoiceStatusNotification(customerId: string | null, invoiceNumber: string, newStatus: string, invoiceId: string): Promise<{
         id: string;
-        userId: string;
         title: string;
+        userId: string;
         body: string;
         type: string | null;
         referenceId: string | null;
@@ -34,8 +34,8 @@ export declare class NotificationService {
         referenceId?: string;
     }): Promise<{
         id: string;
-        userId: string;
         title: string;
+        userId: string;
         body: string;
         type: string | null;
         referenceId: string | null;

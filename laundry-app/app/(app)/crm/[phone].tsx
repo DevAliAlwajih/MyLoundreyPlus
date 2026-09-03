@@ -10,16 +10,14 @@ import { DeferredInvoiceCard } from '../../../components/crm/DeferredInvoiceCard
 import { InvoiceCard } from '../../../components/invoices/InvoiceCard';
 import { PaymentModal } from '../../../components/crm/PaymentModal';
 import { Invoice } from '../../../hooks/useInvoices';
+import { useThemeStore } from '../../../stores/themeStore';
 
-const COLORS = {
-  primary: '#1a5fa8',
-  bg: '#f8f9fa',
-};
 
 export default function CustomerDetailScreen() {
   const { phone } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useThemeStore();
 
   const phoneStr = Array.isArray(phone) ? phone[0] : phone;
   
@@ -31,17 +29,17 @@ export default function CustomerDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <SafeAreaView style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   if (isError || !customer) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
+      <SafeAreaView style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <Text style={{ color: '#e74c3c' }}>{t('crm.failedToLoadDetail')}</Text>
-        <TouchableOpacity onPress={() => refetch()}><Text style={{ color: COLORS.primary }}>{t('common.retry')}</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => refetch()}><Text style={{ color: colors.primary }}>{t('common.retry')}</Text></TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -74,12 +72,12 @@ export default function CustomerDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>{t('crm.customerProfile')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('crm.customerProfile')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -88,7 +86,7 @@ export default function CustomerDetailScreen() {
 
         {deferredInvoices.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('crm.deferredInvoices')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('crm.deferredInvoices')}</Text>
             {deferredInvoices.map((inv) => (
               <DeferredInvoiceCard 
                 key={inv.id} 
@@ -100,15 +98,20 @@ export default function CustomerDetailScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('crm.allInvoices')}</Text>
-          {customer.invoices.map((inv) => (
-            <InvoiceCard 
-              key={inv.id} 
-              invoice={inv} 
-              onPress={() => router.push(`/(app)/invoices/${inv.id}`)}
-            />
-          ))}
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('crm.allInvoices')}</Text>
+          {customer.invoices.length === 0 ? (
+            <Text style={[styles.emptyInvoices, { color: colors.textSecondary }]}>{t('invoice.noInvoices', 'لا توجد فواتير بعد')}</Text>
+          ) : (
+            customer.invoices.map((inv) => (
+              <InvoiceCard 
+                key={inv.id} 
+                invoice={inv} 
+                onPress={() => router.push(`/(app)/invoices/${inv.id}`)}
+              />
+            ))
+          )}
         </View>
+
 
       </ScrollView>
 
@@ -119,6 +122,18 @@ export default function CustomerDetailScreen() {
         onSubmit={handleSubmitPayment}
         isSubmitting={paymentMutation.isPending}
       />
+
+      <TouchableOpacity 
+        style={[styles.fab, { backgroundColor: colors.primary }]}
+        onPress={() => router.push({
+          pathname: '/(app)/invoices/new',
+          params: { prefillName: customer.customerName, prefillPhone: customer.customerPhone }
+        })}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={24} color="#fff" />
+        <Text style={styles.fabText}>{t('invoice.new', 'إنشاء فاتورة')}</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -126,7 +141,6 @@ export default function CustomerDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
   centerContainer: {
     flex: 1,
@@ -139,9 +153,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   backButton: {
     width: 40,
@@ -151,7 +163,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -163,8 +174,34 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 12,
     textAlign: 'left',
+  },
+  emptyInvoices: {
+    textAlign: 'center',
+    fontSize: 14,
+    paddingVertical: 20,
+    fontStyle: 'italic',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  fabText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
