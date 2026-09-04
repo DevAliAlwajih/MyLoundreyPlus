@@ -13,6 +13,7 @@ import { useLaundryStore } from '../../../stores/laundryStore';
 import { useThemeStore } from '../../../stores/themeStore';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { APP_LOGO_BASE64 } from '../../../constants/AppLogoBase64';
 
 
 // --- Add Item Modal Component (Reusing catalog logic from new.tsx) ---
@@ -209,6 +210,7 @@ export default function InvoiceDetailScreen() {
           </head>
           <body>
             <div class="header">
+              ${laundry?.logoUrl ? `<img src="${laundry.logoUrl}" class="logo" />` : ''}
               <h1 class="laundry-name">${laundry?.name || 'Laundry App'}</h1>
               <h2 class="invoice-title">${t('invoice.printTitle', 'فاتورة طلب')} #${invoice.invoiceNumber}</h2>
             </div>
@@ -274,6 +276,10 @@ export default function InvoiceDetailScreen() {
 
             <div class="footer">
               <p>${t('invoice.thankYou', 'شكراً لتعاملكم معنا')}</p>
+              <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <img src="${APP_LOGO_BASE64}" style="width: 24px; height: 24px; border-radius: 4px;" />
+                <span style="font-weight: bold; color: #555;">مغسلتي بلس MyLundryPlus</span>
+              </div>
             </div>
           </body>
         </html>
@@ -303,7 +309,7 @@ export default function InvoiceDetailScreen() {
     }
   };
 
-  const handleShareWhatsApp = () => {
+  const generateShareMessage = () => {
     let message = `*فاتورة طلب #${invoice.invoiceNumber}*\n`;
     message += `*العميل:* ${invoice.customerName}\n`;
     message += `*التاريخ:* ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}\n`;
@@ -321,9 +327,14 @@ export default function InvoiceDetailScreen() {
     if (invoice.taxAmount > 0) {
       message += `\n*الضريبة (${invoice.taxPercent}%):* ${(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س`;
     }
-    message += `\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ر.س\n`;
+    message += `\n\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ر.س\n`;
     
     message += `\nشكراً لتعاملكم مع ${laundry?.name || 'المغسلة'}`;
+    return message;
+  };
+
+  const handleShareWhatsApp = () => {
+    const message = generateShareMessage();
     
     let url = '';
     if (invoice.customerPhone) {
@@ -339,6 +350,18 @@ export default function InvoiceDetailScreen() {
 
     Linking.openURL(url).catch(() => {
       Alert.alert(t('common.error'), t('invoice.whatsappError', 'تطبيق الواتساب غير مثبت على الجهاز'));
+    });
+  };
+
+  const handleShareSMS = () => {
+    const message = generateShareMessage();
+    let phone = invoice.customerPhone || '';
+    
+    const separator = Platform.OS === 'ios' ? '&' : '?';
+    const url = `sms:${phone}${separator}body=${encodeURIComponent(message)}`;
+
+    Linking.openURL(url).catch(() => {
+      Alert.alert(t('common.error'), 'حدث خطأ أثناء فتح تطبيق الرسائل النصية');
     });
   };
 
@@ -687,6 +710,10 @@ export default function InvoiceDetailScreen() {
                 <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handleShareWhatsApp}>
                   <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
                   <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('invoice.shareWhatsApp')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handleShareSMS}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="#3498db" />
+                  <Text style={[styles.shareBtnText, { color: colors.text }]}>رسالة SMS</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handleSharePDF}>
                   <Ionicons name="document-text-outline" size={20} color="#e74c3c" />
