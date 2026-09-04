@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -119,6 +120,16 @@ export class AdminController {
     return this.adminService.toggleDeviceByLaundryId(id, deviceId, isActive);
   }
 
+  @ApiOperation({ summary: 'Admin: Delete laundry and owner account' })
+  @Delete('laundries/:id')
+  deleteLaundry(
+    @Req() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('password') password?: string,
+  ) {
+    return this.adminService.deleteLaundry(id, req.user.id, password);
+  }
+
   // ────────────────────────────────────────────────────
   // 👥 Users
   // ────────────────────────────────────────────────────
@@ -159,5 +170,11 @@ export class AdminController {
     @Body('isActive', ParseBoolPipe) isActive: boolean,
   ) {
     return this.adminService.toggleDevice(id, deviceId, isActive);
+  }
+
+  @ApiOperation({ summary: 'Admin: Delete user account' })
+  @Delete('users/:id')
+  deleteUser(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.deleteUser(id);
   }
 }

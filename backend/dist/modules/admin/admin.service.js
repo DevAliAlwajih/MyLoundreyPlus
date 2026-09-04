@@ -13,6 +13,7 @@ exports.AdminService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const notification_service_1 = require("../notification/notification.service");
+const bcrypt = require("bcrypt");
 let AdminService = class AdminService {
     constructor(prisma, notificationService) {
         this.prisma = prisma;
@@ -198,6 +199,77 @@ let AdminService = class AdminService {
             });
         }
         return this.toggleDevice(laundry.ownerId, deviceId, isActive);
+    }
+    async deleteLaundry(laundryId, adminId, adminPassword) {
+        if (!adminPassword) {
+            throw new common_1.UnauthorizedException({
+                success: false,
+                error: { code: 'PASSWORD_REQUIRED', message: 'كلمة المرور مطلوبة لحذف المغسلة' },
+            });
+        }
+        const admin = await this.prisma.user.findUnique({
+            where: { id: adminId },
+            select: { password_hash: true },
+        });
+        if (!admin || !admin.password_hash) {
+            throw new common_1.UnauthorizedException({
+                success: false,
+                error: { code: 'INVALID_CREDENTIALS', message: 'تعذر التحقق من هوية المدير' },
+            });
+        }
+        const isMatch = await bcrypt.compare(adminPassword, admin.password_hash);
+        if (!isMatch) {
+            throw new common_1.UnauthorizedException({
+                success: false,
+                error: { code: 'INVALID_PASSWORD', message: 'كلمة المرور غير صحيحة' },
+            });
+        }
+        const laundry = await this.prisma.laundry.findUnique({
+            where: { id: laundryId },
+            select: { id: true, ownerId: true, name: true },
+        });
+        if (!laundry) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+            });
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.invoice.deleteMany({ where: { laundryId } });
+            await tx.laundry.delete({ where: { id: laundryId } });
+            await tx.user.delete({ where: { id: laundry.ownerId } });
+        });
+        return { success: true, message: `تم حذف المغسلة "${laundry.name}" وحساب المالك بنجاح` };
+    }
+    async deleteUser(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, role: true, fullName: true },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود' },
+            });
+        }
+        if (user.role === 'admin') {
+            throw new common_1.ForbiddenException({
+                success: false,
+                error: { code: 'CANNOT_DELETE_ADMIN', message: 'لا يمكن حذف حساب أدمن' },
+            });
+        }
+        if (user.role === 'laundry') {
+            const laundries = await this.prisma.laundry.findMany({
+                where: { ownerId: userId },
+                select: { id: true },
+            });
+            for (const laundry of laundries) {
+                await this.prisma.invoice.deleteMany({ where: { laundryId: laundry.id } });
+                await this.prisma.laundry.delete({ where: { id: laundry.id } });
+            }
+        }
+        await this.prisma.user.delete({ where: { id: userId } });
+        return { success: true, message: `تم حذف المستخدم "${user.fullName}" بنجاح` };
     }
     async getUsers(dto) {
         const page = dto.page ?? 1;

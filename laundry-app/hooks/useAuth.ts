@@ -58,10 +58,11 @@ export const useRegister = () => {
     onMutate: () => setApiError(null),
 
     onSuccess: async ({ responseData, logo }) => {
-      // الباكند يُرجع {accessToken, refreshToken, user} مباشرة بدون غلاف {success, data}
-      const { accessToken, refreshToken, user } = responseData;
+      // الباكند يُرجع { success, data: { accessToken, refreshToken, user, message } }
+      const payload = responseData?.data ?? responseData;
+      const { accessToken, refreshToken, user } = payload;
       if (accessToken && refreshToken && user) {
-        login(user, accessToken, refreshToken);
+        await login(user, accessToken, refreshToken);
 
         if (logo) {
           try {

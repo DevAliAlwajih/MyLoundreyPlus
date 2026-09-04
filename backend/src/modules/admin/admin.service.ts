@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { laundry_status, user_role } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminService {
@@ -224,6 +225,106 @@ export class AdminService {
       });
     }
     return this.toggleDevice(laundry.ownerId, deviceId, isActive);
+  }
+
+  // ────────────────────────────────────────────────────
+  // 🗑️ حذف مغسلة (مع صاحب الحساب وجميع البيانات)
+  // ────────────────────────────────────────────────────
+
+  async deleteLaundry(laundryId: string, adminId: string, adminPassword?: string) {
+    if (!adminPassword) {
+      throw new UnauthorizedException({
+        success: false,
+        error: { code: 'PASSWORD_REQUIRED', message: 'كلمة المرور مطلوبة لحذف المغسلة' },
+      });
+    }
+
+    const admin = await this.prisma.user.findUnique({
+      where: { id: adminId },
+      select: { password_hash: true },
+    });
+
+    if (!admin || !admin.password_hash) {
+      throw new UnauthorizedException({
+        success: false,
+        error: { code: 'INVALID_CREDENTIALS', message: 'تعذر التحقق من هوية المدير' },
+      });
+    }
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password_hash);
+    if (!isMatch) {
+      throw new UnauthorizedException({
+        success: false,
+        error: { code: 'INVALID_PASSWORD', message: 'كلمة المرور غير صحيحة' },
+      });
+    }
+
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true, ownerId: true, name: true },
+    });
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    // حذف المستخدم (المالك) سيؤدي لحذف أجهزته (Cascade)
+    // حذف المغسلة يؤدي لحذف: categories, items, invoices, ratings, subscriptions, etc. (Cascade)
+    await this.prisma.$transaction(async (tx) => {
+      // 1. حذف الفواتير المرتبطة بالمغسلة (لأنها لا تملك onDelete: Cascade على laundryId)
+      await tx.invoice.deleteMany({ where: { laundryId } });
+
+      // 2. حذف المغسلة (Cascade يحذف: categories, laundryPrices, ratings, promotions, subscriptions, holidays, etc.)
+      await tx.laundry.delete({ where: { id: laundryId } });
+
+      // 3. حذف المستخدم (المالك) — Cascade يحذف: userDevices, notifications, supportTickets
+      await tx.user.delete({ where: { id: laundry.ownerId } });
+    });
+
+    return { success: true, message: `تم حذف المغسلة "${laundry.name}" وحساب المالك بنجاح` };
+  }
+
+  // ────────────────────────────────────────────────────
+  // 🗑️ حذف عميل (مستخدم عادي)
+  // ────────────────────────────────────────────────────
+
+  async deleteUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, fullName: true },
+    });
+    if (!user) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'USER_NOT_FOUND', message: 'المستخدم غير موجود' },
+      });
+    }
+
+    if (user.role === 'admin') {
+      throw new ForbiddenException({
+        success: false,
+        error: { code: 'CANNOT_DELETE_ADMIN', message: 'لا يمكن حذف حساب أدمن' },
+      });
+    }
+
+    // إذا كان المستخدم مالك مغسلة، نحذف المغسلة أولاً
+    if (user.role === 'laundry') {
+      const laundries = await this.prisma.laundry.findMany({
+        where: { ownerId: userId },
+        select: { id: true },
+      });
+      for (const laundry of laundries) {
+        await this.prisma.invoice.deleteMany({ where: { laundryId: laundry.id } });
+        await this.prisma.laundry.delete({ where: { id: laundry.id } });
+      }
+    }
+
+    // حذف المستخدم — Cascade يحذف: userDevices, notifications, supportTickets, ratings, etc.
+    await this.prisma.user.delete({ where: { id: userId } });
+
+    return { success: true, message: `تم حذف المستخدم "${user.fullName}" بنجاح` };
   }
 
   // ────────────────────────────────────────────────────

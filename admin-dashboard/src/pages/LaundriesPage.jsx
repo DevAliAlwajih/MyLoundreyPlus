@@ -34,6 +34,11 @@ export default function LaundriesPage() {
   const [selectedLaundry, setSelectedLaundry] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDevicesModal, setShowDevicesModal] = useState(false)
+  
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [laundryToDelete, setLaundryToDelete] = useState(null)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     fetchLaundries()
@@ -70,13 +75,27 @@ export default function LaundriesPage() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(label('هل أنت متأكد من حذف هذه المغسلة؟', 'Are you sure you want to delete this laundry?'))) return
+  const handleDeleteClick = (id) => {
+    setLaundryToDelete(id)
+    setAdminPassword('')
+    setDeleteError('')
+    setDeleteModalVisible(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!adminPassword) {
+      setDeleteError(label('كلمة المرور مطلوبة', 'Password is required'))
+      return
+    }
+    
     try {
-      await api.delete(`/admin/laundries/${id}`)
+      await api.delete(`/admin/laundries/${laundryToDelete}`, {
+        data: { password: adminPassword }
+      })
+      setDeleteModalVisible(false)
       fetchLaundries()
     } catch (err) {
-      alert('فشل الحذف')
+      setDeleteError(err.response?.data?.error?.message || label('فشل الحذف، تأكد من كلمة المرور', 'Delete failed, check your password'))
     }
   }
 
@@ -238,7 +257,7 @@ export default function LaundriesPage() {
                           <CheckCircle size={15} />
                         </button>
                       ) : null}
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(l.id)} data-tooltip={label('حذف', 'Delete')}>
+                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteClick(l.id)} data-tooltip={label('حذف', 'Delete')}>
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -372,6 +391,43 @@ export default function LaundriesPage() {
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowModal(false)}>{label('إلغاء', 'Cancel')}</button>
               <button className="btn btn-primary">{label('حفظ', 'Save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalVisible && (
+        <div className="modal-overlay" onClick={() => setDeleteModalVisible(false)}>
+          <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="fw-bold text-danger">
+                {label('تأكيد الحذف', 'Confirm Deletion')}
+              </h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setDeleteModalVisible(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p className="mb-16">
+                {label('لحذف هذه المغسلة، يرجى إدخال كلمة المرور الخاصة بك كمدير للنظام:', 'To delete this laundry, please enter your admin password:')}
+              </p>
+              <div className="form-group mb-0">
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder={label('كلمة المرور', 'Password')}
+                  value={adminPassword}
+                  onChange={e => setAdminPassword(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') confirmDelete() }}
+                  autoFocus
+                />
+              </div>
+              {deleteError && (
+                <p className="text-danger fs-sm mt-8">{deleteError}</p>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setDeleteModalVisible(false)}>{label('إلغاء', 'Cancel')}</button>
+              <button className="btn btn-danger" onClick={confirmDelete}>{label('حذف نهائياً', 'Delete Permanently')}</button>
             </div>
           </div>
         </div>

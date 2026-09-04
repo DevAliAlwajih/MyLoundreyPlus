@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,9 @@ import { StatusTimeline } from '../../../components/invoices/StatusTimeline';
 import { StatusBottomSheet } from '../../../components/invoices/StatusBottomSheet';
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useThemeStore } from '../../../stores/themeStore';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+
 
 // --- Add Item Modal Component (Reusing catalog logic from new.tsx) ---
 const AddItemModal = ({ visible, onClose, onSelect }: { visible: boolean, onClose: () => void, onSelect: (item: any, catId: string, catName: string, sType: string) => void }) => {
@@ -181,6 +184,163 @@ export default function InvoiceDetailScreen() {
   }
 
   const isTerminal = invoice.status === 'completed' || invoice.status === 'cancelled';
+
+  const generateInvoiceHTML = () => `
+        <html dir="${i18n.language === 'ar' ? 'rtl' : 'ltr'}">
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
+              .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+              .logo { max-width: 150px; margin-bottom: 10px; }
+              .laundry-name { font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
+              .invoice-title { font-size: 20px; color: #555; margin: 0; }
+              .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+              .info-label { font-weight: bold; color: #666; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { padding: 12px; text-align: ${i18n.language === 'ar' ? 'right' : 'left'}; border-bottom: 1px solid #eee; }
+              th { background-color: #f9f9f9; font-weight: bold; }
+              .totals { margin-top: 20px; width: 100%; }
+              .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; }
+              .total-label { font-weight: bold; color: #666; }
+              .grand-total { font-size: 18px; font-weight: bold; color: #1a5fa8; border-top: 2px solid #eee; padding-top: 10px; margin-top: 10px; }
+              .footer { text-align: center; margin-top: 40px; color: #888; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1 class="laundry-name">${laundry?.name || 'Laundry App'}</h1>
+              <h2 class="invoice-title">${t('invoice.printTitle', 'فاتورة طلب')} #${invoice.invoiceNumber}</h2>
+            </div>
+            
+            <div class="info-row">
+              <div>
+                <span class="info-label">${t('invoice.customer')}:</span> ${invoice.customerName}
+                <br>
+                ${invoice.customerPhone ? `<span class="info-label">${t('invoice.phone')}:</span> ${invoice.customerPhone}` : ''}
+              </div>
+              <div>
+                <span class="info-label">${t('invoice.date')}:</span> ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}
+                <br>
+                <span class="info-label">${t('invoice.paymentType')}:</span> ${t(`invoice.payment.${invoice.paymentType}`)}
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>${t('invoice.items', 'الخدمة')}</th>
+                  <th>${t('invoice.quantity', 'الكمية')}</th>
+                  <th>${t('invoice.price', 'السعر')}</th>
+                  <th>${t('invoice.total', 'المجموع')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.items.map((item: any) => `
+                  <tr>
+                    <td>${item.itemNameAr || item.itemName}<br><small style="color:#888">${item.notes || ''}</small></td>
+                    <td>${item.quantity}</td>
+                    <td>${(Number(item.unitPrice) || 0).toFixed(2)}</td>
+                    <td>${(Number(item.unitPrice * item.quantity) || 0).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="totals">
+              <div class="total-row">
+                <span class="total-label">${t('invoice.subtotal')}:</span>
+                <span>${(Number(invoice.subtotal) || 0).toFixed(2)} ر.س</span>
+              </div>
+              ${invoice.discountAmount > 0 ? `
+              <div class="total-row">
+                <span class="total-label">${t('invoice.discount')}:</span>
+                <span style="color:#e74c3c">-${(Number(invoice.discountAmount) || 0).toFixed(2)} ر.س</span>
+              </div>` : ''}
+              ${invoice.urgencyFeeAmount > 0 ? `
+              <div class="total-row">
+                <span class="total-label">${t('invoice.urgencyFee')}:</span>
+                <span>+ ${(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ر.س</span>
+              </div>` : ''}
+              <div class="total-row">
+                <span class="total-label">${t('invoice.tax')} (${invoice.taxPercent}%):</span>
+                <span>+ ${(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س</span>
+              </div>
+              <div class="total-row grand-total">
+                <span class="total-label">${t('invoice.total')}:</span>
+                <span>${(Number(invoice.total) || 0).toFixed(2)} ر.س</span>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>${t('invoice.thankYou', 'شكراً لتعاملكم معنا')}</p>
+            </div>
+          </body>
+        </html>
+  `;
+
+  const handlePrint = async () => {
+    try {
+      await Print.printAsync({
+        html: generateInvoiceHTML(),
+      });
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      Alert.alert(t('common.error'), t('invoice.printError', 'حدث خطأ أثناء الطباعة'));
+    }
+  };
+
+  const handleSharePDF = async () => {
+    try {
+      const { uri } = await Print.printToFileAsync({
+        html: generateInvoiceHTML(),
+        base64: false
+      });
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      console.error('Error sharing PDF:', error);
+      Alert.alert(t('common.error'), t('invoice.shareError', 'حدث خطأ أثناء مشاركة الفاتورة'));
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    let message = `*فاتورة طلب #${invoice.invoiceNumber}*\n`;
+    message += `*العميل:* ${invoice.customerName}\n`;
+    message += `*التاريخ:* ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}\n`;
+    message += `\n*الخدمات:*\n`;
+    invoice.items.forEach((item: any) => {
+      message += `- ${item.itemNameAr || item.itemName} (${item.quantity} x ${(Number(item.unitPrice) || 0).toFixed(2)}) = ${(Number(item.unitPrice * item.quantity) || 0).toFixed(2)} ر.س\n`;
+    });
+    
+    if (invoice.discountAmount > 0) {
+      message += `\n*الخصم:* ${(Number(invoice.discountAmount) || 0).toFixed(2)} ر.س`;
+    }
+    if (invoice.urgencyFeeAmount > 0) {
+      message += `\n*رسوم الاستعجال:* ${(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ر.س`;
+    }
+    if (invoice.taxAmount > 0) {
+      message += `\n*الضريبة (${invoice.taxPercent}%):* ${(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س`;
+    }
+    message += `\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ر.س\n`;
+    
+    message += `\nشكراً لتعاملكم مع ${laundry?.name || 'المغسلة'}`;
+    
+    let url = '';
+    if (invoice.customerPhone) {
+      let phone = invoice.customerPhone;
+      if (phone.startsWith('05')) {
+        phone = '966' + phone.substring(1);
+      }
+      phone = phone.replace('+', '');
+      url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+    } else {
+      url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    }
+
+    Linking.openURL(url).catch(() => {
+      Alert.alert(t('common.error'), t('invoice.whatsappError', 'تطبيق الواتساب غير مثبت على الجهاز'));
+    });
+  };
 
   const handleUpdateStatus = (newStatus: string, statusNotes: string) => {
     updateStatusMutation.mutate({ id: invoice.id, status: newStatus, notes: statusNotes }, {
@@ -524,17 +684,17 @@ export default function InvoiceDetailScreen() {
           {!isEditing && (
             <>
               <View style={styles.shareActionsCard}>
-                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={() => Alert.alert(t('common.comingSoon'))}>
+                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handleShareWhatsApp}>
                   <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
                   <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('invoice.shareWhatsApp')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={() => Alert.alert(t('common.comingSoon'))}>
+                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handleSharePDF}>
                   <Ionicons name="document-text-outline" size={20} color="#e74c3c" />
                   <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('invoice.sharePDF')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={() => Alert.alert(t('common.comingSoon'))}>
+                <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]} onPress={handlePrint}>
                   <Ionicons name="print-outline" size={20} color={colors.textSecondary} />
-                  <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('invoice.print')}</Text>
+                  <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('invoice.print', 'طباعة')}</Text>
                 </TouchableOpacity>
               </View>
               <StatusTimeline history={invoice.statusHistory} />

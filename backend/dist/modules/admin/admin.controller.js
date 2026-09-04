@@ -61,6 +61,9 @@ let AdminController = class AdminController {
     toggleLaundryDevice(id, deviceId, isActive) {
         return this.adminService.toggleDeviceByLaundryId(id, deviceId, isActive);
     }
+    deleteLaundry(req, id, password) {
+        return this.adminService.deleteLaundry(id, req.user.id, password);
+    }
     getUsers(dto) {
         return this.adminService.getUsers(dto);
     }
@@ -75,6 +78,9 @@ let AdminController = class AdminController {
     }
     toggleUserDevice(id, deviceId, isActive) {
         return this.adminService.toggleDevice(id, deviceId, isActive);
+    }
+    deleteUser(id) {
+        return this.adminService.deleteUser(id);
     }
 };
 exports.AdminController = AdminController;
@@ -170,6 +176,16 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "toggleLaundryDevice", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Delete laundry and owner account' }),
+    (0, common_1.Delete)('laundries/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)('password')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "deleteLaundry", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all users' }),
     (0, common_1.Get)('users'),
     __param(0, (0, common_1.Query)()),
@@ -213,6 +229,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Boolean]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "toggleUserDevice", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Delete user account' }),
+    (0, common_1.Delete)('users/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "deleteUser", null);
 exports.AdminController = AdminController = __decorate([
     (0, swagger_1.ApiTags)('Admin'),
     (0, swagger_1.ApiBearerAuth)(),
