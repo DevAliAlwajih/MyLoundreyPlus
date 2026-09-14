@@ -10,13 +10,13 @@ import {
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/',             icon: LayoutDashboard, labelAr: 'لوحة المؤشرات',    labelEn: 'Dashboard' },
-  { to: '/laundries',   icon: Store,            labelAr: 'المغاسل',           labelEn: 'Laundries' },
-  { to: '/customers',   icon: Users,            labelAr: 'العملاء',           labelEn: 'Customers' },
-  { to: '/subscriptions',icon: CreditCard,      labelAr: 'الاشتراكات',        labelEn: 'Subscriptions' },
-  { to: '/ads',         icon: Megaphone,        labelAr: 'الإعلانات',         labelEn: 'Ads' },
-  { to: '/support',     icon: HeadphonesIcon,   labelAr: 'الدعم الفني',       labelEn: 'Support' },
-  { to: '/settings',    icon: Settings,         labelAr: 'الإعدادات',         labelEn: 'Settings' },
+  { to: '/dashboard',             icon: LayoutDashboard, labelAr: 'لوحة المؤشرات',    labelEn: 'Dashboard' },
+  { to: '/dashboard/laundries',   icon: Store,            labelAr: 'المغاسل',           labelEn: 'Laundries' },
+  { to: '/dashboard/customers',   icon: Users,            labelAr: 'العملاء',           labelEn: 'Customers' },
+  { to: '/dashboard/subscriptions',icon: CreditCard,      labelAr: 'الاشتراكات',        labelEn: 'Subscriptions' },
+  { to: '/dashboard/ads',         icon: Megaphone,        labelAr: 'الإعلانات',         labelEn: 'Ads' },
+  { to: '/dashboard/support',     icon: HeadphonesIcon,   labelAr: 'الدعم الفني',       labelEn: 'Support' },
+  { to: '/dashboard/settings',    icon: Settings,         labelAr: 'الإعدادات',         labelEn: 'Settings' },
 ]
 
 export default function Layout() {
@@ -77,7 +77,7 @@ export default function Layout() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/dashboard'}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               data-tooltip={!sidebarOpen ? label(labelAr, labelEn) : undefined}
             >
