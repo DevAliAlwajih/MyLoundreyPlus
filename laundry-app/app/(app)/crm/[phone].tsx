@@ -106,7 +106,10 @@ export default function CustomerDetailScreen() {
               <InvoiceCard 
                 key={inv.id} 
                 invoice={inv} 
-                onPress={() => router.push(`/(app)/invoices/${inv.id}`)}
+                onPress={() => router.push({
+                  pathname: '/(app)/invoices/[id]',
+                  params: { id: inv.id }
+                })}
               />
             ))
           )}

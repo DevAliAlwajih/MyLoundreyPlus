@@ -108,7 +108,10 @@ export default function InvoiceListScreen() {
           renderItem={({ item }) => (
             <InvoiceCard 
               invoice={item} 
-              onPress={() => router.push(`/(app)/invoices/${item.id}`)} 
+              onPress={() => router.push({
+                pathname: '/(app)/invoices/[id]',
+                params: { id: item.id }
+              })}
             />
           )}
           refreshing={isRefetching}

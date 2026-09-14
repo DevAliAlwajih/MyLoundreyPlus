@@ -27,7 +27,19 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'ar')
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('adminToken'))
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem('adminToken')
+    if (!savedToken) {
+      setIsAuthenticated(false)
+      return
+    }
+
+    // Ignore stale session tokens so the app always opens to login first.
+    localStorage.removeItem('adminToken')
+    setIsAuthenticated(false)
+  }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -57,10 +69,13 @@ export default function App() {
       <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={
-              isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />
-            } />
             <Route path="/" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+            } />
+            <Route path="/login" element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+            } />
+            <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
@@ -73,7 +88,7 @@ export default function App() {
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
           </Routes>
         </BrowserRouter>
       </AuthContext.Provider>

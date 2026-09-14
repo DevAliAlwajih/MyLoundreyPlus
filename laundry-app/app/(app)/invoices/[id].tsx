@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager, Linking, PermissionsAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,8 @@ import { useLaundryStore } from '../../../stores/laundryStore';
 import { useThemeStore } from '../../../stores/themeStore';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { APP_LOGO_BASE64 } from '../../../constants/AppLogoBase64';
 
 
@@ -128,13 +130,15 @@ const AddItemModal = ({ visible, onClose, onSelect }: { visible: boolean, onClos
 
 // --- Main Screen ---
 export default function InvoiceDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const id = rawId || '';
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { colors } = useThemeStore();
   const laundry = useLaundryStore(s => s.profile);
   
-  const { data: invoice, isLoading, isError, refetch } = useInvoiceById(id as string);
+  const { data: invoice, isLoading, isError, refetch } = useInvoiceById(id);
   const updateStatusMutation = useUpdateInvoiceStatus();
   const updateInvoiceMutation = useUpdateInvoice();
 
@@ -167,6 +171,17 @@ export default function InvoiceDetailScreen() {
     }
   }, [invoice, isEditing]);
 
+  if (!id) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <Text style={{ color: colors.error }}>{t('invoice.failedToLoadSingle', 'تعذر تحميل الفاتورة')}</Text>
+        <TouchableOpacity onPress={() => router.replace('/(app)/invoices')}>
+          <Text style={{ color: colors.primary }}>{t('common.back', 'رجوع')}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centerContainer}>
@@ -186,104 +201,283 @@ export default function InvoiceDetailScreen() {
 
   const isTerminal = invoice.status === 'completed' || invoice.status === 'cancelled';
 
-  const generateInvoiceHTML = () => `
-        <html dir="${i18n.language === 'ar' ? 'rtl' : 'ltr'}">
-          <head>
-            <meta charset="utf-8">
-            <style>
-              body { font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
-              .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
-              .logo { max-width: 150px; margin-bottom: 10px; }
-              .laundry-name { font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
-              .invoice-title { font-size: 20px; color: #555; margin: 0; }
-              .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-              .info-label { font-weight: bold; color: #666; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { padding: 12px; text-align: ${i18n.language === 'ar' ? 'right' : 'left'}; border-bottom: 1px solid #eee; }
-              th { background-color: #f9f9f9; font-weight: bold; }
-              .totals { margin-top: 20px; width: 100%; }
-              .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; }
-              .total-label { font-weight: bold; color: #666; }
-              .grand-total { font-size: 18px; font-weight: bold; color: #1a5fa8; border-top: 2px solid #eee; padding-top: 10px; margin-top: 10px; }
-              .footer { text-align: center; margin-top: 40px; color: #888; font-size: 12px; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              ${laundry?.logoUrl ? `<img src="${laundry.logoUrl}" class="logo" />` : ''}
-              <h1 class="laundry-name">${laundry?.name || 'Laundry App'}</h1>
-              <h2 class="invoice-title">${t('invoice.printTitle', 'فاتورة طلب')} #${invoice.invoiceNumber}</h2>
+  const generateInvoiceHTML = () => {
+    const subtotal = Number(invoice.subtotal ?? 0);
+    const discount = Number(invoice.discountAmount ?? 0);
+    const tax = Number(invoice.taxAmount ?? 0);
+    const total = Number(invoice.total ?? 0);
+    const deliveryDate = invoice.expectedDeliveryAt
+      ? new Date(invoice.expectedDeliveryAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+      : new Date(invoice.createdAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+
+    const paymentLabel =
+      invoice.paymentType === 'cash'
+        ? 'نقدي'
+        : invoice.paymentType === 'card'
+          ? 'بطاقة'
+          : invoice.paymentType === 'deferred'
+            ? 'آجل'
+            : invoice.paymentType === 'electronic'
+              ? 'إلكتروني'
+              : invoice.paymentType;
+
+    const logoSrc = laundry?.logoUrl || APP_LOGO_BASE64;
+
+    return `
+      <html dir="rtl">
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 4mm;
+            }
+
+            * { box-sizing: border-box; }
+
+            body {
+              margin: 0;
+              padding: 0;
+              background: #fff;
+              color: #111;
+              font-family: Arial, Helvetica, sans-serif;
+            }
+
+            .sheet {
+              width: 80mm;
+              max-width: 80mm;
+              margin: 0 auto;
+              padding: 4mm 3mm 5mm;
+            }
+
+            .center { text-align: center; }
+            .logo-wrap {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-bottom: 5px;
+            }
+
+            .logo {
+              width: 36px;
+              height: 36px;
+              border-radius: 10px;
+              object-fit: cover;
+              background: transparent;
+              border: 1px solid transparent;
+            }
+
+            .brand-name {
+              font-size: 19px;
+              font-weight: 800;
+              margin: 0;
+              line-height: 1.2;
+              letter-spacing: 0.2px;
+            }
+
+            .invoice-title {
+              font-size: 12px;
+              margin: 3px 0 0;
+              color: #333;
+              font-weight: bold;
+            }
+
+            .divider {
+              border-top: 1px solid #111;
+              margin: 8px 0 7px;
+            }
+
+            .meta {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 4px 8px;
+              font-size: 9px;
+              line-height: 1.4;
+            }
+
+            .meta-box {
+              display: flex;
+              flex-direction: column;
+            }
+
+            .meta-label {
+              color: #666;
+              font-size: 8px;
+              margin-bottom: 2px;
+            }
+
+            .meta-value {
+              font-weight: 700;
+              word-break: break-word;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 8px;
+              font-size: 8.5px;
+            }
+
+            th, td {
+              border-bottom: 1px dashed #666;
+              padding: 3px 2px;
+              text-align: center;
+              vertical-align: top;
+            }
+
+            th {
+              font-size: 8px;
+              font-weight: 700;
+              color: #111;
+            }
+
+            th:first-child, td:first-child {
+              text-align: right;
+            }
+
+            td:first-child {
+              width: 40%;
+            }
+
+            .totals {
+              width: 100%;
+              margin-top: 8px;
+              font-size: 9px;
+            }
+
+            .line {
+              display: flex;
+              justify-content: space-between;
+              padding: 2px 0;
+              border-bottom: 1px solid #eee;
+            }
+
+            .line strong {
+              font-weight: 700;
+            }
+
+            .grand {
+              font-size: 11px;
+              font-weight: 700;
+              border-top: 1px solid #111;
+              border-bottom: none;
+              margin-top: 4px;
+              padding-top: 4px;
+            }
+
+            .notes {
+              margin-top: 8px;
+              font-size: 8.5px;
+              line-height: 1.5;
+              border-top: 1px dashed #666;
+              padding-top: 6px;
+            }
+
+            .footer {
+              margin-top: 10px;
+              text-align: center;
+              font-size: 8.5px;
+              line-height: 1.6;
+            }
+
+            .footer-brand {
+              margin-top: 6px;
+              font-weight: 700;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="sheet">
+            <div class="center">
+              ${logoSrc && logoSrc !== APP_LOGO_BASE64 ? `
+                <div class="logo-wrap">
+                  <img src="${logoSrc}" class="logo" alt="logo" />
+                </div>
+              ` : ''}
+              <p class="brand-name">${laundry?.name || 'المغسلة'}</p>
             </div>
-            
-            <div class="info-row">
-              <div>
-                <span class="info-label">${t('invoice.customer')}:</span> ${invoice.customerName}
-                <br>
-                ${invoice.customerPhone ? `<span class="info-label">${t('invoice.phone')}:</span> ${invoice.customerPhone}` : ''}
+
+            <div class="divider"></div>
+
+            <div class="meta">
+              <div class="meta-box">
+                <span class="meta-label">رقم الفاتورة</span>
+                <span class="meta-value">#${invoice.invoiceNumber}</span>
               </div>
-              <div>
-                <span class="info-label">${t('invoice.date')}:</span> ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}
-                <br>
-                <span class="info-label">${t('invoice.paymentType')}:</span> ${t(`invoice.payment.${invoice.paymentType}`)}
+              <div class="meta-box">
+                <span class="meta-label">تاريخ التسليم</span>
+                <span class="meta-value">${deliveryDate}</span>
+              </div>
+
+              <div class="meta-box">
+                <span class="meta-label">اسم العميل</span>
+                <span class="meta-value">${invoice.customerName || '-'}</span>
+              </div>
+              <div class="meta-box">
+                <span class="meta-label">نوع الدفع</span>
+                <span class="meta-value">${paymentLabel}</span>
+              </div>
+
+              <div class="meta-box" style="grid-column: 1 / -1;">
+                <span class="meta-label">رقم العميل</span>
+                <span class="meta-value">${invoice.customerPhone || '-'}</span>
               </div>
             </div>
 
             <table>
               <thead>
                 <tr>
-                  <th>${t('invoice.items', 'الخدمة')}</th>
-                  <th>${t('invoice.quantity', 'الكمية')}</th>
-                  <th>${t('invoice.price', 'السعر')}</th>
-                  <th>${t('invoice.total', 'المجموع')}</th>
+                  <th style="text-align: right;">الصنف</th>
+                  <th>الكمية</th>
+                  <th>السعر</th>
+                  <th>الإجمالي</th>
                 </tr>
               </thead>
               <tbody>
-                ${invoice.items.map((item: any) => `
-                  <tr>
-                    <td>${item.itemNameAr || item.itemName}<br><small style="color:#888">${item.notes || ''}</small></td>
-                    <td>${item.quantity}</td>
-                    <td>${(Number(item.unitPrice) || 0).toFixed(2)}</td>
-                    <td>${(Number(item.unitPrice * item.quantity) || 0).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
+                ${invoice.items.map((item: any) => {
+                  const itemTotal = Number(item.unitPrice ?? 0) * Number(item.quantity ?? 0);
+                  return `
+                    <tr>
+                      <td>${item.itemNameAr || item.itemName || 'صنف'}</td>
+                      <td>${Number(item.quantity ?? 0)}</td>
+                      <td>${Number(item.unitPrice ?? 0).toFixed(2)}</td>
+                      <td>${itemTotal.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
 
             <div class="totals">
-              <div class="total-row">
-                <span class="total-label">${t('invoice.subtotal')}:</span>
-                <span>${(Number(invoice.subtotal) || 0).toFixed(2)} ر.س</span>
-              </div>
-              ${invoice.discountAmount > 0 ? `
-              <div class="total-row">
-                <span class="total-label">${t('invoice.discount')}:</span>
-                <span style="color:#e74c3c">-${(Number(invoice.discountAmount) || 0).toFixed(2)} ر.س</span>
-              </div>` : ''}
-              ${invoice.urgencyFeeAmount > 0 ? `
-              <div class="total-row">
-                <span class="total-label">${t('invoice.urgencyFee')}:</span>
-                <span>+ ${(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ر.س</span>
-              </div>` : ''}
-              <div class="total-row">
-                <span class="total-label">${t('invoice.tax')} (${invoice.taxPercent}%):</span>
-                <span>+ ${(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س</span>
-              </div>
-              <div class="total-row grand-total">
-                <span class="total-label">${t('invoice.total')}:</span>
-                <span>${(Number(invoice.total) || 0).toFixed(2)} ر.س</span>
-              </div>
+              <div class="line"><span>المجموع الفرعي</span><span>${subtotal.toFixed(2)} ر.س</span></div>
+              <div class="line"><span>الخصم</span><span>-${discount.toFixed(2)} ر.س</span></div>
+              <div class="line"><span>ضريبة القيمة المضافة</span><span>${tax.toFixed(2)} ر.س</span></div>
+              <div class="line grand"><span>الإجمالي</span><span>${total.toFixed(2)} ر.س</span></div>
             </div>
 
-            <div class="footer">
-              <p>${t('invoice.thankYou', 'شكراً لتعاملكم معنا')}</p>
-              <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <img src="${APP_LOGO_BASE64}" style="width: 24px; height: 24px; border-radius: 4px;" />
-                <span style="font-weight: bold; color: #555;">مغسلتي بلس MyLundryPlus</span>
+            ${invoice.notes ? `
+              <div class="notes">
+                <strong>ملاحظة:</strong> ${invoice.notes}
               </div>
+            ` : ''}
+
+            <div class="footer">
+              <div>شكراً لتعاملكم معنا</div>
+              <div class="footer-brand">تم الإعداد بواسطة MyLoundreyPlus</div>
             </div>
-          </body>
-        </html>
-  `;
+          </div>
+        </body>
+      </html>
+    `;
+  };
 
   const handlePrint = async () => {
     try {
@@ -298,14 +492,47 @@ export default function InvoiceDetailScreen() {
 
   const handleSharePDF = async () => {
     try {
+      if (Platform.OS === 'android') {
+        const sdkVersion = Number(Platform.Version || 0);
+
+        if (sdkVersion < 29) {
+          const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+          const granted = await PermissionsAndroid.request(permission);
+
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            Alert.alert('صلاحية الوصول مطلوبة', 'يرجى السماح للوصول إلى الملفات قبل حفظ الفاتورة');
+            return;
+          }
+        } else {
+          const mediaPermission = await MediaLibrary.requestPermissionsAsync();
+          if (mediaPermission.status !== 'granted') {
+            Alert.alert('صلاحية الوصول مطلوبة', 'يرجى السماح للوصول إلى الملفات قبل حفظ الفاتورة');
+            return;
+          }
+        }
+      }
+
       const { uri } = await Print.printToFileAsync({
         html: generateInvoiceHTML(),
-        base64: false
+        base64: false,
       });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+
+      const folderName = 'MyLoundreyPlus';
+      const appFolder = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory}${folderName}/`;
+      const fileName = `invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
+      const localFileUri = `${appFolder}${fileName}`;
+
+      await FileSystem.makeDirectoryAsync(appFolder, { intermediates: true });
+      await FileSystem.copyAsync({ from: uri, to: localFileUri });
+
+      if (Platform.OS === 'android') {
+        await MediaLibrary.saveToLibraryAsync(localFileUri);
+      }
+
+      Alert.alert('تم الحفظ', `تم حفظ الفاتورة في المجلد ${folderName}\n${fileName}`);
     } catch (error) {
-      console.error('Error sharing PDF:', error);
-      Alert.alert(t('common.error'), t('invoice.shareError', 'حدث خطأ أثناء مشاركة الفاتورة'));
+      console.error('Error saving PDF:', error);
+      Alert.alert(t('common.error'), t('invoice.shareError', 'حدث خطأ أثناء حفظ الفاتورة'));
     }
   };
 
@@ -333,24 +560,22 @@ export default function InvoiceDetailScreen() {
     return message;
   };
 
-  const handleShareWhatsApp = () => {
-    const message = generateShareMessage();
-    
-    let url = '';
-    if (invoice.customerPhone) {
-      let phone = invoice.customerPhone;
-      if (phone.startsWith('05')) {
-        phone = '966' + phone.substring(1);
-      }
-      phone = phone.replace('+', '');
-      url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
-    } else {
-      url = `whatsapp://send?text=${encodeURIComponent(message)}`;
-    }
+  const handleShareWhatsApp = async () => {
+    try {
+      const { uri } = await Print.printToFileAsync({
+        html: generateInvoiceHTML(),
+        base64: false,
+      });
 
-    Linking.openURL(url).catch(() => {
-      Alert.alert(t('common.error'), t('invoice.whatsappError', 'تطبيق الواتساب غير مثبت على الجهاز'));
-    });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: `فاتورة #${invoice.invoiceNumber}`,
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (error: any) {
+      console.error('Error sharing PDF via WhatsApp:', error);
+      Alert.alert(t('common.error'), t('invoice.whatsappError', 'تعذر مشاركة الفاتورة'));
+    }
   };
 
   const handleShareSMS = () => {

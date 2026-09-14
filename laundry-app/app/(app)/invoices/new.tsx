@@ -105,6 +105,11 @@ export default function NewInvoiceScreen() {
     }
   };
 
+  const isValidUuid = (value?: string) => {
+    if (!value) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  };
+
   const validate = () => {
     if (!store.customerName.trim() && !store.customerId) {
       Alert.alert(t('common.error', 'خطأ'), t('invoice.validation.customerRequired', 'اسم العميل مطلوب'));
@@ -123,18 +128,19 @@ export default function NewInvoiceScreen() {
 
   const handleCreate = (status: 'draft' | 'received') => {
     if (status === 'received' && !validate()) return;
-    
+
+    const normalizedCustomerId = isValidUuid(store.customerId) ? store.customerId : undefined;
     const payload = {
-      customerId: store.customerId,
-      walkInName: !store.customerId ? store.customerName : undefined,
-      walkInPhone: !store.customerId ? store.customerPhone : undefined,
-      walkInLocation: !store.customerId ? store.customerLocation : undefined,
+      customerId: normalizedCustomerId,
+      walkInName: !normalizedCustomerId ? store.customerName : undefined,
+      walkInPhone: !normalizedCustomerId ? store.customerPhone : undefined,
+      walkInLocation: !normalizedCustomerId ? store.customerLocation : undefined,
       paymentType: store.paymentType,
       isUrgent: store.isUrgent,
       notes: store.notes,
       expectedDeliveryAt: store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt).toISOString() : undefined,
       discountPercent: store.discountPercent,
-      status,   // تمرير الحالة صراحةً للباكند
+      status,
       items: store.cart.map((c) => ({
         itemId: c.itemId,
         quantity: c.quantity,
@@ -227,7 +233,8 @@ export default function NewInvoiceScreen() {
                     key={cust.customerId} 
                     style={styles.dropdownItem}
                     onPress={() => {
-                       store.setCustomer(cust.customerName, cust.customerPhone || '', '', cust.customerId);
+                       const selectedCustomerId = isValidUuid(cust.customerId) ? cust.customerId : undefined;
+                       store.setCustomer(cust.customerName, cust.customerPhone || '', '', selectedCustomerId);
                        setShowCustomerDropdown(false);
                     }}
                  >

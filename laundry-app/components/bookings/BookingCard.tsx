@@ -88,7 +88,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
     booking.invoiceId ? (
       <TouchableOpacity
         style={[styles.linkedInvoiceRow, { backgroundColor: colors.primary + '15' }]}
-        onPress={() => router.push(`/(app)/invoices/${booking.invoiceId}`)}
+        onPress={() => router.push({
+          pathname: '/(app)/invoices/[id]',
+          params: { id: booking.invoiceId }
+        })}
       >
         <Ionicons name="receipt-outline" size={16} color={colors.primary} />
         <Text style={[styles.linkedInvoiceText, { color: colors.primary }]}>

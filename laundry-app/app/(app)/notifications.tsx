@@ -98,7 +98,10 @@ export default function NotificationsScreen() {
 
     // Navigation logic based on notification type
     if (item.type.startsWith('invoice_') && item.referenceId) {
-      router.push(`/(app)/invoices/${item.referenceId}` as any);
+      router.push({
+        pathname: '/(app)/invoices/[id]',
+        params: { id: item.referenceId }
+      } as any);
     } else if (item.type === 'customer_message' && item.referenceId) {
       router.push(`/(app)/conversations/chat/${item.referenceId}` as any);
     } else if (item.type === 'support_message') {

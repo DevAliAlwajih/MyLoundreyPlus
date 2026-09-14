@@ -16,41 +16,121 @@ const ioredis_1 = require("ioredis");
 let RedisService = class RedisService {
     constructor(configService) {
         this.configService = configService;
+        this.client = null;
         this.logger = new common_1.Logger('RedisService');
-        this.client = new ioredis_1.default({
-            host: this.configService.get('REDIS_HOST', '127.0.0.1'),
-            port: this.configService.get('REDIS_PORT', 6379),
-            lazyConnect: false,
-        });
-        this.client.on('connect', () => {
-            this.logger.log('✅ Redis connected successfully');
-        });
-        this.client.on('error', (err) => {
-            this.logger.error(`❌ Redis connection error: ${err.message}`);
-        });
+        this.isRedisConnected = false;
+        this.memoryStore = new Map();
+        const host = this.configService.get('REDIS_HOST', '127.0.0.1');
+        const port = this.configService.get('REDIS_PORT', 6379);
+        try {
+            this.client = new ioredis_1.default({
+                host,
+                port,
+                lazyConnect: true,
+                maxRetriesPerRequest: 1,
+                retryStrategy: (times) => {
+                    if (times >= 2) {
+                        return null;
+                    }
+                    return 500;
+                },
+            });
+            this.client.connect().then(() => {
+                this.isRedisConnected = true;
+                this.logger.log('✅ Redis connected successfully');
+            }).catch((err) => {
+                this.isRedisConnected = false;
+                this.logger.warn(`⚠️ Redis is unavailable at ${host}:${port} (${err.message}). Using In-Memory fallback.`);
+            });
+            this.client.on('error', (err) => {
+                if (this.isRedisConnected) {
+                    this.logger.error(`❌ Redis error: ${err.message}`);
+                }
+                this.isRedisConnected = false;
+            });
+        }
+        catch (err) {
+            this.isRedisConnected = false;
+            this.logger.warn(`⚠️ Could not initialize Redis client. Using In-Memory fallback.`);
+        }
     }
     async get(key) {
-        return this.client.get(key);
+        if (this.isRedisConnected && this.client) {
+            try {
+                return await this.client.get(key);
+            }
+            catch {
+            }
+        }
+        const item = this.memoryStore.get(key);
+        if (!item)
+            return null;
+        if (item.expiresAt && Date.now() > item.expiresAt) {
+            this.memoryStore.delete(key);
+            return null;
+        }
+        return item.value;
     }
     async set(key, value, ttl) {
-        if (ttl) {
-            await this.client.set(key, value, 'EX', ttl);
+        if (this.isRedisConnected && this.client) {
+            try {
+                if (ttl) {
+                    await this.client.set(key, value, 'EX', ttl);
+                }
+                else {
+                    await this.client.set(key, value);
+                }
+                return;
+            }
+            catch {
+            }
         }
-        else {
-            await this.client.set(key, value);
-        }
+        const expiresAt = ttl ? Date.now() + ttl * 1000 : undefined;
+        this.memoryStore.set(key, { value, expiresAt });
     }
     async del(key) {
-        await this.client.del(key);
+        if (this.isRedisConnected && this.client) {
+            try {
+                await this.client.del(key);
+                return;
+            }
+            catch {
+            }
+        }
+        this.memoryStore.delete(key);
     }
     async incr(key) {
-        return this.client.incr(key);
+        if (this.isRedisConnected && this.client) {
+            try {
+                return await this.client.incr(key);
+            }
+            catch {
+            }
+        }
+        const current = await this.get(key);
+        const next = (parseInt(current || '0', 10) || 0) + 1;
+        const existing = this.memoryStore.get(key);
+        this.memoryStore.set(key, { value: String(next), expiresAt: existing?.expiresAt });
+        return next;
     }
     async expire(key, seconds) {
-        await this.client.expire(key, seconds);
+        if (this.isRedisConnected && this.client) {
+            try {
+                await this.client.expire(key, seconds);
+                return;
+            }
+            catch {
+            }
+        }
+        const item = this.memoryStore.get(key);
+        if (item) {
+            item.expiresAt = Date.now() + seconds * 1000;
+        }
     }
     onModuleDestroy() {
-        this.client.disconnect();
+        if (this.client) {
+            this.client.disconnect();
+        }
     }
 };
 exports.RedisService = RedisService;
