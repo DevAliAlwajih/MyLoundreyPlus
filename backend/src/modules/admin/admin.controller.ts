@@ -19,6 +19,7 @@ import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
+import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -83,6 +84,24 @@ export class AdminController {
   @Get('laundries/:id')
   getLaundryDetails(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.getLaundryDetails(id);
+  }
+
+  @ApiOperation({ summary: 'Admin: Update laundry details' })
+  @Patch('laundries/:id')
+  updateLaundryDetails(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLaundryDto,
+  ) {
+    return this.adminService.updateLaundryDetails(id, dto);
+  }
+
+  @ApiOperation({ summary: 'Admin: Update laundry owner account credentials' })
+  @Patch('laundries/:id/owner-account')
+  updateLaundryOwnerAccount(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { email?: string; password?: string },
+  ) {
+    return this.adminService.updateLaundryOwnerAccount(id, dto);
   }
 
   @ApiOperation({ summary: 'Admin: Update laundry status' })

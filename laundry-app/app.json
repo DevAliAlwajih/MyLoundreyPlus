@@ -49,7 +49,11 @@
           "savePhotosPermission": "السماح للتطبيق بحفظ ملفات PDF في مكتبة الصور والمستندات.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-splash-screen",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

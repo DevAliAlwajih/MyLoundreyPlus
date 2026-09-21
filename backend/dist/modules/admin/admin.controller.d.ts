@@ -4,6 +4,7 @@ import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
+import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
 export declare class AdminController {
     private readonly adminService;
     constructor(adminService: AdminService);
@@ -218,6 +219,118 @@ export declare class AdminController {
             trial_commission_ends_at: Date | null;
             balance: import("@prisma/client/runtime/library").Decimal;
             debt_limit: import("@prisma/client/runtime/library").Decimal | null;
+        };
+    }>;
+    updateLaundryDetails(id: string, dto: UpdateLaundryDto): Promise<{
+        success: boolean;
+        data: {
+            stats: {
+                totalRevenue: number | import("@prisma/client/runtime/library").Decimal;
+            };
+            categories: ({
+                items: {
+                    id: string;
+                    nameAr: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    nameEn: string;
+                    sortOrder: number;
+                    categoryId: string;
+                    basePrice: import("@prisma/client/runtime/library").Decimal;
+                    washing_price: import("@prisma/client/runtime/library").Decimal | null;
+                    ironing_price: import("@prisma/client/runtime/library").Decimal | null;
+                }[];
+            } & {
+                id: string;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
+                laundryId: string;
+                sortOrder: number;
+            })[];
+            owner: {
+                id: string;
+                phoneNumber: string;
+                createdAt: Date;
+                fullName: string;
+                email: string;
+            };
+            subscriptions: ({
+                plan: {
+                    id: string;
+                    nameAr: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
+                    nameEn: string;
+                    durationDays: number;
+                    priceSar: import("@prisma/client/runtime/library").Decimal;
+                    features: import("@prisma/client/runtime/library").JsonValue | null;
+                    is_seasonal: boolean;
+                    occasion_name: string | null;
+                    discount_percent: import("@prisma/client/runtime/library").Decimal | null;
+                    offer_valid_from: Date | null;
+                    offer_valid_until: Date | null;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                isActive: boolean;
+                laundryId: string;
+                planId: string;
+                amountPaid: import("@prisma/client/runtime/library").Decimal;
+                paymentMethod: string | null;
+                promoCode: string | null;
+                startDate: Date;
+                endDate: Date;
+                notes: string | null;
+                createdBy: string | null;
+            })[];
+            _count: {
+                invoices: number;
+                promotions: number;
+                ratings: number;
+            };
+            id: string;
+            ownerId: string;
+            name: string;
+            nameAr: string | null;
+            phoneNumber: string;
+            address: string | null;
+            city: string | null;
+            country: string | null;
+            latitude: import("@prisma/client/runtime/library").Decimal | null;
+            longitude: import("@prisma/client/runtime/library").Decimal | null;
+            workingHours: import("@prisma/client/runtime/library").JsonValue | null;
+            logoUrl: string | null;
+            status: import(".prisma/client").$Enums.laundry_status;
+            ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
+            ratingCount: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+            tax_enabled: boolean;
+            tax_rate: import("@prisma/client/runtime/library").Decimal | null;
+            urgency_enabled: boolean;
+            urgency_fee: import("@prisma/client/runtime/library").Decimal | null;
+            billing_type: import(".prisma/client").$Enums.billing_type;
+            commission_rate: import("@prisma/client/runtime/library").Decimal | null;
+            trial_commission_ends_at: Date | null;
+            balance: import("@prisma/client/runtime/library").Decimal;
+            debt_limit: import("@prisma/client/runtime/library").Decimal | null;
+        };
+    }>;
+    updateLaundryOwnerAccount(id: string, dto: {
+        email?: string;
+        password?: string;
+    }): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            fullName: string;
+            email: string;
+            passwordChanged: boolean;
         };
     }>;
     updateLaundryStatus(req: any, id: string, dto: UpdateLaundryStatusDto): Promise<{

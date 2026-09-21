@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
-import { StackActions } from '@react-navigation/native';
+import { StackActions } from 'expo-router/react-navigation';
 import { useThemeStore } from '../../stores/themeStore';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -13,7 +13,7 @@ function TabIcon({
   size,
 }: {
   name: IoniconsName;
-  color: string;
+  color: any;
   size: number;
 }) {
   return <Ionicons name={name} size={size} color={color} />;
@@ -72,7 +72,7 @@ export default function AppLayout() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             const state = navigation.getState();
-            const currentRoute = state.routes.find((r) => r.key === e.target);
+            const currentRoute = state.routes.find((r: any) => r.key === e.target);
             if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
             }
@@ -92,7 +92,7 @@ export default function AppLayout() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             const state = navigation.getState();
-            const currentRoute = state.routes.find((r) => r.key === e.target);
+            const currentRoute = state.routes.find((r: any) => r.key === e.target);
             if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
             }
@@ -112,7 +112,7 @@ export default function AppLayout() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             const state = navigation.getState();
-            const currentRoute = state.routes.find((r) => r.key === e.target);
+            const currentRoute = state.routes.find((r: any) => r.key === e.target);
             if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
               navigation.dispatch(StackActions.popToTop());
             }

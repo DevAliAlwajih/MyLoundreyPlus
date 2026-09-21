@@ -17,15 +17,14 @@ import {
   StatusBar,
   Linking,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Paths, File as FSFile } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -168,21 +167,45 @@ export default function ChatScreen() {
     if (!viewerImage) return;
     try {
       setSavingImage(true);
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          isAr ? 'صلاحية مطلوبة' : 'Permission Required',
-          isAr ? 'يرجى السماح بالوصول إلى المعرض لحفظ الصور' : 'Please allow gallery access to save images',
-        );
-        return;
-      }
       const destFile = new FSFile(Paths.cache, 'chat_image_' + Date.now() + '.jpg');
       const downloadedFile = await FSFile.downloadFileAsync(viewerImage, destFile);
-      await MediaLibrary.saveToLibraryAsync(downloadedFile.uri);
-      Alert.alert(
-        isAr ? 'تم الحفظ' : 'Saved',
-        isAr ? 'تم حفظ الصورة في المعرض بنجاح' : 'Image saved to gallery successfully',
-      );
+
+      const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+      if (isExpoGo) {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadedFile.uri);
+        }
+        return;
+      }
+
+      let saved = false;
+      try {
+        const MediaLib = await import('expo-media-library');
+        const { status } = await MediaLib.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLib.saveToLibraryAsync(downloadedFile.uri);
+          saved = true;
+        } else {
+          Alert.alert(
+            isAr ? 'صلاحية مطلوبة' : 'Permission Required',
+            isAr ? 'يرجى السماح بالوصول إلى المعرض لحفظ الصور' : 'Please allow gallery access to save images',
+          );
+          return;
+        }
+      } catch {
+        // Fallback when MediaLibrary native module is not present (e.g. Expo Go)
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadedFile.uri);
+          return;
+        }
+      }
+
+      if (saved) {
+        Alert.alert(
+          isAr ? 'تم الحفظ' : 'Saved',
+          isAr ? 'تم حفظ الصورة في المعرض بنجاح' : 'Image saved to gallery successfully',
+        );
+      }
     } catch (err) {
       console.error('Save image error:', err);
       Alert.alert(t('common.error'), isAr ? 'فشل حفظ الصورة' : 'Failed to save image');

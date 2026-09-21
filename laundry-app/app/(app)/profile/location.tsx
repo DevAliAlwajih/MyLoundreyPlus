@@ -1,7 +1,8 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
   Alert, Linking, ScrollView, Modal, FlatList, Platform,
+  TextInput, KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -40,14 +41,23 @@ export default function LocationScreen() {
 
   const savedCity = useMemo(() => {
     if (!savedCountry || !profile?.city) return null;
-    return savedCountry.cities.find(
-      c => c.nameAr === profile.city || c.nameEn === profile.city,
-    ) || null;
+    return (
+      savedCountry.cities.find(
+        c => c.nameAr === profile.city || c.nameEn === profile.city,
+      ) ||
+      savedCountry.cities.find(
+        c => profile.city.includes(c.nameAr) || c.nameAr.includes(profile.city),
+      ) ||
+      null
+    );
   }, [savedCountry, profile?.city]);
 
   // ─── State ───
   const [selectedCountry, setSelectedCountry] = useState<CountryType | null>(savedCountry);
   const [selectedCity, setSelectedCity] = useState<CityType | null>(savedCity);
+  const [addressText, setAddressText] = useState(
+    isAr ? (profile?.addressAr || profile?.address || '') : (profile?.address || profile?.addressAr || ''),
+  );
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(
     profile?.latitude && profile?.longitude
       ? { lat: Number(profile.latitude), lng: Number(profile.longitude) }
@@ -57,9 +67,37 @@ export default function LocationScreen() {
   );
   const [isLocating, setIsLocating] = useState(false);
 
-  // ─── Modals ───
+  useEffect(() => {
+    const profileAddress = isAr
+      ? (profile?.addressAr || profile?.address || '')
+      : (profile?.address || profile?.addressAr || '');
+
+    setAddressText(profileAddress);
+  }, [isAr, profile?.address, profile?.addressAr]);
+
+  // ─── Modals & Search ───
   const [countryModalVisible, setCountryModalVisible] = useState(false);
   const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+
+  // ─── Filtered lists ───
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return GULF_COUNTRIES;
+    const q = countrySearch.trim().toLowerCase();
+    return GULF_COUNTRIES.filter(
+      c => c.nameAr.toLowerCase().includes(q) || c.nameEn.toLowerCase().includes(q),
+    );
+  }, [countrySearch]);
+
+  const filteredCities = useMemo(() => {
+    const list = selectedCountry?.cities || [];
+    if (!citySearch.trim()) return list;
+    const q = citySearch.trim().toLowerCase();
+    return list.filter(
+      c => c.nameAr.toLowerCase().includes(q) || c.nameEn.toLowerCase().includes(q),
+    );
+  }, [selectedCountry?.cities, citySearch]);
 
   const bothSelected = selectedCountry && selectedCity;
 
@@ -69,12 +107,15 @@ export default function LocationScreen() {
     setSelectedCity(null);
     setMarkerPosition(null);
     setCountryModalVisible(false);
+    setCountrySearch('');
+    setCitySearch('');
   }, []);
 
   const handleSelectCity = useCallback((city: CityType) => {
     setSelectedCity(city);
     setMarkerPosition({ lat: city.lat, lng: city.lng });
     setCityModalVisible(false);
+    setCitySearch('');
 
     // Animate map to city center
     setTimeout(() => {
@@ -134,10 +175,13 @@ export default function LocationScreen() {
   const handleSave = () => {
     if (!selectedCountry || !selectedCity || !markerPosition) return;
 
+    const normalizedAddress = addressText.trim();
+
     updateMutation.mutate(
       {
         country: selectedCountry.code,
         city: isAr ? selectedCity.nameAr : selectedCity.nameEn,
+        address: normalizedAddress,
         latitude: markerPosition.lat,
         longitude: markerPosition.lng,
       } as any,
@@ -225,7 +269,49 @@ export default function LocationScreen() {
           <Ionicons name="chevron-down" size={20} color={selectedCountry ? colors.textSecondary : colors.textMuted} />
         </TouchableOpacity>
 
-        {/* ─── 3. GPS Button ─── */}
+        {/* ─── 3. Area (City) Input ─── */}
+        <Text style={[styles.label, isRTL && styles.textRight, { marginTop: 16 }]}>
+          {t('location.areaCity')}
+        </Text>
+        <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
+          <Ionicons name="business-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          <TextInput
+            style={[
+              styles.textInput,
+              isRTL && styles.textRight,
+              { color: colors.text }
+            ]}
+            placeholder={t('location.areaCityPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            value={area}
+            onChangeText={setArea}
+            returnKeyType="done"
+          />
+          {area.length > 0 && (
+            <TouchableOpacity onPress={() => setArea('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* ─── 3. Area / Street / City Address ─── */}
+        <Text style={[styles.label, isRTL && styles.textRight, { marginTop: 16 }]}> 
+          {t('location.areaCity')}
+        </Text>
+        <TextInput
+          value={addressText}
+          onChangeText={setAddressText}
+          placeholder={t('location.areaCityPlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, isRTL && styles.textRight]}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+          autoCapitalize="sentences"
+          autoCorrect={false}
+        />
+
+        {/* ─── 4. GPS Button ─── */}
         {bothSelected && (
           <TouchableOpacity
             style={[styles.gpsButton, isRTL && { flexDirection: 'row-reverse' }]}
@@ -243,7 +329,7 @@ export default function LocationScreen() {
           </TouchableOpacity>
         )}
 
-        {/* ─── 4. Map or Placeholder ─── */}
+        {/* ─── 5. Map or Placeholder ─── */}
         <View style={styles.mapWrapper}>
           {bothSelected && markerPosition ? (
             <MapView
@@ -307,75 +393,157 @@ export default function LocationScreen() {
       </View>
 
       {/* ─── Country BottomSheet Modal ─── */}
-      <Modal visible={countryModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal 
+        visible={countryModalVisible} 
+        animationType="slide" 
+        transparent
+        onRequestClose={() => {
+          setCountryModalVisible(false);
+          setCountrySearch('');
+        }}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('location.selectCountry')}</Text>
-              <TouchableOpacity onPress={() => setCountryModalVisible(false)}>
+              <TouchableOpacity onPress={() => {
+                setCountryModalVisible(false);
+                setCountrySearch('');
+              }}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={GULF_COUNTRIES}
-              keyExtractor={(item) => item.code}
-              renderItem={({ item }) => {
-                const isSelected = selectedCountry?.code === item.code;
-                return (
-                  <TouchableOpacity
-                    style={[styles.listItem, isSelected && styles.listItemSelected]}
-                    onPress={() => handleSelectCountry(item)}
-                  >
-                    <Text style={[
-                      styles.listItemText,
-                      isSelected && styles.listItemTextSelected,
-                      isRTL && styles.textRight,
-                    ]}>
-                      {isAr ? item.nameAr : item.nameEn}
-                    </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                  </TouchableOpacity>
-                );
-              }}
-            />
+
+            {/* Country Search Bar */}
+            <View style={[styles.searchContainer, isRTL && { flexDirection: 'row-reverse' }]}>
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, isRTL && styles.textRight, { color: colors.text }]}
+                placeholder={t('location.searchCountry')}
+                placeholderTextColor={colors.textMuted}
+                value={countrySearch}
+                onChangeText={setCountrySearch}
+                autoCorrect={false}
+              />
+              {countrySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setCountrySearch('')}>
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {filteredCountries.length === 0 ? (
+              <View style={styles.emptyResults}>
+                <Ionicons name="search-outline" size={36} color={colors.textMuted} />
+                <Text style={styles.emptyResultsText}>{t('location.noResults')}</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredCountries}
+                keyExtractor={(item) => item.code}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => {
+                  const isSelected = selectedCountry?.code === item.code;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.listItem, isSelected && styles.listItemSelected]}
+                      onPress={() => handleSelectCountry(item)}
+                    >
+                      <Text style={[
+                        styles.listItemText,
+                        isSelected && styles.listItemTextSelected,
+                        isRTL && styles.textRight,
+                      ]}>
+                        {isAr ? item.nameAr : item.nameEn}
+                      </Text>
+                      {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── City BottomSheet Modal ─── */}
-      <Modal visible={cityModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      {/* ─── Governorate BottomSheet Modal ─── */}
+      <Modal 
+        visible={cityModalVisible} 
+        animationType="slide" 
+        transparent
+        onRequestClose={() => {
+          setCityModalVisible(false);
+          setCitySearch('');
+        }}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('location.selectCity')}</Text>
-              <TouchableOpacity onPress={() => setCityModalVisible(false)}>
+              <TouchableOpacity onPress={() => {
+                setCityModalVisible(false);
+                setCitySearch('');
+              }}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={selectedCountry?.cities || []}
-              keyExtractor={(item) => item.nameEn}
-              renderItem={({ item }) => {
-                const isSelected = selectedCity?.nameEn === item.nameEn;
-                return (
-                  <TouchableOpacity
-                    style={[styles.listItem, isSelected && styles.listItemSelected]}
-                    onPress={() => handleSelectCity(item)}
-                  >
-                    <Text style={[
-                      styles.listItemText,
-                      isSelected && styles.listItemTextSelected,
-                      isRTL && styles.textRight,
-                    ]}>
-                      {isAr ? item.nameAr : item.nameEn}
-                    </Text>
-                    {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                  </TouchableOpacity>
-                );
-              }}
-            />
+
+            {/* Governorate Search Bar */}
+            <View style={[styles.searchContainer, isRTL && { flexDirection: 'row-reverse' }]}>
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, isRTL && styles.textRight, { color: colors.text }]}
+                placeholder={t('location.searchGovernorate')}
+                placeholderTextColor={colors.textMuted}
+                value={citySearch}
+                onChangeText={setCitySearch}
+                autoCorrect={false}
+              />
+              {citySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setCitySearch('')}>
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {filteredCities.length === 0 ? (
+              <View style={styles.emptyResults}>
+                <Ionicons name="search-outline" size={36} color={colors.textMuted} />
+                <Text style={styles.emptyResultsText}>{t('location.noResults')}</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredCities}
+                keyExtractor={(item) => item.nameEn}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => {
+                  const isSelected = selectedCity?.nameEn === item.nameEn;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.listItem, isSelected && styles.listItemSelected]}
+                      onPress={() => handleSelectCity(item)}
+                    >
+                      <Text style={[
+                        styles.listItemText,
+                        isSelected && styles.listItemTextSelected,
+                        isRTL && styles.textRight,
+                      ]}>
+                        {isAr ? item.nameAr : item.nameEn}
+                      </Text>
+                      {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
     </SafeAreaView>
@@ -444,6 +612,39 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   pickerPlaceholder: {
     color: colors.textMuted,
+  },
+
+  // ─── Area Input ───
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  inputIcon: {
+    marginRight: 2,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    height: '100%',
+  },
+  input: {
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+    textAlign: 'left',
   },
 
   // ─── GPS Button ───
@@ -537,8 +738,39 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '60%',
+    maxHeight: '75%',
     paddingBottom: 30,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 8,
+    height: 44,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 8,
+  },
+  emptyResults: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+  },
+  emptyResultsText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   modalHeader: {
     flexDirection: 'row',

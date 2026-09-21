@@ -21,6 +21,7 @@ const update_laundry_status_dto_1 = require("./dto/update-laundry-status.dto");
 const update_laundry_billing_dto_1 = require("./dto/update-laundry-billing.dto");
 const update_user_status_dto_1 = require("./dto/update-user-status.dto");
 const update_setting_dto_1 = require("./dto/update-setting.dto");
+const update_laundry_dto_1 = require("../laundry/dto/update-laundry.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -48,6 +49,12 @@ let AdminController = class AdminController {
     }
     getLaundryDetails(id) {
         return this.adminService.getLaundryDetails(id);
+    }
+    updateLaundryDetails(id, dto) {
+        return this.adminService.updateLaundryDetails(id, dto);
+    }
+    updateLaundryOwnerAccount(id, dto) {
+        return this.adminService.updateLaundryOwnerAccount(id, dto);
     }
     updateLaundryStatus(req, id, dto) {
         return this.adminService.updateLaundryStatus(id, req.user.id, dto);
@@ -138,6 +145,24 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getLaundryDetails", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update laundry details' }),
+    (0, common_1.Patch)('laundries/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_laundry_dto_1.UpdateLaundryDto]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateLaundryDetails", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update laundry owner account credentials' }),
+    (0, common_1.Patch)('laundries/:id/owner-account'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateLaundryOwnerAccount", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Update laundry status' }),
     (0, common_1.Patch)('laundries/:id/status'),

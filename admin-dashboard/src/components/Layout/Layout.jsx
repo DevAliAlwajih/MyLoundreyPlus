@@ -21,7 +21,7 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { theme, toggleTheme, lang, toggleLang } = useTheme()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -148,11 +148,13 @@ export default function Layout() {
 
             {/* Admin Avatar */}
             <div className="admin-profile">
-              <div className="avatar-placeholder avatar-sm" style={{ fontSize: '0.8rem' }}>م</div>
+              <div className="avatar-placeholder avatar-sm" style={{ fontSize: '0.8rem' }}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'م'}
+              </div>
               {sidebarOpen && (
                 <div className="admin-info">
-                  <span className="fs-sm fw-semi">{label('مدير النظام', 'System Admin')}</span>
-                  <span className="fs-xs text-muted">{label('مدير', 'Admin')}</span>
+                  <span className="fs-sm fw-semi">{user?.name || label('مدير النظام', 'System Admin')}</span>
+                  <span className="fs-xs text-muted">{user?.email || (user?.role === 'admin' ? label('مدير النظام', 'System Admin') : label('مدير', 'Admin'))}</span>
                 </div>
               )}
             </div>

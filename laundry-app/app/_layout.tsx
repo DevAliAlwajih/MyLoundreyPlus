@@ -1,26 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { initI18n } from '../i18n'; // Bootstrap i18n
-import * as Notifications from 'expo-notifications';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-// Setup notification handler to display notifications in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 // Use existing colors if present or define primary
 const COLORS = {
@@ -96,16 +85,45 @@ export default function RootLayout() {
     }
   }, [isAuthenticated, isReady, isLoading, segments]);
 
-  // Listen to foreground notifications to refresh data in real-time
+  // Listen to foreground notifications to refresh data in real-time (safely skipped in Expo Go on Android)
   useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener((notification) => {
-      console.log('Received foreground notification:', notification);
-      // Invalidate notifications query to fetch the new one and update unread count
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-    });
+    const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+    if (isExpoGo && Platform.OS === 'android') {
+      return;
+    }
 
-    return () => subscription.remove();
+    let isMounted = true;
+    let subscription: any;
+
+    (async () => {
+      try {
+        const Notifications = await import('expo-notifications');
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+
+        if (!isMounted) return;
+
+        subscription = Notifications.addNotificationReceivedListener((notification) => {
+          console.log('Received foreground notification:', notification);
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+        });
+      } catch (err) {
+        console.warn('[RootLayout] Notifications setup skipped or failed:', err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      subscription?.remove?.();
+    };
   }, []);
 
   if (!isReady || isLoading) {

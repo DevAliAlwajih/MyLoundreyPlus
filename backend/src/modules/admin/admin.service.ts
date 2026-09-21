@@ -4,6 +4,7 @@ import { NotificationService } from '../notification/notification.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
+import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
 import { laundry_status, user_role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -112,6 +113,142 @@ export class AdminService {
         stats: {
           totalRevenue: totalRevenue._sum.totalAmount ?? 0,
         },
+      },
+    };
+  }
+
+  async updateLaundryDetails(laundryId: string, dto: UpdateLaundryDto) {
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true },
+    });
+
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    const updated = await this.prisma.laundry.update({
+      where: { id: laundryId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.nameAr !== undefined && { nameAr: dto.nameAr }),
+        ...(dto.phoneNumber !== undefined && { phoneNumber: dto.phoneNumber }),
+        ...(dto.address !== undefined && { address: dto.address }),
+        ...(dto.city !== undefined && { city: dto.city }),
+        ...(dto.country !== undefined && { country: dto.country }),
+        ...(dto.latitude !== undefined && { latitude: dto.latitude }),
+        ...(dto.longitude !== undefined && { longitude: dto.longitude }),
+        ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),
+        ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
+        ...(dto.tax_enabled !== undefined && { tax_enabled: dto.tax_enabled }),
+        ...(dto.tax_rate !== undefined && { tax_rate: dto.tax_rate }),
+        ...(dto.urgency_enabled !== undefined && { urgency_enabled: dto.urgency_enabled }),
+        ...(dto.urgency_fee !== undefined && { urgency_fee: dto.urgency_fee }),
+        updatedAt: new Date(),
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phoneNumber: true,
+            createdAt: true,
+          },
+        },
+        subscriptions: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          include: { plan: true },
+        },
+        categories: {
+          where: { isActive: true },
+          include: { items: { where: { isActive: true } } },
+        },
+        _count: {
+          select: {
+            invoices: true,
+            ratings: true,
+            promotions: true,
+          },
+        },
+      },
+    });
+
+    const totalRevenue = await this.prisma.invoice.aggregate({
+      where: { laundryId, status: 'completed' },
+      _sum: { totalAmount: true },
+    });
+
+    return {
+      success: true,
+      data: {
+        ...updated,
+        stats: {
+          totalRevenue: totalRevenue._sum.totalAmount ?? 0,
+        },
+      },
+    };
+  }
+
+  async updateLaundryOwnerAccount(laundryId: string, dto: { email?: string; password?: string }) {
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true, ownerId: true, name: true },
+    });
+
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    const normalizedEmail = dto.email?.trim();
+    const normalizedPassword = dto.password?.trim();
+
+    const currentOwner = await this.prisma.user.findUnique({
+      where: { id: laundry.ownerId },
+      select: { id: true, email: true },
+    });
+
+    if (!currentOwner) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'OWNER_NOT_FOUND', message: 'مالك المغسلة غير موجود' },
+      });
+    }
+
+    if (normalizedEmail && normalizedEmail !== currentOwner.email) {
+      const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+      if (existing && existing.id !== currentOwner.id) {
+        throw new ForbiddenException({
+          success: false,
+          error: { code: 'EMAIL_ALREADY_IN_USE', message: 'هذا البريد الإلكتروني مستخدم بالفعل' },
+        });
+      }
+    }
+
+    const updateData: any = {};
+    if (normalizedEmail) updateData.email = normalizedEmail;
+    if (normalizedPassword) updateData.password_hash = await bcrypt.hash(normalizedPassword, 10);
+
+    const updated = await this.prisma.user.update({
+      where: { id: laundry.ownerId },
+      data: updateData,
+      select: { id: true, fullName: true, email: true },
+    });
+
+    return {
+      success: true,
+      data: {
+        id: updated.id,
+        fullName: updated.fullName,
+        email: updated.email,
+        passwordChanged: !!normalizedPassword,
       },
     };
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager, Linking, PermissionsAndroid } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, KeyboardAvoidingView, Platform, I18nManager, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,9 +12,8 @@ import { StatusBottomSheet } from '../../../components/invoices/StatusBottomShee
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useThemeStore } from '../../../stores/themeStore';
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import { APP_LOGO_BASE64 } from '../../../constants/AppLogoBase64';
 
 
@@ -490,49 +489,41 @@ export default function InvoiceDetailScreen() {
     }
   };
 
+  const getShareablePdfUri = async (html: string): Promise<string> => {
+    // Use printToFileAsync with base64 to avoid fetch/blob issues in React Native (Hermes)
+    const result = await Print.printToFileAsync({ html, base64: true });
+
+    const base64 = result.base64;
+    if (!base64) throw new Error('Failed to generate PDF base64');
+
+    const dir = `${FileSystem.documentDirectory}invoices/`;
+    await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+
+    const safeUri = `${dir}invoice_${Date.now()}.pdf`;
+    await FileSystem.writeAsStringAsync(safeUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // Return the file:// URI directly — expo-sharing handles Android content:// conversion internally
+    return safeUri;
+  };
+
   const handleSharePDF = async () => {
     try {
-      if (Platform.OS === 'android') {
-        const sdkVersion = Number(Platform.Version || 0);
-
-        if (sdkVersion < 29) {
-          const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
-          const granted = await PermissionsAndroid.request(permission);
-
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            Alert.alert('صلاحية الوصول مطلوبة', 'يرجى السماح للوصول إلى الملفات قبل حفظ الفاتورة');
-            return;
-          }
-        } else {
-          const mediaPermission = await MediaLibrary.requestPermissionsAsync();
-          if (mediaPermission.status !== 'granted') {
-            Alert.alert('صلاحية الوصول مطلوبة', 'يرجى السماح للوصول إلى الملفات قبل حفظ الفاتورة');
-            return;
-          }
-        }
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t('common.error'), 'المشاركة غير متاحة على هذا الجهاز');
+        return;
       }
-
-      const { uri } = await Print.printToFileAsync({
-        html: generateInvoiceHTML(),
-        base64: false,
+      const shareableUri = await getShareablePdfUri(generateInvoiceHTML());
+      await Sharing.shareAsync(shareableUri, {
+        UTI: 'com.adobe.pdf',
+        mimeType: 'application/pdf',
+        dialogTitle: t('invoice.sharePDF', 'مشاركة الفاتورة'),
       });
-
-      const folderName = 'MyLoundreyPlus';
-      const appFolder = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory}${folderName}/`;
-      const fileName = `invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
-      const localFileUri = `${appFolder}${fileName}`;
-
-      await FileSystem.makeDirectoryAsync(appFolder, { intermediates: true });
-      await FileSystem.copyAsync({ from: uri, to: localFileUri });
-
-      if (Platform.OS === 'android') {
-        await MediaLibrary.saveToLibraryAsync(localFileUri);
-      }
-
-      Alert.alert('تم الحفظ', `تم حفظ الفاتورة في المجلد ${folderName}\n${fileName}`);
     } catch (error) {
-      console.error('Error saving PDF:', error);
-      Alert.alert(t('common.error'), t('invoice.shareError', 'حدث خطأ أثناء حفظ الفاتورة'));
+      console.error('Error sharing PDF:', error);
+      Alert.alert(t('common.error'), t('invoice.shareError', 'حدث خطأ أثناء إنشاء أو مشاركة الفاتورة'));
     }
   };
 
@@ -562,12 +553,13 @@ export default function InvoiceDetailScreen() {
 
   const handleShareWhatsApp = async () => {
     try {
-      const { uri } = await Print.printToFileAsync({
-        html: generateInvoiceHTML(),
-        base64: false,
-      });
-
-      await Sharing.shareAsync(uri, {
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t('common.error'), 'المشاركة غير متاحة على هذا الجهاز');
+        return;
+      }
+      const shareableUri = await getShareablePdfUri(generateInvoiceHTML());
+      await Sharing.shareAsync(shareableUri, {
         mimeType: 'application/pdf',
         dialogTitle: `فاتورة #${invoice.invoiceNumber}`,
         UTI: 'com.adobe.pdf',

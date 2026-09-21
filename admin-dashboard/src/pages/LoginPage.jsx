@@ -52,10 +52,11 @@ export default function LoginPage() {
         throw new Error('غير مصرح لك بالدخول كمدير');
       }
 
-      // تخزين التوكن
+      // تخزين التوكن والمستخدم
       localStorage.setItem('adminToken', accessToken);
-      login(accessToken);
-      navigate('/');
+      localStorage.setItem('adminUser', JSON.stringify(user));
+      login(accessToken, user);
+      navigate('/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'فشل تسجيل الدخول'
       setError(msg)

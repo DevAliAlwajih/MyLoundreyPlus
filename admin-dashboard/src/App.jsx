@@ -9,6 +9,7 @@ import SubscriptionsPage from './pages/SubscriptionsPage'
 import AdsPage from './pages/AdsPage'
 import SupportPage from './pages/SupportPage'
 import SettingsPage from './pages/SettingsPage'
+import LaundryDetailsPage from './pages/LaundryDetailsPage'
 
 // ---- Theme Context ----
 export const ThemeContext = createContext(null)
@@ -27,18 +28,21 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'ar')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('adminUser')
+    try {
+      return savedUser ? JSON.parse(savedUser) : null
+    } catch {
+      return null
+    }
+  })
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return Boolean(localStorage.getItem('adminToken'))
+  })
 
   useEffect(() => {
     const savedToken = localStorage.getItem('adminToken')
-    if (!savedToken) {
-      setIsAuthenticated(false)
-      return
-    }
-
-    // Ignore stale session tokens so the app always opens to login first.
-    localStorage.removeItem('adminToken')
-    setIsAuthenticated(false)
+    setIsAuthenticated(Boolean(savedToken))
   }, [])
 
   useEffect(() => {
@@ -55,18 +59,24 @@ export default function App() {
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light')
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar')
 
-  const login = (token) => {
+  const login = (token, userData = null) => {
     localStorage.setItem('adminToken', token)
+    if (userData) {
+      localStorage.setItem('adminUser', JSON.stringify(userData))
+      setUser(userData)
+    }
     setIsAuthenticated(true)
   }
   const logout = () => {
     localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUser')
+    setUser(null)
     setIsAuthenticated(false)
   }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, lang, toggleLang }}>
-      <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={
@@ -82,6 +92,7 @@ export default function App() {
             }>
               <Route index element={<DashboardPage />} />
               <Route path="laundries" element={<LaundriesPage />} />
+              <Route path="laundries/:id" element={<LaundryDetailsPage />} />
               <Route path="customers" element={<CustomersPage />} />
               <Route path="subscriptions" element={<SubscriptionsPage />} />
               <Route path="ads" element={<AdsPage />} />

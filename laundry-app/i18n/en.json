@@ -504,14 +504,20 @@
   },
   "location": {
     "selectCountry": "Select Country",
-    "selectCity": "Select City",
+    "selectCity": "Select Governorate",
     "country": "Country",
-    "city": "City",
+    "city": "Governorate",
+    "areaCity": "Area (City)",
+    "areaCityPlaceholder": "e.g. Al-Asbahi, Hadda St, Mualla...",
     "useCurrentLocation": "Use Current Location Automatically",
-    "selectCountryCityFirst": "Please select country and city first",
+    "selectCountryCityFirst": "Please select country and governorate first",
     "saveLocation": "Save Location",
     "locationSaved": "Location saved successfully",
-    "gpsPermissionDenied": "Location permission denied"
+    "gpsPermissionDenied": "Location permission denied",
+    "searchGovernorate": "Search governorate...",
+    "searchCountry": "Search country...",
+    "search": "Search...",
+    "noResults": "No matching results"
   },
   "workingHours": {
     "exceptionalHolidays": "Exceptional Holidays",

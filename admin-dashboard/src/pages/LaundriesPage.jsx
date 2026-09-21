@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../App'
 import api from '../services/api'
 import {
@@ -24,6 +25,7 @@ const PLAN_MAP = {
 }
 
 export default function LaundriesPage() {
+  const navigate = useNavigate()
   const { lang } = useTheme()
   const label = (ar, en) => lang === 'ar' ? ar : en
 
@@ -115,8 +117,7 @@ export default function LaundriesPage() {
   }
 
   const openDetails = (l) => {
-    setSelectedLaundry(l)
-    setShowModal(true)
+    navigate(`/dashboard/laundries/${l.id}`)
   }
 
   return (
