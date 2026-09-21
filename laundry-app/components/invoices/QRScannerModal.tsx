@@ -76,7 +76,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ visible, onClose
             barcodeScannerSettings={{
               barcodeTypes: ["qr"],
             }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
           <View style={styles.markerContainer}>
             <View style={styles.marker} />
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   markerContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     justifyContent: 'center',
     alignItems: 'center',
   },

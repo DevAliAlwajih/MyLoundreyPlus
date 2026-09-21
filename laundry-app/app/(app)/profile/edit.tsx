@@ -565,7 +565,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
   },
   logoOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center'

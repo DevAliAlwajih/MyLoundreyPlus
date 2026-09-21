@@ -505,14 +505,20 @@
   },
   "location": {
     "selectCountry": "اختر الدولة",
-    "selectCity": "اختر المدينة",
+    "selectCity": "اختر المحافظة",
     "country": "الدولة",
-    "city": "المدينة",
+    "city": "المحافظة",
+    "areaCity": "المنطقة (الحي / الشارع)",
+    "areaCityPlaceholder": "مثال: الأصبحي، شارع حدة، المعلا...",
     "useCurrentLocation": "تحديد موقعي الحالي تلقائياً",
-    "selectCountryCityFirst": "اختر الدولة والمدينة أولاً",
+    "selectCountryCityFirst": "يرجى اختيار الدولة والمحافظة أولاً",
     "saveLocation": "حفظ الموقع",
     "locationSaved": "تم حفظ الموقع بنجاح",
-    "gpsPermissionDenied": "لم يتم منح إذن الموقع"
+    "gpsPermissionDenied": "لم يتم منح إذن الموقع",
+    "searchGovernorate": "البحث عن محافظة...",
+    "searchCountry": "البحث عن دولة...",
+    "search": "بحث...",
+    "noResults": "لا توجد نتائج مطابقة"
   },
   "workingHours": {
     "exceptionalHolidays": "الإجازات الاستثنائية",

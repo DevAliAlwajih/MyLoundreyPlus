@@ -70,10 +70,10 @@ export default function ReportsScreen() {
         </View>
 
         {/* Revenue Chart (Period Only) */}
-        {isPeriodView && (report as PeriodReport).dailyBreakdown && (
+        {isPeriodView && (report as unknown as PeriodReport).dailyBreakdown && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('reports.revenueChart')}</Text>
-            <RevenueChart dailyBreakdown={(report as PeriodReport).dailyBreakdown} />
+            <RevenueChart dailyBreakdown={(report as unknown as PeriodReport).dailyBreakdown} />
           </View>
         )}
 

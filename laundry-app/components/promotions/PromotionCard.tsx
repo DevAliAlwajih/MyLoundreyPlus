@@ -19,8 +19,8 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({ promotion, onEdit 
   const title = promotion.title;
 
   const now = new Date();
-  const startDate = new Date(promotion.startDate);
-  const endDate = new Date(promotion.endDate);
+  const startDate = new Date(promotion.startDate || Date.now());
+  const endDate = new Date(promotion.endDate || Date.now());
   
   let statusBadge = '';
   let statusColor = '#999';

@@ -47,7 +47,7 @@ export default function ProfileScreen() {
   const getTodayHours = () => {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const todayStr = days[new Date().getDay()];
-    const todaySchedule = profile.workingHours?.find(h => h.day === todayStr);
+    const todaySchedule = profile.workingHours?.find((h: any) => h.day === todayStr);
     
     if (!todaySchedule || !todaySchedule.isOpen) return t('profile.closed');
     return `${todaySchedule.openTime} - ${todaySchedule.closeTime}`;
@@ -113,8 +113,9 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.actionTexts}>
               <Text style={styles.actionTitle}>{t('profile.location')}</Text>
-              <Text style={styles.actionSubtitle}>
-                {profile.latitude && profile.longitude ? `${profile.latitude.toFixed(4)}, ${profile.longitude.toFixed(4)}` : '--'}
+              <Text style={styles.actionSubtitle} numberOfLines={1}>
+                {[profile.city, profile.address].filter(Boolean).join(' - ') || 
+                 (profile.latitude && profile.longitude ? `${Number(profile.latitude).toFixed(4)}, ${Number(profile.longitude).toFixed(4)}` : '--')}
               </Text>
             </View>
             <Ionicons name={isArabic ? "chevron-back" : "chevron-forward"} size={20} color={colors.textSecondary} />

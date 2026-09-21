@@ -130,10 +130,10 @@ export default function SettingsScreen() {
     toggleTheme();
   };
 
-  const handlePrefToggle = (key: keyof typeof notificationPrefs) => (val: boolean) => {
+  const handlePrefToggle = (key: string) => (val: boolean) => {
     if (!notificationPrefs) return;
     const newPrefs = { ...notificationPrefs, [key]: val };
-    updatePrefsMutation.mutate(newPrefs);
+    updatePrefsMutation.mutate(newPrefs as any);
   };
 
   const handleLogout = () => {

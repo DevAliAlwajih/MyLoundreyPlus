@@ -269,7 +269,7 @@ export default function LocationScreen() {
           <Ionicons name="chevron-down" size={20} color={selectedCountry ? colors.textSecondary : colors.textMuted} />
         </TouchableOpacity>
 
-        {/* ─── 3. Area (City) Input ─── */}
+        {/* ─── 3. Area / District Input ─── */}
         <Text style={[styles.label, isRTL && styles.textRight, { marginTop: 16 }]}>
           {t('location.areaCity')}
         </Text>
@@ -283,33 +283,16 @@ export default function LocationScreen() {
             ]}
             placeholder={t('location.areaCityPlaceholder')}
             placeholderTextColor={colors.textMuted}
-            value={area}
-            onChangeText={setArea}
+            value={addressText}
+            onChangeText={setAddressText}
             returnKeyType="done"
           />
-          {area.length > 0 && (
-            <TouchableOpacity onPress={() => setArea('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          {addressText.length > 0 && (
+            <TouchableOpacity onPress={() => setAddressText('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
-
-        {/* ─── 3. Area / Street / City Address ─── */}
-        <Text style={[styles.label, isRTL && styles.textRight, { marginTop: 16 }]}> 
-          {t('location.areaCity')}
-        </Text>
-        <TextInput
-          value={addressText}
-          onChangeText={setAddressText}
-          placeholder={t('location.areaCityPlaceholder')}
-          placeholderTextColor={colors.textMuted}
-          style={[styles.input, isRTL && styles.textRight]}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-          autoCapitalize="sentences"
-          autoCorrect={false}
-        />
 
         {/* ─── 4. GPS Button ─── */}
         {bothSelected && (

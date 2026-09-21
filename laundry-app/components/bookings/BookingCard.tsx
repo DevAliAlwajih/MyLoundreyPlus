@@ -90,7 +90,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onAccept, onR
         style={[styles.linkedInvoiceRow, { backgroundColor: colors.primary + '15' }]}
         onPress={() => router.push({
           pathname: '/(app)/invoices/[id]',
-          params: { id: booking.invoiceId }
+          params: { id: booking.invoiceId! }
         })}
       >
         <Ionicons name="receipt-outline" size={16} color={colors.primary} />
