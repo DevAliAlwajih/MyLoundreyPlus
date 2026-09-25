@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { CreatePlanDto, UpdatePlanDto } from './dto/plan.dto';
+import { CreatePromoCodeDto, UpdatePromoCodeDto } from './dto/promo-code.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -459,4 +461,354 @@ export class SubscriptionService {
       data: subscriptions.map((s) => ({ ...s, amountPaid: Number(s.amountPaid) })),
     };
   }
+
+  // ────────────────────────────────────────────────────
+  // 🛡️ 11. Admin: Plans & Packages Management (CRUD)
+  // ────────────────────────────────────────────────────
+  async adminGetAllPlans() {
+    const plans = await this.prisma.subscriptionPlan.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      success: true,
+      data: plans.map((p) => ({
+        id: p.id,
+        nameAr: p.nameAr,
+        nameEn: p.nameEn,
+        durationDays: p.durationDays,
+        priceSar: Number(p.priceSar),
+        features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? JSON.parse(p.features) : p.features || [],
+        isActive: p.isActive,
+        isSeasonal: p.is_seasonal,
+        occasionName: p.occasion_name,
+        discountPercent: p.discount_percent !== null ? Number(p.discount_percent) : 0,
+        offerValidFrom: p.offer_valid_from ? p.offer_valid_from.toISOString().split('T')[0] : null,
+        offerValidUntil: p.offer_valid_until ? p.offer_valid_until.toISOString().split('T')[0] : null,
+        createdAt: p.createdAt,
+      })),
+    };
+  }
+
+  async adminCreatePlan(dto: CreatePlanDto) {
+    const plan = await this.prisma.subscriptionPlan.create({
+      data: {
+        nameAr: dto.nameAr,
+        nameEn: dto.nameEn,
+        durationDays: dto.durationDays,
+        priceSar: dto.priceSar,
+        features: dto.features ?? [],
+        isActive: dto.isActive ?? true,
+        is_seasonal: dto.isSeasonal ?? false,
+        occasion_name: dto.occasionName ?? null,
+        discount_percent: dto.discountPercent ?? 0,
+        offer_valid_from: dto.offerValidFrom ? new Date(dto.offerValidFrom) : null,
+        offer_valid_until: dto.offerValidUntil ? new Date(dto.offerValidUntil) : null,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'تم إنشاء الباقة بنجاح',
+      data: {
+        ...plan,
+        priceSar: Number(plan.priceSar),
+        discountPercent: plan.discount_percent !== null ? Number(plan.discount_percent) : 0,
+      },
+    };
+  }
+
+  async adminUpdatePlan(id: string, dto: UpdatePlanDto) {
+    const existing = await this.prisma.subscriptionPlan.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException({ success: false, error: { message: 'الباقة غير موجودة' } });
+    }
+
+    const data: any = {};
+    if (dto.nameAr !== undefined) data.nameAr = dto.nameAr;
+    if (dto.nameEn !== undefined) data.nameEn = dto.nameEn;
+    if (dto.durationDays !== undefined) data.durationDays = dto.durationDays;
+    if (dto.priceSar !== undefined) data.priceSar = dto.priceSar;
+    if (dto.features !== undefined) data.features = dto.features;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+    if (dto.isSeasonal !== undefined) data.is_seasonal = dto.isSeasonal;
+    if (dto.occasionName !== undefined) data.occasion_name = dto.occasionName;
+    if (dto.discountPercent !== undefined) data.discount_percent = dto.discountPercent;
+    if (dto.offerValidFrom !== undefined) data.offer_valid_from = dto.offerValidFrom ? new Date(dto.offerValidFrom) : null;
+    if (dto.offerValidUntil !== undefined) data.offer_valid_until = dto.offerValidUntil ? new Date(dto.offerValidUntil) : null;
+
+    const updated = await this.prisma.subscriptionPlan.update({
+      where: { id },
+      data,
+    });
+
+    return {
+      success: true,
+      message: 'تم تحديث الباقة بنجاح',
+      data: {
+        ...updated,
+        priceSar: Number(updated.priceSar),
+        discountPercent: updated.discount_percent !== null ? Number(updated.discount_percent) : 0,
+      },
+    };
+  }
+
+  async adminDeletePlan(id: string) {
+    // Check if there are active subscriptions attached
+    const activeSubsCount = await this.prisma.subscription.count({
+      where: { planId: id, isActive: true },
+    });
+
+    if (activeSubsCount > 0) {
+      // Soft-deactivate if active subscriptions exist
+      await this.prisma.subscriptionPlan.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return {
+        success: true,
+        message: 'تم تعطيل الباقة نظراً لوجود اشتراكات نشطة مرتبطة بها',
+      };
+    }
+
+    try {
+      await this.prisma.subscriptionPlan.delete({ where: { id } });
+      return { success: true, message: 'تم حذف الباقة بنجاح' };
+    } catch {
+      await this.prisma.subscriptionPlan.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return { success: true, message: 'تم تعطيل الباقة بنجاح' };
+    }
+  }
+
+  // ────────────────────────────────────────────────────
+  // 🏷️ 12. Admin: Promo Codes Management (CRUD)
+  // ────────────────────────────────────────────────────
+  async adminGetAllPromoCodes() {
+    const codes = await this.prisma.promoCode.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        creator: { select: { id: true, fullName: true } },
+      },
+    });
+
+    return {
+      success: true,
+      data: codes.map((c) => ({
+        id: c.id,
+        code: c.code,
+        description: c.description,
+        discountType: c.discountType,
+        discountValue: Number(c.discountValue),
+        maxUses: c.maxUses,
+        usedCount: c.usedCount,
+        validFrom: c.validFrom ? c.validFrom.toISOString().split('T')[0] : null,
+        validUntil: c.validUntil ? c.validUntil.toISOString().split('T')[0] : null,
+        isActive: c.isActive,
+        createdAt: c.createdAt,
+        creatorName: c.creator?.fullName,
+      })),
+    };
+  }
+
+  async adminCreatePromoCode(adminId: string, dto: CreatePromoCodeDto) {
+    const existing = await this.prisma.promoCode.findUnique({
+      where: { code: dto.code.toUpperCase() },
+    });
+    if (existing) {
+      throw new BadRequestException({ success: false, error: { message: 'كود الخصم مستخدم مسبقاً' } });
+    }
+
+    const promo = await this.prisma.promoCode.create({
+      data: {
+        code: dto.code.toUpperCase(),
+        description: dto.description,
+        discountType: dto.discountType,
+        discountValue: dto.discountValue,
+        maxUses: dto.maxUses,
+        validFrom: dto.validFrom ? new Date(dto.validFrom) : null,
+        validUntil: dto.validUntil ? new Date(dto.validUntil) : null,
+        isActive: dto.isActive ?? true,
+        createdBy: adminId,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'تم إنشاء كود الخصم بنجاح',
+      data: {
+        ...promo,
+        discountValue: Number(promo.discountValue),
+      },
+    };
+  }
+
+  async adminUpdatePromoCode(id: string, dto: UpdatePromoCodeDto) {
+    const existing = await this.prisma.promoCode.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException({ success: false, error: { message: 'كود الخصم غير موجود' } });
+    }
+
+    const data: any = {};
+    if (dto.code !== undefined) data.code = dto.code.toUpperCase();
+    if (dto.description !== undefined) data.description = dto.description;
+    if (dto.discountType !== undefined) data.discountType = dto.discountType;
+    if (dto.discountValue !== undefined) data.discountValue = dto.discountValue;
+    if (dto.maxUses !== undefined) data.maxUses = dto.maxUses;
+    if (dto.validFrom !== undefined) data.validFrom = dto.validFrom ? new Date(dto.validFrom) : null;
+    if (dto.validUntil !== undefined) data.validUntil = dto.validUntil ? new Date(dto.validUntil) : null;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+
+    const updated = await this.prisma.promoCode.update({
+      where: { id },
+      data,
+    });
+
+    return {
+      success: true,
+      message: 'تم تحديث كود الخصم بنجاح',
+      data: {
+        ...updated,
+        discountValue: Number(updated.discountValue),
+      },
+    };
+  }
+
+  async adminDeletePromoCode(id: string) {
+    await this.prisma.promoCode.delete({ where: { id } });
+    return { success: true, message: 'تم حذف كود الخصم بنجاح' };
+  }
+
+  // ────────────────────────────────────────────────────
+  // 💰 13. Commission Settings & Transactions (Admin)
+  // ────────────────────────────────────────────────────
+  async getCommissionSettings() {
+    const settings = await this.prisma.app_settings.findMany({
+      where: {
+        key: {
+          in: ['default_commission_rate', 'default_trial_days', 'default_debt_limit', 'min_recharge_amount'],
+        },
+      },
+    });
+
+    const map: Record<string, string> = {};
+    settings.forEach((s) => {
+      map[s.key] = s.value;
+    });
+
+    return {
+      success: true,
+      data: {
+        defaultCommissionRate: map['default_commission_rate'] ? Number(map['default_commission_rate']) : 10,
+        defaultTrialDays: map['default_trial_days'] ? Number(map['default_trial_days']) : 30,
+        defaultDebtLimit: map['default_debt_limit'] ? Number(map['default_debt_limit']) : 500,
+        minRechargeAmount: map['min_recharge_amount'] ? Number(map['min_recharge_amount']) : 100,
+      },
+    };
+  }
+
+  async updateCommissionSettings(adminId: string, data: { defaultCommissionRate?: number; defaultTrialDays?: number; defaultDebtLimit?: number; minRechargeAmount?: number }) {
+    const updates: Promise<any>[] = [];
+
+    if (data.defaultCommissionRate !== undefined) {
+      updates.push(
+        this.prisma.app_settings.upsert({
+          where: { key: 'default_commission_rate' },
+          update: { value: String(data.defaultCommissionRate), updated_by: adminId, updated_at: new Date() },
+          create: { key: 'default_commission_rate', value: String(data.defaultCommissionRate), description: 'Default commission rate %', updated_by: adminId },
+        }),
+      );
+    }
+
+    if (data.defaultTrialDays !== undefined) {
+      updates.push(
+        this.prisma.app_settings.upsert({
+          where: { key: 'default_trial_days' },
+          update: { value: String(data.defaultTrialDays), updated_by: adminId, updated_at: new Date() },
+          create: { key: 'default_trial_days', value: String(data.defaultTrialDays), description: 'Default trial days for new laundries', updated_by: adminId },
+        }),
+      );
+    }
+
+    if (data.defaultDebtLimit !== undefined) {
+      updates.push(
+        this.prisma.app_settings.upsert({
+          where: { key: 'default_debt_limit' },
+          update: { value: String(data.defaultDebtLimit), updated_by: adminId, updated_at: new Date() },
+          create: { key: 'default_debt_limit', value: String(data.defaultDebtLimit), description: 'Default debt limit for laundries in SAR', updated_by: adminId },
+        }),
+      );
+    }
+
+    if (data.minRechargeAmount !== undefined) {
+      updates.push(
+        this.prisma.app_settings.upsert({
+          where: { key: 'min_recharge_amount' },
+          update: { value: String(data.minRechargeAmount), updated_by: adminId, updated_at: new Date() },
+          create: { key: 'min_recharge_amount', value: String(data.minRechargeAmount), description: 'Minimum wallet recharge amount in SAR', updated_by: adminId },
+        }),
+      );
+    }
+
+    await Promise.all(updates);
+
+    return {
+      success: true,
+      message: 'تم حفظ إعدادات العمولات بنجاح',
+    };
+  }
+
+  async getCommissionTransactions(query?: { laundryId?: string; limit?: number; offset?: number }) {
+    const limit = query?.limit ? Number(query.limit) : 50;
+    const offset = query?.offset ? Number(query.offset) : 0;
+    const where: any = {};
+    if (query?.laundryId) where.laundry_id = query.laundryId;
+
+    const [transactions, total, stats] = await Promise.all([
+      this.prisma.commissionTransaction.findMany({
+        where,
+        take: limit,
+        skip: offset,
+        orderBy: { created_at: 'desc' },
+        include: {
+          laundry: { select: { id: true, name: true, nameAr: true, phoneNumber: true, balance: true } },
+          invoice: { select: { id: true, invoiceNumber: true, totalAmount: true, status: true } },
+        },
+      }),
+      this.prisma.commissionTransaction.count({ where }),
+      this.prisma.commissionTransaction.aggregate({
+        _sum: {
+          commission_amount: true,
+          invoice_total: true,
+        },
+      }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        transactions: transactions.map((t) => ({
+          id: t.id,
+          laundryId: t.laundry_id,
+          laundryName: t.laundry?.nameAr || t.laundry?.name,
+          laundryPhone: t.laundry?.phoneNumber,
+          currentBalance: Number(t.laundry?.balance ?? 0),
+          invoiceId: t.invoice_id,
+          invoiceNumber: t.invoice?.invoiceNumber,
+          invoiceTotal: Number(t.invoice_total),
+          commissionRate: Number(t.commission_rate),
+          commissionAmount: Number(t.commission_amount),
+          balanceAfter: Number(t.balance_after),
+          type: t.type,
+          createdAt: t.created_at,
+        })),
+        total,
+        totalCommissionSum: Number(stats._sum.commission_amount ?? 0),
+        totalInvoicesSum: Number(stats._sum.invoice_total ?? 0),
+      },
+    };
+  }
 }
+

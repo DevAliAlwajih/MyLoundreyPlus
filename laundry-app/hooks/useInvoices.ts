@@ -40,6 +40,17 @@ export interface StatusHistory {
   notes: string;
 }
 
+export interface InvoiceLaundry {
+  id: string;
+  name: string;
+  nameAr?: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  logoUrl?: string | null;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -63,6 +74,7 @@ export interface Invoice {
   statusHistory: StatusHistory[];
   createdAt: string;
   expectedDeliveryAt?: string;
+  laundry?: InvoiceLaundry;
 }
 
 // Normalize raw API response to frontend Invoice shape safely

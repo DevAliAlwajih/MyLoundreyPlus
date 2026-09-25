@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { to: '/dashboard',             icon: LayoutDashboard, labelAr: 'لوحة المؤشرات',    labelEn: 'Dashboard' },
   { to: '/dashboard/laundries',   icon: Store,            labelAr: 'المغاسل',           labelEn: 'Laundries' },
   { to: '/dashboard/customers',   icon: Users,            labelAr: 'العملاء',           labelEn: 'Customers' },
-  { to: '/dashboard/subscriptions',icon: CreditCard,      labelAr: 'الاشتراكات',        labelEn: 'Subscriptions' },
+  { to: '/dashboard/subscriptions',icon: CreditCard,      labelAr: 'الباقات والعمولات', labelEn: 'Packages & Commissions' },
   { to: '/dashboard/ads',         icon: Megaphone,        labelAr: 'الإعلانات',         labelEn: 'Ads' },
   { to: '/dashboard/support',     icon: HeadphonesIcon,   labelAr: 'الدعم الفني',       labelEn: 'Support' },
   { to: '/dashboard/settings',    icon: Settings,         labelAr: 'الإعدادات',         labelEn: 'Settings' },

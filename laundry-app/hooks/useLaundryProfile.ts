@@ -76,6 +76,7 @@ export const useUpdateProfile = () => {
 export const useUploadLogo = () => {
   const queryClient = useQueryClient();
   const updateRememberedAccount = useAuthStore((s) => s.updateRememberedAccount);
+  const { profile, setProfile } = useLaundryStore();
 
   return useMutation({
     mutationFn: async (imageUri: string) => {
@@ -103,6 +104,10 @@ export const useUploadLogo = () => {
       queryClient.invalidateQueries({ queryKey: ['my-laundry-profile'] });
       if (data?.data?.logoUrl) {
         updateRememberedAccount({ logoUrl: data.data.logoUrl });
+        // تحديث laundryStore فوراً حتى تظهر في الفواتير بدون إعادة تشغيل
+        if (profile) {
+          setProfile({ ...profile, logoUrl: data.data.logoUrl });
+        }
       }
     },
   });

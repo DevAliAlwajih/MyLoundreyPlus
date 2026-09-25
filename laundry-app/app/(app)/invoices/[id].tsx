@@ -200,7 +200,25 @@ export default function InvoiceDetailScreen() {
 
   const isTerminal = invoice.status === 'completed' || invoice.status === 'cancelled';
 
-  const generateInvoiceHTML = () => {
+  // تحويل URL الشعار إلى Base64 حتى يظهر في PDF
+  const fetchLogoBase64 = async (url: string): Promise<string> => {
+    try {
+      // تنزيل الصورة إلى ملف مؤقت ثم قراءتها كـ Base64
+      const localPath = `${FileSystem.cacheDirectory}logo_cache.jpg`;
+      const downloadResult = await FileSystem.downloadAsync(url, localPath);
+      if (downloadResult.status !== 200) return APP_LOGO_BASE64;
+      const base64Data = await FileSystem.readAsStringAsync(downloadResult.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const ext = url.split('?')[0].split('.').pop()?.toLowerCase() || 'jpeg';
+      const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+      return `data:${mime};base64,${base64Data}`;
+    } catch {
+      return APP_LOGO_BASE64;
+    }
+  };
+
+  const generateInvoiceHTML = (logoSrc: string) => {
     const subtotal = Number(invoice.subtotal ?? 0);
     const discount = Number(invoice.discountAmount ?? 0);
     const tax = Number(invoice.taxAmount ?? 0);
@@ -228,7 +246,13 @@ export default function InvoiceDetailScreen() {
               ? 'إلكتروني'
               : invoice.paymentType;
 
-    const logoSrc = laundry?.logoUrl || APP_LOGO_BASE64;
+    // logoSrc يُمرَّر كمعامل (Base64 جاهز)
+
+    // بيانات المغسلة
+    const laundryCity    = laundry?.city    || '';
+    const laundryAddress = laundry?.address || '';
+    const laundryPhone   = laundry?.phoneNumber || '';
+    const laundryLocation = [laundryCity, laundryAddress].filter(Boolean).join(' - ');
 
     return `
       <html dir="rtl">
@@ -266,20 +290,27 @@ export default function InvoiceDetailScreen() {
             }
 
             .logo {
-              width: 36px;
-              height: 36px;
-              border-radius: 10px;
+              width: 52px;
+              height: 52px;
+              border-radius: 12px;
               object-fit: cover;
               background: transparent;
-              border: 1px solid transparent;
+              border: 1px solid #eee;
             }
 
             .brand-name {
               font-size: 19px;
               font-weight: 800;
-              margin: 0;
+              margin: 4px 0 2px;
               line-height: 1.2;
               letter-spacing: 0.2px;
+            }
+
+            .laundry-info {
+              font-size: 8.5px;
+              color: #555;
+              line-height: 1.5;
+              margin: 2px 0 0;
             }
 
             .invoice-title {
@@ -385,6 +416,8 @@ export default function InvoiceDetailScreen() {
               text-align: center;
               font-size: 8.5px;
               line-height: 1.6;
+              border-top: 1px dashed #999;
+              padding-top: 6px;
             }
 
             .footer-brand {
@@ -396,12 +429,14 @@ export default function InvoiceDetailScreen() {
         <body>
           <div class="sheet">
             <div class="center">
-              ${logoSrc && logoSrc !== APP_LOGO_BASE64 ? `
+              ${logoSrc ? `
                 <div class="logo-wrap">
                   <img src="${logoSrc}" class="logo" alt="logo" />
                 </div>
               ` : ''}
               <p class="brand-name">${laundry?.name || 'المغسلة'}</p>
+              ${laundryLocation ? `<p class="laundry-info">📍 ${laundryLocation}</p>` : ''}
+              ${laundryPhone ? `<p class="laundry-info">📞 ${laundryPhone}</p>` : ''}
             </div>
 
             <div class="divider"></div>
@@ -469,7 +504,8 @@ export default function InvoiceDetailScreen() {
             ` : ''}
 
             <div class="footer">
-              <div>شكراً لتعاملكم معنا</div>
+              <div>شكراً لتعاملكم معنا 🙏</div>
+              ${laundryPhone ? `<div>${laundry?.name || 'المغسلة'} | 📞 ${laundryPhone}</div>` : ''}
               <div class="footer-brand">تم الإعداد بواسطة MyLoundreyPlus</div>
             </div>
           </div>
@@ -480,8 +516,10 @@ export default function InvoiceDetailScreen() {
 
   const handlePrint = async () => {
     try {
+      const rawLogoUrl = laundry?.logoUrl;
+      const logoSrc = rawLogoUrl ? await fetchLogoBase64(rawLogoUrl) : APP_LOGO_BASE64;
       await Print.printAsync({
-        html: generateInvoiceHTML(),
+        html: generateInvoiceHTML(logoSrc),
       });
     } catch (error) {
       console.error('Error printing invoice:', error);
@@ -515,7 +553,9 @@ export default function InvoiceDetailScreen() {
         Alert.alert(t('common.error'), 'المشاركة غير متاحة على هذا الجهاز');
         return;
       }
-      const shareableUri = await getShareablePdfUri(generateInvoiceHTML());
+      const rawLogoUrl = laundry?.logoUrl;
+      const logoSrc = rawLogoUrl ? await fetchLogoBase64(rawLogoUrl) : APP_LOGO_BASE64;
+      const shareableUri = await getShareablePdfUri(generateInvoiceHTML(logoSrc));
       await Sharing.shareAsync(shareableUri, {
         UTI: 'com.adobe.pdf',
         mimeType: 'application/pdf',
@@ -528,7 +568,15 @@ export default function InvoiceDetailScreen() {
   };
 
   const generateShareMessage = () => {
-    let message = `*فاتورة طلب #${invoice.invoiceNumber}*\n`;
+    const laundryCity    = laundry?.city    || '';
+    const laundryAddress = laundry?.address || '';
+    const laundryPhone   = laundry?.phoneNumber || '';
+    const laundryLocation = [laundryCity, laundryAddress].filter(Boolean).join(' - ');
+
+    let message = `*${laundry?.name || 'المغسلة'}*\n`;
+    if (laundryLocation) message += `📍 ${laundryLocation}\n`;
+    if (laundryPhone)   message += `📞 ${laundryPhone}\n`;
+    message += `\n*فاتورة رقم #${invoice.invoiceNumber}*\n`;
     message += `*العميل:* ${invoice.customerName}\n`;
     message += `*التاريخ:* ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}\n`;
     message += `\n*الخدمات:*\n`;
@@ -547,7 +595,7 @@ export default function InvoiceDetailScreen() {
     }
     message += `\n\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ر.س\n`;
     
-    message += `\nشكراً لتعاملكم مع ${laundry?.name || 'المغسلة'}`;
+    message += `\nشكراً لتعاملكم مع ${laundry?.name || 'المغسلة'} 🙏`;
     return message;
   };
 
@@ -558,7 +606,9 @@ export default function InvoiceDetailScreen() {
         Alert.alert(t('common.error'), 'المشاركة غير متاحة على هذا الجهاز');
         return;
       }
-      const shareableUri = await getShareablePdfUri(generateInvoiceHTML());
+      const rawLogoUrl = laundry?.logoUrl;
+      const logoSrc = rawLogoUrl ? await fetchLogoBase64(rawLogoUrl) : APP_LOGO_BASE64;
+      const shareableUri = await getShareablePdfUri(generateInvoiceHTML(logoSrc));
       await Sharing.shareAsync(shareableUri, {
         mimeType: 'application/pdf',
         dialogTitle: `فاتورة #${invoice.invoiceNumber}`,

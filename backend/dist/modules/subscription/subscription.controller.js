@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const subscription_service_1 = require("./subscription.service");
 const create_subscription_dto_1 = require("./dto/create-subscription.dto");
+const plan_dto_1 = require("./dto/plan.dto");
+const promo_code_dto_1 = require("./dto/promo-code.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -49,6 +51,39 @@ let SubscriptionController = class SubscriptionController {
     validatePromoCode(code, planId) {
         return this.subscriptionService.validatePromoCode(code, planId);
     }
+    adminGetAllPlans() {
+        return this.subscriptionService.adminGetAllPlans();
+    }
+    adminCreatePlan(dto) {
+        return this.subscriptionService.adminCreatePlan(dto);
+    }
+    adminUpdatePlan(id, dto) {
+        return this.subscriptionService.adminUpdatePlan(id, dto);
+    }
+    adminDeletePlan(id) {
+        return this.subscriptionService.adminDeletePlan(id);
+    }
+    adminGetAllPromoCodes() {
+        return this.subscriptionService.adminGetAllPromoCodes();
+    }
+    adminCreatePromoCode(req, dto) {
+        return this.subscriptionService.adminCreatePromoCode(req.user.id, dto);
+    }
+    adminUpdatePromoCode(id, dto) {
+        return this.subscriptionService.adminUpdatePromoCode(id, dto);
+    }
+    adminDeletePromoCode(id) {
+        return this.subscriptionService.adminDeletePromoCode(id);
+    }
+    getCommissionSettings() {
+        return this.subscriptionService.getCommissionSettings();
+    }
+    updateCommissionSettings(req, data) {
+        return this.subscriptionService.updateCommissionSettings(req.user.id, data);
+    }
+    getCommissionTransactions(query) {
+        return this.subscriptionService.getCommissionTransactions(query);
+    }
     getExpiring() {
         return this.subscriptionService.getExpiring();
     }
@@ -67,12 +102,14 @@ let SubscriptionController = class SubscriptionController {
 };
 exports.SubscriptionController = SubscriptionController;
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get active subscription & recharge plans' }),
     (0, common_1.Get)('plans'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SubscriptionController.prototype, "getPlans", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get plan details by ID' }),
     (0, common_1.Get)('plans/:id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
@@ -110,6 +147,128 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], SubscriptionController.prototype, "validatePromoCode", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all plans (active & inactive)' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/all-plans'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminGetAllPlans", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Create new plan / package' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Post)('admin/plans'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [plan_dto_1.CreatePlanDto]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminCreatePlan", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update plan / package' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Patch)('admin/plans/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, plan_dto_1.UpdatePlanDto]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminUpdatePlan", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Delete / Deactivate plan' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Delete)('admin/plans/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminDeletePlan", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all promo codes' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/promo-codes'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminGetAllPromoCodes", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Create promo code' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Post)('admin/promo-codes'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, promo_code_dto_1.CreatePromoCodeDto]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminCreatePromoCode", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update promo code' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Patch)('admin/promo-codes/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, promo_code_dto_1.UpdatePromoCodeDto]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminUpdatePromoCode", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Delete promo code' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Delete)('admin/promo-codes/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "adminDeletePromoCode", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get commission & system billing settings' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/commissions/settings'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "getCommissionSettings", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update commission & system billing settings' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Patch)('admin/commissions/settings'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "updateCommissionSettings", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all commission transactions' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    (0, common_1.Get)('admin/commissions/transactions'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SubscriptionController.prototype, "getCommissionTransactions", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
@@ -161,7 +320,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SubscriptionController.prototype, "deactivateSubscription", null);
 exports.SubscriptionController = SubscriptionController = __decorate([
-    (0, swagger_1.ApiTags)('Subscriptions'),
+    (0, swagger_1.ApiTags)('Subscriptions & Commissions'),
     (0, common_1.Controller)('subscriptions'),
     __metadata("design:paramtypes", [subscription_service_1.SubscriptionService])
 ], SubscriptionController);

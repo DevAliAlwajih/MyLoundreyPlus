@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 import { StackActions } from 'expo-router/react-navigation';
 import { useThemeStore } from '../../stores/themeStore';
+import { useProfile } from '../../hooks/useLaundryProfile';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -22,6 +23,9 @@ function TabIcon({
 export default function AppLayout() {
   const { t } = useTranslation();
   const { colors, themeMode } = useThemeStore();
+
+  // تحميل بيانات المغسلة (بما فيها logoUrl) فور دخول التطبيق حتى تكون متاحة لجميع الشاشات
+  useProfile();
 
   return (
     <Tabs

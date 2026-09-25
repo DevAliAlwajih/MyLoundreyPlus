@@ -63,6 +63,18 @@ const INVOICE_DETAIL_SELECT = {
   customer: {
     select: { id: true, fullName: true, uniqueId: true, phoneNumber: true },
   },
+  laundry: {
+    select: {
+      id: true,
+      name: true,
+      nameAr: true,
+      phoneNumber: true,
+      country: true,
+      city: true,
+      address: true,
+      logoUrl: true,
+    },
+  },
 } as const;
 
 const INVOICE_LIST_SELECT = {

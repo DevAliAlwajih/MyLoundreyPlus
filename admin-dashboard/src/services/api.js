@@ -33,6 +33,32 @@ api.interceptors.response.use(
   }
 );
 
+// ─── Packages / Plans API ───────────────────────────────────────────────────
+export const packagesApi = {
+  getAll: () => api.get('/subscriptions/admin/all-plans'),
+  getPublicPlans: () => api.get('/subscriptions/plans'),
+  create: (data) => api.post('/subscriptions/admin/plans', data),
+  update: (id, data) => api.patch(`/subscriptions/admin/plans/${id}`, data),
+  delete: (id) => api.delete(`/subscriptions/admin/plans/${id}`),
+};
+
+// ─── Promo Codes API ────────────────────────────────────────────────────────
+export const promoCodesApi = {
+  getAll: () => api.get('/subscriptions/admin/promo-codes'),
+  create: (data) => api.post('/subscriptions/admin/promo-codes', data),
+  update: (id, data) => api.patch(`/subscriptions/admin/promo-codes/${id}`, data),
+  delete: (id) => api.delete(`/subscriptions/admin/promo-codes/${id}`),
+};
+
+// ─── Commission & Wallet API ────────────────────────────────────────────────
+export const commissionsApi = {
+  getSettings: () => api.get('/subscriptions/admin/commissions/settings'),
+  updateSettings: (data) => api.patch('/subscriptions/admin/commissions/settings', data),
+  getTransactions: (params) => api.get('/subscriptions/admin/commissions/transactions', { params }),
+  getSubscriptions: () => api.get('/subscriptions'),
+};
+
+// ─── Ads API ─────────────────────────────────────────────────────────────────
 export const adsApi = {
   getAll: (params) => api.get('/ads/admin/all', { params }),
   getById: (id) => api.get(`/ads/${id}`),
