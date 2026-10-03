@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
@@ -725,4 +725,289 @@ export class AdminService {
 
     return { success: true, data: setting };
   }
+
+  // ────────────────────────────────────────────────────
+  // 💳 شحن رصيد المغسلة (Admin)
+  // ────────────────────────────────────────────────────
+
+  async addBalance(
+    laundryId: string,
+    adminId: string,
+    dto: {
+      amount: number;
+      payment_method?: 'cash' | 'bank_transfer' | 'cheque' | 'electronic' | 'other';
+      reference_number?: string;
+      notes?: string;
+    },
+  ) {
+    if (!dto.amount || dto.amount <= 0) {
+      throw new BadRequestException({
+        success: false,
+        error: { code: 'INVALID_AMOUNT', message: 'المبلغ يجب أن يكون أكبر من صفر' },
+      });
+    }
+
+    // Use a transaction to ensure atomicity
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Get current laundry balance
+      const laundry = await tx.laundry.findUnique({
+        where: { id: laundryId },
+        select: { id: true, name: true, nameAr: true, balance: true, ownerId: true },
+      });
+
+      if (!laundry) {
+        throw new NotFoundException({
+          success: false,
+          error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+        });
+      }
+
+      const balanceBefore = Number(laundry.balance);
+      const balanceAfter = balanceBefore + dto.amount;
+
+      // Update laundry balance
+      await tx.laundry.update({
+        where: { id: laundryId },
+        data: { balance: balanceAfter },
+      });
+
+      // Record the recharge in wallet_recharges via raw SQL
+      // (Prisma model not yet regenerated due to running server)
+      await tx.$executeRaw`
+        INSERT INTO wallet_recharges
+          (id, laundry_id, amount, balance_before, balance_after, payment_method, reference_number, notes, created_by, created_at)
+        VALUES
+          (uuid_generate_v4(), ${laundryId}::uuid, ${dto.amount}, ${balanceBefore}, ${balanceAfter},
+           ${(dto.payment_method ?? 'cash')}::"payment_method_type",
+           ${dto.reference_number ?? null}, ${dto.notes ?? null},
+           ${adminId}::uuid, NOW())
+      `;
+
+      return {
+        laundryId,
+        laundryName: laundry.nameAr || laundry.name,
+        balanceBefore,
+        balanceAfter,
+        amount: dto.amount,
+        payment_method: dto.payment_method ?? 'cash',
+        reference_number: dto.reference_number,
+        notes: dto.notes,
+      };
+    });
+
+    // Send notification to laundry owner
+    try {
+      const laundry = await this.prisma.laundry.findUnique({
+        where: { id: laundryId },
+        select: { ownerId: true },
+      });
+      if (laundry?.ownerId) {
+        await this.notificationService.sendToUser(
+          laundry.ownerId,
+          'تم شحن رصيدك 💰',
+          `تم إضافة ${dto.amount} ريال إلى رصيد مغسلتك. الرصيد الحالي: ${result.balanceAfter} ريال`,
+          { type: 'wallet_recharge', data: { amount: String(dto.amount) } },
+        );
+      }
+    } catch (e) {
+      // Notification failure should not block the response
+    }
+
+    return { success: true, message: 'تم شحن الرصيد بنجاح', data: result };
+  }
+
+  async getBalanceHistory(laundryId: string, query?: { limit?: number; offset?: number }) {
+    const limit = query?.limit ? Number(query.limit) : 50;
+    const offset = query?.offset ? Number(query.offset) : 0;
+
+    // Check laundry exists
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true, name: true, nameAr: true, balance: true },
+    });
+
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    // Raw SQL query for wallet_recharges
+    const records: any[] = await this.prisma.$queryRaw`
+      SELECT
+        wr.id,
+        wr.amount,
+        wr.balance_before,
+        wr.balance_after,
+        wr.payment_method,
+        wr.reference_number,
+        wr.notes,
+        wr.created_at,
+        u.full_name AS admin_name
+      FROM wallet_recharges wr
+      LEFT JOIN users u ON u.id = wr.created_by
+      WHERE wr.laundry_id = ${laundryId}::uuid
+      ORDER BY wr.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const countResult: any[] = await this.prisma.$queryRaw`
+      SELECT COUNT(*)::int AS total FROM wallet_recharges WHERE laundry_id = ${laundryId}::uuid
+    `;
+
+    const totalRechargedResult: any[] = await this.prisma.$queryRaw`
+      SELECT COALESCE(SUM(amount), 0)::float AS total FROM wallet_recharges WHERE laundry_id = ${laundryId}::uuid
+    `;
+
+    return {
+      success: true,
+      data: {
+        laundryId,
+        laundryName: laundry.nameAr || laundry.name,
+        currentBalance: Number(laundry.balance),
+        totalRecharged: Number(totalRechargedResult[0]?.total ?? 0),
+        total: Number(countResult[0]?.total ?? 0),
+        records: records.map((r) => ({
+          id: r.id,
+          amount: Number(r.amount),
+          balanceBefore: Number(r.balance_before),
+          balanceAfter: Number(r.balance_after),
+          paymentMethod: r.payment_method,
+          referenceNumber: r.reference_number,
+          notes: r.notes,
+          adminName: r.admin_name,
+          createdAt: r.created_at,
+        })),
+      },
+    };
+  }
+
+  async getAllRecharges(query?: { laundryId?: string; limit?: number; offset?: number; search?: string }) {
+    const limit = query?.limit ? Number(query.limit) : 50;
+    const offset = query?.offset ? Number(query.offset) : 0;
+    const laundryId = query?.laundryId;
+    const search = query?.search ? `%${query.search}%` : null;
+
+    let records: any[];
+    let countResult: any[];
+    let totalSumResult: any[];
+
+    if (laundryId) {
+      records = await this.prisma.$queryRaw`
+        SELECT
+          wr.id,
+          wr.laundry_id,
+          wr.amount,
+          wr.balance_before,
+          wr.balance_after,
+          wr.payment_method,
+          wr.reference_number,
+          wr.notes,
+          wr.created_at,
+          l.name AS laundry_name,
+          l.name_ar AS laundry_name_ar,
+          l.phone_number AS laundry_phone,
+          u.full_name AS admin_name
+        FROM wallet_recharges wr
+        JOIN laundries l ON l.id = wr.laundry_id
+        LEFT JOIN users u ON u.id = wr.created_by
+        WHERE wr.laundry_id = ${laundryId}::uuid
+        ORDER BY wr.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      countResult = await this.prisma.$queryRaw`
+        SELECT COUNT(*)::int AS total FROM wallet_recharges WHERE laundry_id = ${laundryId}::uuid
+      `;
+      totalSumResult = await this.prisma.$queryRaw`
+        SELECT COALESCE(SUM(amount), 0)::float AS total FROM wallet_recharges WHERE laundry_id = ${laundryId}::uuid
+      `;
+    } else if (search) {
+      records = await this.prisma.$queryRaw`
+        SELECT
+          wr.id,
+          wr.laundry_id,
+          wr.amount,
+          wr.balance_before,
+          wr.balance_after,
+          wr.payment_method,
+          wr.reference_number,
+          wr.notes,
+          wr.created_at,
+          l.name AS laundry_name,
+          l.name_ar AS laundry_name_ar,
+          l.phone_number AS laundry_phone,
+          u.full_name AS admin_name
+        FROM wallet_recharges wr
+        JOIN laundries l ON l.id = wr.laundry_id
+        LEFT JOIN users u ON u.id = wr.created_by
+        WHERE (l.name ILIKE ${search} OR l.name_ar ILIKE ${search} OR wr.reference_number ILIKE ${search} OR wr.notes ILIKE ${search})
+        ORDER BY wr.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      countResult = await this.prisma.$queryRaw`
+        SELECT COUNT(*)::int AS total
+        FROM wallet_recharges wr
+        JOIN laundries l ON l.id = wr.laundry_id
+        WHERE (l.name ILIKE ${search} OR l.name_ar ILIKE ${search} OR wr.reference_number ILIKE ${search} OR wr.notes ILIKE ${search})
+      `;
+      totalSumResult = await this.prisma.$queryRaw`
+        SELECT COALESCE(SUM(wr.amount), 0)::float AS total
+        FROM wallet_recharges wr
+        JOIN laundries l ON l.id = wr.laundry_id
+        WHERE (l.name ILIKE ${search} OR l.name_ar ILIKE ${search} OR wr.reference_number ILIKE ${search} OR wr.notes ILIKE ${search})
+      `;
+    } else {
+      records = await this.prisma.$queryRaw`
+        SELECT
+          wr.id,
+          wr.laundry_id,
+          wr.amount,
+          wr.balance_before,
+          wr.balance_after,
+          wr.payment_method,
+          wr.reference_number,
+          wr.notes,
+          wr.created_at,
+          l.name AS laundry_name,
+          l.name_ar AS laundry_name_ar,
+          l.phone_number AS laundry_phone,
+          u.full_name AS admin_name
+        FROM wallet_recharges wr
+        JOIN laundries l ON l.id = wr.laundry_id
+        LEFT JOIN users u ON u.id = wr.created_by
+        ORDER BY wr.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      countResult = await this.prisma.$queryRaw`
+        SELECT COUNT(*)::int AS total FROM wallet_recharges
+      `;
+      totalSumResult = await this.prisma.$queryRaw`
+        SELECT COALESCE(SUM(amount), 0)::float AS total FROM wallet_recharges
+      `;
+    }
+
+    return {
+      success: true,
+      data: {
+        total: Number(countResult[0]?.total ?? 0),
+        totalRechargedSum: Number(totalSumResult[0]?.total ?? 0),
+        records: records.map((r) => ({
+          id: r.id,
+          laundryId: r.laundry_id,
+          laundryName: r.laundry_name_ar || r.laundry_name,
+          laundryPhone: r.laundry_phone,
+          amount: Number(r.amount),
+          balanceBefore: Number(r.balance_before),
+          balanceAfter: Number(r.balance_after),
+          paymentMethod: r.payment_method,
+          referenceNumber: r.reference_number,
+          notes: r.notes,
+          adminName: r.admin_name,
+          createdAt: r.created_at,
+        })),
+      },
+    };
+  }
 }
+

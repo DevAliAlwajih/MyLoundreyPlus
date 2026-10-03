@@ -176,7 +176,7 @@ export class SubscriptionController {
   @Patch('admin/commissions/settings')
   updateCommissionSettings(
     @Req() req: any,
-    @Body() data: { defaultCommissionRate?: number; defaultTrialDays?: number; defaultDebtLimit?: number; minRechargeAmount?: number },
+    @Body() data: { defaultCommissionRate?: number; defaultTrialDays?: number; defaultInitialBalance?: number; defaultDebtLimit?: number; minRechargeAmount?: number },
   ) {
     return this.subscriptionService.updateCommissionSettings(req.user.id, data);
   }

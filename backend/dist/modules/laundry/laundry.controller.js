@@ -116,10 +116,10 @@ let LaundryOwnerController = class LaundryOwnerController {
     getWallet(req) {
         return this.laundryService.getWallet(req.user.id);
     }
-    getWalletTransactions(req, page, limit) {
+    getWalletTransactions(req, page, limit, filter) {
         const p = page ? parseInt(page, 10) : 1;
         const l = limit ? parseInt(limit, 10) : 20;
-        return this.laundryService.getWalletTransactions(req.user.id, p, l);
+        return this.laundryService.getWalletTransactions(req.user.id, p, l, filter);
     }
     createCategory(req, dto) {
         return this.laundryService.createCategory(req.user.id, dto);
@@ -238,8 +238,9 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('filter')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], LaundryOwnerController.prototype, "getWalletTransactions", null);
 __decorate([

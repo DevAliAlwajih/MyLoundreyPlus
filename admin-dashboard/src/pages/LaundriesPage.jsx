@@ -5,8 +5,9 @@ import api from '../services/api'
 import {
   Search, Plus, Filter, MoreVertical, Store, MapPin, Star,
   CheckCircle, XCircle, Clock, Ban, Eye, Edit, Trash2,
-  Smartphone, Tablet, Shield, Phone, Calendar
+  Smartphone, Tablet, Shield, Phone, Calendar, Wallet
 } from 'lucide-react'
+import RechargeModal from '../components/RechargeModal'
 
 import { io } from 'socket.io-client'
 
@@ -37,6 +38,10 @@ export default function LaundriesPage() {
   const [showModal, setShowModal] = useState(false)
   const [showDevicesModal, setShowDevicesModal] = useState(false)
   
+  // 💳 Recharge Modal State
+  const [rechargeLaundry, setRechargeLaundry] = useState(null)
+  const [showRechargeModal, setShowRechargeModal] = useState(false)
+
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [laundryToDelete, setLaundryToDelete] = useState(null)
   const [adminPassword, setAdminPassword] = useState('')
@@ -173,6 +178,7 @@ export default function LaundriesPage() {
                 <th>{label('المالك', 'Owner')}</th>
                 <th>{label('المدينة', 'City')}</th>
                 <th>{label('الحالة', 'Status')}</th>
+                <th>{label('الرصيد', 'Balance')}</th>
                 <th>{label('الخطة', 'Plan')}</th>
                 <th>{label('التقييم', 'Rating')}</th>
                 <th>{label('الطلبات', 'Orders')}</th>
@@ -183,7 +189,7 @@ export default function LaundriesPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="10" className="text-center py-20">{label('جاري التحميل...', 'Loading...')}</td></tr>
+                <tr><td colSpan="11" className="text-center py-20">{label('جاري التحميل...', 'Loading...')}</td></tr>
               ) : filtered.map(l => (
                 <tr key={l.id}>
                   <td>
@@ -209,6 +215,22 @@ export default function LaundriesPage() {
                     <span className={`badge badge-${STATUS_MAP[l.status]?.badge || 'neutral'}`}>
                       {label(STATUS_MAP[l.status]?.labelAr, STATUS_MAP[l.status]?.labelEn) || l.status}
                     </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-6">
+                      <span
+                        className={`fw-bold fs-sm ${
+                          Number(l.balance || 0) > 0
+                            ? 'text-success'
+                            : Number(l.balance || 0) < 0
+                            ? 'text-danger'
+                            : 'text-muted'
+                        }`}
+                        dir="ltr"
+                      >
+                        {Number(l.balance || 0) > 0 ? `+${Number(l.balance).toLocaleString()}` : Number(l.balance || 0).toLocaleString()} {label('ر.س', 'SAR')}
+                      </span>
+                    </div>
                   </td>
                   <td>
                     <span className={`badge badge-${PLAN_MAP[l.plan]?.badge || 'neutral'}`}>
@@ -243,6 +265,18 @@ export default function LaundriesPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-4">
+                      {/* 💳 Quick Recharge Button */}
+                      <button
+                        className="btn btn-ghost btn-icon btn-sm"
+                        style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}
+                        onClick={() => {
+                          setRechargeLaundry(l)
+                          setShowRechargeModal(true)
+                        }}
+                        data-tooltip={label('تسجيل دفعة / شحن الرصيد', 'Recharge Balance')}
+                      >
+                        <Wallet size={15} />
+                      </button>
                       <button className="btn btn-ghost btn-icon btn-sm" onClick={() => openDetails(l)} data-tooltip={label('عرض', 'View')}>
                         <Eye size={15} />
                       </button>
@@ -433,6 +467,20 @@ export default function LaundriesPage() {
           </div>
         </div>
       )}
+
+      {/* 💳 Laundry Recharge / Payment Modal */}
+      <RechargeModal
+        isOpen={showRechargeModal}
+        onClose={() => {
+          setShowRechargeModal(false)
+          setRechargeLaundry(null)
+        }}
+        laundry={rechargeLaundry}
+        onSuccess={() => {
+          fetchLaundries()
+        }}
+      />
     </div>
   )
 }
+

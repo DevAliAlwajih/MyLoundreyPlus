@@ -184,6 +184,14 @@ export default function DashboardScreen() {
   const balance = Number(walletData?.balance || 0);
   const isNegative = balance < 0;
 
+  // Trial period calculation
+  const trialEndsAt = walletData?.trialCommissionEndsAt ? new Date(walletData.trialCommissionEndsAt) : null;
+  const now = new Date();
+  const isTrialActive = trialEndsAt ? trialEndsAt.getTime() > now.getTime() : false;
+  const trialDaysLeft = isTrialActive && trialEndsAt
+    ? Math.max(1, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
   // Recent invoices (latest 3) — تُحدَّث عند كل عودة للشاشة
   const { data: recentInvoices, isLoading: invLoading, refetch: refetchInvoices } = useInvoices({});
 
@@ -268,6 +276,36 @@ export default function DashboardScreen() {
           </View>
           <Ionicons name={isAr ? "chevron-back" : "chevron-forward"} size={20} color="#9ca3af" />
         </TouchableOpacity>
+
+        {/* ── Trial / Commission Banner ── */}
+        {!walletLoading && walletData && (
+          <TouchableOpacity
+            style={[
+              styles.trialBanner,
+              isTrialActive ? styles.trialBannerGreen : styles.trialBannerBlue,
+            ]}
+            onPress={() => router.push('/(app)/wallet')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.trialBannerLeft}>
+              <Ionicons
+                name={isTrialActive ? 'gift-outline' : 'flash-outline'}
+                size={16}
+                color={isTrialActive ? '#059669' : '#2563eb'}
+              />
+              <Text style={[styles.trialBannerText, { color: isTrialActive ? '#065f46' : '#1e40af' }]}>
+                {isTrialActive
+                  ? `فترة تجريبية مجانية · متبقي ${trialDaysLeft} يوم`
+                  : `نظام العمولة مفعل · ${walletData.commissionRate ?? 1}% لكل فاتورة`}
+              </Text>
+            </View>
+            <View style={[styles.trialBannerBadge, { backgroundColor: isTrialActive ? '#059669' : '#2563eb' }]}>
+              <Text style={styles.trialBannerBadgeText}>
+                {isTrialActive ? 'مجاناً' : `${walletData.commissionRate ?? 1}%`}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* ── Ad Carousel ── */}
         <AdCarousel />
@@ -479,6 +517,48 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderColor: '#b4530930',
   },
   alertText: { flex: 1, fontSize: 13, color: colors.background === '#000000' || colors.background === '#121212' ? '#fde68a' : '#92400e', fontWeight: '600' },
+
+  // Trial Banner
+  trialBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+  },
+  trialBannerGreen: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#6ee7b7',
+  },
+  trialBannerBlue: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#93c5fd',
+  },
+  trialBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  trialBannerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  trialBannerBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginLeft: 8,
+  },
+  trialBannerBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
 
   // Quick Access
   sectionLabel: {

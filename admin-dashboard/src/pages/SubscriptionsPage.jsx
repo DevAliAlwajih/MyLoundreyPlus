@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../App'
-import { packagesApi, promoCodesApi, commissionsApi } from '../services/api'
+import { packagesApi, promoCodesApi, commissionsApi, rechargesApi } from '../services/api'
 import {
   CreditCard, Plus, Tag, Calendar, CheckCircle, XCircle, Percent,
   DollarSign, Trash2, Edit, Coins, Sparkles, Clock, AlertCircle,
-  Save, RefreshCw, Check, ShieldAlert, Layers, TrendingUp, Info
+  Save, RefreshCw, Check, ShieldAlert, Layers, TrendingUp, Info,
+  Wallet, Search, Banknote, User
 } from 'lucide-react'
 
 export default function SubscriptionsPage() {
   const { lang } = useTheme()
   const label = (ar, en) => (lang === 'ar' ? ar : en)
 
-  const [tab, setTab] = useState('plans') // 'plans' | 'promos' | 'settings' | 'transactions'
+  const [tab, setTab] = useState('plans') // 'plans' | 'promos' | 'settings' | 'transactions' | 'recharges'
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
@@ -22,9 +23,14 @@ export default function SubscriptionsPage() {
   const [promoCodes, setPromoCodes] = useState([])
   const [transactions, setTransactions] = useState([])
   const [txStats, setTxStats] = useState({ totalCommission: 0, totalInvoices: 0 })
+  const [recharges, setRecharges] = useState([])
+  const [loadingRecharges, setLoadingRecharges] = useState(false)
+  const [rechargeSearch, setRechargeSearch] = useState('')
+  const [rechargeStats, setRechargeStats] = useState({ totalRecharged: 0, total: 0 })
   const [commissionSettings, setCommissionSettings] = useState({
-    defaultCommissionRate: 10,
+    defaultCommissionRate: 1,
     defaultTrialDays: 30,
+    defaultInitialBalance: 2000,
     defaultDebtLimit: 500,
     minRechargeAmount: 100,
   })
@@ -78,6 +84,24 @@ export default function SubscriptionsPage() {
     }
   }
 
+  const loadRecharges = async (searchVal = rechargeSearch) => {
+    setLoadingRecharges(true)
+    try {
+      const res = await rechargesApi.getAll({ search: searchVal || undefined, limit: 100 })
+      if (res.data?.success) {
+        setRecharges(res.data.data.records || [])
+        setRechargeStats({
+          totalRecharged: res.data.data.totalRecharged || 0,
+          total: res.data.data.total || 0,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load recharges log', err)
+    } finally {
+      setLoadingRecharges(false)
+    }
+  }
+
   const loadAllData = async () => {
     setLoading(true)
     try {
@@ -104,6 +128,8 @@ export default function SubscriptionsPage() {
           totalInvoices: txRes.value.data.data.totalInvoicesSum || 0,
         })
       }
+
+      await loadRecharges()
     } catch (err) {
       console.error('Error fetching data', err)
       showNotification(label('فشل تحميل بعض البيانات', 'Failed to load data'), true)
@@ -299,6 +325,7 @@ export default function SubscriptionsPage() {
       await commissionsApi.updateSettings({
         defaultCommissionRate: Number(commissionSettings.defaultCommissionRate),
         defaultTrialDays: Number(commissionSettings.defaultTrialDays),
+        defaultInitialBalance: Number(commissionSettings.defaultInitialBalance),
         defaultDebtLimit: Number(commissionSettings.defaultDebtLimit),
         minRechargeAmount: Number(commissionSettings.minRechargeAmount),
       })
@@ -404,7 +431,7 @@ export default function SubscriptionsPage() {
               </div>
             </div>
             <p className="fs-xs text-muted mt-8">
-              {label('فترة تجريبية افتراضية:', 'Default Trial:')} {commissionSettings.defaultTrialDays} {label('يوم', 'days')}
+              {label('تجريبي:', 'Trial:')} {commissionSettings.defaultTrialDays} {label('يوم', 'days')} | {label('هدية التفعيل:', 'Welcome:')} {Number(commissionSettings.defaultInitialBalance ?? 2000).toLocaleString()} {label('ر.س', 'SAR')}
             </p>
           </div>
         </div>
@@ -455,6 +482,7 @@ export default function SubscriptionsPage() {
           ['promos', label('العروض وأكواد الخصم', 'Offers & Promo Codes'), Tag],
           ['settings', label('إعدادات العمولات والحدود', 'Commission Settings'), Coins],
           ['transactions', label('سجل حركات العمولات', 'Commission Transactions'), TrendingUp],
+          ['recharges', label('سجل التسديدات وشحن المحافظ', 'Recharges & Payments Log'), Wallet],
         ].map(([k, title, Icon]) => (
           <button key={k} className={`tab-btn flex items-center gap-8 ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
             <Icon size={16} />
@@ -824,6 +852,28 @@ export default function SubscriptionsPage() {
 
               <div className="form-group">
                 <label className="form-label fw-bold">
+                  {label('رصيد هدية التفعيل الافتراضي (ريال)', 'Default Initial Welcome Balance (SAR)')}
+                </label>
+                <div className="flex items-center gap-8">
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    value={commissionSettings.defaultInitialBalance ?? 2000}
+                    onChange={(e) =>
+                      setCommissionSettings({ ...commissionSettings, defaultInitialBalance: e.target.value })
+                    }
+                    required
+                  />
+                  <span className="fs-sm fw-bold text-muted">{label('ريال', 'SAR')}</span>
+                </div>
+                <span className="fs-xs text-muted mt-4">
+                  {label('الرصيد الترحيبي المجاني الذي يضاف تلقائياً لمحفظة أي مغسلة جديدة عند التسجيل (مثل 2,000 ريال) ليظل رصيداً لها.', 'Free welcome credit granted automatically to new laundries upon registration.')}
+                </span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label fw-bold">
                   {label('الحد الائتماني للمديونية (ريال)', 'Debt Limit in SAR')}
                 </label>
                 <div className="flex items-center gap-8">
@@ -979,6 +1029,212 @@ export default function SubscriptionsPage() {
                       <td className="fs-xs text-muted">{new Date(tx.createdAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
                     </tr>
                   ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────────────────────────────────────────────────────────────── */}
+      {/* 💳 TAB 5: WALLET RECHARGES & PAYMENTS LOG */}
+      {/* ────────────────────────────────────────────────────────────────────────── */}
+      {tab === 'recharges' && (
+        <div className="card">
+          <div className="card-header flex items-center justify-between p-16 flex-wrap gap-12">
+            <div>
+              <h3 className="fs-lg fw-bold flex items-center gap-8">
+                <Wallet size={20} color="#10b981" />
+                {label('سجل تسديدات وشحن محافظ المغاسل', 'Wallet Recharges & Payments Log')}
+              </h3>
+              <p className="fs-xs text-muted mt-4">
+                {label(
+                  'توثيق ومتابعة كافة سندات القبض والدفعات المودعة في أرصدة المغاسل لجميع الفروع',
+                  'Comprehensive audit log of all balance top-ups and cash/transfer receipts across all laundries'
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-10 flex-wrap">
+              <div className="search-box" style={{ maxWidth: 260 }}>
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder={label('بحث بالمغسلة، السند، الملاحظات...', 'Search laundry, receipt, notes...')}
+                  value={rechargeSearch}
+                  onChange={(e) => {
+                    setRechargeSearch(e.target.value)
+                    loadRecharges(e.target.value)
+                  }}
+                />
+              </div>
+
+              <button
+                className="btn btn-secondary btn-sm flex items-center gap-6"
+                onClick={() => loadRecharges(rechargeSearch)}
+                disabled={loadingRecharges}
+              >
+                <RefreshCw size={14} className={loadingRecharges ? 'animate-spin' : ''} />
+                <span>{label('تحديث', 'Refresh')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div
+            className="flex items-center gap-20 p-16 flex-wrap"
+            style={{
+              background: 'var(--bg-page)',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <div className="flex items-center gap-10">
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  color: '#10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Banknote size={18} />
+              </div>
+              <div>
+                <span className="fs-xs text-muted block">{label('إجمالي المبالغ المسددة', 'Total Recharged')}</span>
+                <span className="fw-black fs-md text-success">
+                  +{Number(rechargeStats.totalRecharged || 0).toLocaleString()} <small className="fs-xs font-normal">ر.س</small>
+                </span>
+              </div>
+            </div>
+
+            <div style={{ height: 28, width: 1, background: 'var(--border)' }} />
+
+            <div className="flex items-center gap-10">
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: 'rgba(59, 130, 246, 0.12)',
+                  color: '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Wallet size={18} />
+              </div>
+              <div>
+                <span className="fs-xs text-muted block">{label('عدد العمليات المسجلة', 'Recorded Operations')}</span>
+                <span className="fw-black fs-md">
+                  {rechargeStats.total || recharges.length} <small className="fs-xs font-normal text-muted">{label('عملية', 'ops')}</small>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="table-wrapper" style={{ border: 'none' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>{label('المغسلة', 'Laundry')}</th>
+                  <th>{label('المبلغ المودع', 'Amount Credited')}</th>
+                  <th>{label('طريقة التحصيل', 'Payment Method')}</th>
+                  <th>{label('رقم السند / المرجع', 'Receipt / Ref #')}</th>
+                  <th>{label('الرصيد قبل / بعد', 'Balance Change')}</th>
+                  <th>{label('المسؤول المنفذ', 'Processed By')}</th>
+                  <th>{label('التاريخ والوقت', 'Date & Time')}</th>
+                  <th>{label('البيان / الملاحظات', 'Notes')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingRecharges ? (
+                  <tr>
+                    <td colSpan={8} className="text-center p-30 text-muted">
+                      <RefreshCw size={20} className="animate-spin inline mr-8" />
+                      <span>{label('جاري تحميل سجل التسديدات...', 'Loading payments log...')}</span>
+                    </td>
+                  </tr>
+                ) : recharges.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center p-30 text-muted">
+                      {label('لا توجد عمليات تسديد أو شحن مسجلة بعد', 'No recharge operations found')}
+                    </td>
+                  </tr>
+                ) : (
+                  recharges.map((rc) => {
+                    const methodLabels = {
+                      cash: { ar: 'نقدي (كاش)', en: 'Cash', badge: 'success' },
+                      bank_transfer: { ar: 'تحويل بنكي', en: 'Bank Transfer', badge: 'primary' },
+                      electronic: { ar: 'دفع إلكتروني', en: 'Electronic', badge: 'info' },
+                      cheque: { ar: 'شيك بنكي', en: 'Cheque', badge: 'gold' },
+                      other: { ar: 'أخرى / تسوية', en: 'Other', badge: 'neutral' },
+                    }
+                    const mInfo = methodLabels[rc.payment_method || rc.paymentMethod] || {
+                      ar: rc.payment_method || rc.paymentMethod || 'أخرى',
+                      en: rc.payment_method || rc.paymentMethod || 'Other',
+                      badge: 'neutral',
+                    }
+
+                    return (
+                      <tr key={rc.id}>
+                        <td>
+                          <div className="fw-bold">{rc.laundry_name_ar || rc.laundry_name || rc.laundryName}</div>
+                          {(rc.laundry_phone || rc.laundryPhone) && (
+                            <div className="fs-xs text-muted ltr" dir="ltr">{rc.laundry_phone || rc.laundryPhone}</div>
+                          )}
+                        </td>
+                        <td>
+                          <span className="fw-black fs-md text-success">
+                            +{Number(rc.amount).toLocaleString()} <small className="fs-xs font-normal">ر.س</small>
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge badge-${mInfo.badge} fs-xs`}>
+                            {label(mInfo.ar, mInfo.en)}
+                          </span>
+                        </td>
+                        <td>
+                          {rc.reference_number || rc.referenceNumber ? (
+                            <span className="badge badge-neutral fs-xs fw-bold font-mono">
+                              {rc.reference_number || rc.referenceNumber}
+                            </span>
+                          ) : (
+                            <span className="text-muted fs-xs">—</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-6 fs-xs">
+                            <span className="text-muted">
+                              {Number(rc.balance_before ?? rc.balanceBefore ?? 0).toLocaleString()}
+                            </span>
+                            <span>→</span>
+                            <span className="fw-bold text-success">
+                              {Number(rc.balance_after ?? rc.balanceAfter ?? 0).toLocaleString()} ر.س
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-6 fs-xs fw-semi">
+                            <User size={12} className="text-muted" />
+                            <span>{rc.admin_name || rc.adminName || label('مدير النظام', 'Admin')}</span>
+                          </div>
+                        </td>
+                        <td className="fs-xs text-muted">
+                          {rc.created_at || rc.createdAt
+                            ? new Date(rc.created_at || rc.createdAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US')
+                            : '—'}
+                        </td>
+                        <td className="fs-xs text-muted" style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {rc.notes || '—'}
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>

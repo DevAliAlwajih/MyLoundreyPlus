@@ -17,6 +17,7 @@ import { AdminService } from './admin.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
+import { RechargeBalanceDto } from './dto/recharge-balance.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
 import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
@@ -195,5 +196,40 @@ export class AdminController {
   @Delete('users/:id')
   deleteUser(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.deleteUser(id);
+  }
+
+  // ────────────────────────────────────────────────────
+  // 💳 Wallet Recharges & Payments (تسديدات وشحن أرصدة المغاسل)
+  // ────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Admin: Recharge laundry balance (إضافة رصيد عند سداد المغسلة)' })
+  @Post('laundries/:id/balance')
+  addLaundryBalance(
+    @Req() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RechargeBalanceDto,
+  ) {
+    return this.adminService.addBalance(id, req.user.id, dto);
+  }
+
+  @ApiOperation({ summary: 'Admin: Get laundry balance recharge history (سجل تسديدات مغسلة معينة)' })
+  @Get('laundries/:id/balance-history')
+  getLaundryBalanceHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.adminService.getBalanceHistory(id, { limit, offset });
+  }
+
+  @ApiOperation({ summary: 'Admin: Get all wallet recharges history (سجل جميع التسديدات في النظام)' })
+  @Get('recharges')
+  getAllRecharges(
+    @Query('laundryId') laundryId?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return this.adminService.getAllRecharges({ laundryId, search, limit, offset });
   }
 }

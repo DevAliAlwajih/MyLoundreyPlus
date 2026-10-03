@@ -11,8 +11,8 @@ export declare class BookingCustomerController {
             id: string;
             laundries: {
                 id: string;
-                name: string;
                 phoneNumber: string;
+                name: string;
                 city: string;
                 logoUrl: string;
             };
@@ -30,8 +30,8 @@ export declare class BookingCustomerController {
             id: string;
             laundries: {
                 id: string;
-                name: string;
                 phoneNumber: string;
+                name: string;
                 city: string;
                 logoUrl: string;
             };
@@ -55,8 +55,8 @@ export declare class BookingCustomerController {
             id: string;
             laundries: {
                 id: string;
-                name: string;
                 phoneNumber: string;
+                name: string;
                 city: string;
                 logoUrl: string;
             };

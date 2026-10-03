@@ -179,10 +179,25 @@ let ProfileService = class ProfileService {
             invoiceStatus: true,
             paymentReceived: true,
             systemAlerts: true,
+            deliveryReminder: {
+                enabled: true,
+                hoursEnabled: true,
+                hours: 5,
+                daysEnabled: true,
+                days: 1,
+            },
         };
+        const userPrefs = user.notification_prefs || {};
         return {
             success: true,
-            data: user.notification_prefs || defaultPrefs,
+            data: {
+                ...defaultPrefs,
+                ...userPrefs,
+                deliveryReminder: {
+                    ...defaultPrefs.deliveryReminder,
+                    ...(userPrefs.deliveryReminder || {}),
+                },
+            },
         };
     }
     async updateNotificationPrefs(userId, prefs) {

@@ -49,14 +49,14 @@ export declare class SubscriptionController {
             plan: {
                 priceSar: number;
                 discount_percent: number;
+                id: string;
+                isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
                 nameAr: string;
                 nameEn: string;
                 durationDays: number;
                 features: import("@prisma/client/runtime/library").JsonValue | null;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 is_seasonal: boolean;
                 occasion_name: string | null;
                 offer_valid_from: Date | null;
@@ -65,16 +65,16 @@ export declare class SubscriptionController {
             daysRemaining: number;
             isExpiringSoon: boolean;
             isExpired: boolean;
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         };
         message?: undefined;
@@ -84,21 +84,21 @@ export declare class SubscriptionController {
         data: {
             amountPaid: number;
             plan: {
+                id: string;
                 nameAr: string;
                 nameEn: string;
                 durationDays: number;
-                id: string;
             };
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         }[];
     }>;
@@ -137,14 +137,14 @@ export declare class SubscriptionController {
         data: {
             priceSar: number;
             discountPercent: number;
+            id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             nameAr: string;
             nameEn: string;
             durationDays: number;
             features: import("@prisma/client/runtime/library").JsonValue | null;
-            isActive: boolean;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             is_seasonal: boolean;
             occasion_name: string | null;
             discount_percent: import("@prisma/client/runtime/library").Decimal | null;
@@ -158,14 +158,14 @@ export declare class SubscriptionController {
         data: {
             priceSar: number;
             discountPercent: number;
+            id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             nameAr: string;
             nameEn: string;
             durationDays: number;
             features: import("@prisma/client/runtime/library").JsonValue | null;
-            isActive: boolean;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             is_seasonal: boolean;
             occasion_name: string | null;
             discount_percent: import("@prisma/client/runtime/library").Decimal | null;
@@ -199,17 +199,17 @@ export declare class SubscriptionController {
         message: string;
         data: {
             discountValue: number;
-            description: string | null;
+            id: string;
             isActive: boolean;
+            createdAt: Date;
+            description: string | null;
+            createdBy: string | null;
             code: string;
             discountType: string;
             maxUses: number | null;
+            usedCount: number;
             validFrom: Date | null;
             validUntil: Date | null;
-            id: string;
-            createdAt: Date;
-            createdBy: string | null;
-            usedCount: number;
         };
     }>;
     adminUpdatePromoCode(id: string, dto: UpdatePromoCodeDto): Promise<{
@@ -217,17 +217,17 @@ export declare class SubscriptionController {
         message: string;
         data: {
             discountValue: number;
-            description: string | null;
+            id: string;
             isActive: boolean;
+            createdAt: Date;
+            description: string | null;
+            createdBy: string | null;
             code: string;
             discountType: string;
             maxUses: number | null;
+            usedCount: number;
             validFrom: Date | null;
             validUntil: Date | null;
-            id: string;
-            createdAt: Date;
-            createdBy: string | null;
-            usedCount: number;
         };
     }>;
     adminDeletePromoCode(id: string): Promise<{
@@ -239,6 +239,7 @@ export declare class SubscriptionController {
         data: {
             defaultCommissionRate: number;
             defaultTrialDays: number;
+            defaultInitialBalance: number;
             defaultDebtLimit: number;
             minRechargeAmount: number;
         };
@@ -246,6 +247,7 @@ export declare class SubscriptionController {
     updateCommissionSettings(req: any, data: {
         defaultCommissionRate?: number;
         defaultTrialDays?: number;
+        defaultInitialBalance?: number;
         defaultDebtLimit?: number;
         minRechargeAmount?: number;
     }): Promise<{
@@ -288,20 +290,20 @@ export declare class SubscriptionController {
         data: {
             amountPaid: number;
             laundry: {
-                name: string;
                 id: string;
                 phoneNumber: string;
+                name: string;
             };
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         }[];
         fallback: boolean;
@@ -311,24 +313,24 @@ export declare class SubscriptionController {
         data: {
             amountPaid: number;
             laundry: {
-                name: string;
                 id: string;
+                name: string;
             };
             plan: {
                 nameAr: string;
                 nameEn: string;
                 durationDays: number;
             };
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         }[];
     }>;
@@ -338,30 +340,30 @@ export declare class SubscriptionController {
             amountPaid: number;
             plan: {
                 priceSar: number;
+                id: string;
+                isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
                 nameAr: string;
                 nameEn: string;
                 durationDays: number;
                 features: import("@prisma/client/runtime/library").JsonValue | null;
-                isActive: boolean;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 is_seasonal: boolean;
                 occasion_name: string | null;
                 discount_percent: import("@prisma/client/runtime/library").Decimal | null;
                 offer_valid_from: Date | null;
                 offer_valid_until: Date | null;
             };
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         };
     }>;
@@ -369,16 +371,16 @@ export declare class SubscriptionController {
         success: boolean;
         data: {
             amountPaid: number;
-            isActive: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             laundryId: string;
+            notes: string | null;
             planId: string;
             paymentMethod: string | null;
-            promoCode: string | null;
             startDate: Date;
             endDate: Date;
-            notes: string | null;
             createdBy: string | null;
         };
     }>;

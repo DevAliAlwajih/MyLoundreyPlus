@@ -92,10 +92,10 @@ export declare class AuthController {
         success: boolean;
         data: {
             id: string;
-            fullName: string;
             uniqueId: string;
-            role: import(".prisma/client").$Enums.user_role;
             email: string;
+            fullName: string;
+            role: import(".prisma/client").$Enums.user_role;
         };
     }>;
     requestEmailChange(req: any, dto: RequestEmailChangeDto): Promise<{
@@ -106,10 +106,10 @@ export declare class AuthController {
         success: boolean;
         data: {
             id: string;
-            fullName: string;
             uniqueId: string;
-            role: import(".prisma/client").$Enums.user_role;
             email: string;
+            fullName: string;
+            role: import(".prisma/client").$Enums.user_role;
         };
         message: string;
     }>;

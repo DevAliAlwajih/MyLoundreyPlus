@@ -19,6 +19,7 @@ const admin_service_1 = require("./admin.service");
 const query_admin_dto_1 = require("./dto/query-admin.dto");
 const update_laundry_status_dto_1 = require("./dto/update-laundry-status.dto");
 const update_laundry_billing_dto_1 = require("./dto/update-laundry-billing.dto");
+const recharge_balance_dto_1 = require("./dto/recharge-balance.dto");
 const update_user_status_dto_1 = require("./dto/update-user-status.dto");
 const update_setting_dto_1 = require("./dto/update-setting.dto");
 const update_laundry_dto_1 = require("../laundry/dto/update-laundry.dto");
@@ -88,6 +89,15 @@ let AdminController = class AdminController {
     }
     deleteUser(id) {
         return this.adminService.deleteUser(id);
+    }
+    addLaundryBalance(req, id, dto) {
+        return this.adminService.addBalance(id, req.user.id, dto);
+    }
+    getLaundryBalanceHistory(id, limit, offset) {
+        return this.adminService.getBalanceHistory(id, { limit, offset });
+    }
+    getAllRecharges(laundryId, search, limit, offset) {
+        return this.adminService.getAllRecharges({ laundryId, search, limit, offset });
     }
 };
 exports.AdminController = AdminController;
@@ -262,6 +272,37 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "deleteUser", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Recharge laundry balance (إضافة رصيد عند سداد المغسلة)' }),
+    (0, common_1.Post)('laundries/:id/balance'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, recharge_balance_dto_1.RechargeBalanceDto]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "addLaundryBalance", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get laundry balance recharge history (سجل تسديدات مغسلة معينة)' }),
+    (0, common_1.Get)('laundries/:id/balance-history'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('offset')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, Number]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getLaundryBalanceHistory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all wallet recharges history (سجل جميع التسديدات في النظام)' }),
+    (0, common_1.Get)('recharges'),
+    __param(0, (0, common_1.Query)('laundryId')),
+    __param(1, (0, common_1.Query)('search')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('offset')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Number, Number]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getAllRecharges", null);
 exports.AdminController = AdminController = __decorate([
     (0, swagger_1.ApiTags)('Admin'),
     (0, swagger_1.ApiBearerAuth)(),

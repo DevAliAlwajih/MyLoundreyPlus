@@ -100,4 +100,11 @@ export const chatSupportApi = {
   },
 };
 
+// ─── Recharges & Payments API ──────────────────────────────────────────────
+export const rechargesApi = {
+  getAll: (params) => api.get('/admin/recharges', { params }),
+  recharge: (laundryId, data) => api.post(`/admin/laundries/${laundryId}/balance`, data),
+  getLaundryHistory: (laundryId, params) => api.get(`/admin/laundries/${laundryId}/balance-history`, { params }),
+};
+
 export default api;

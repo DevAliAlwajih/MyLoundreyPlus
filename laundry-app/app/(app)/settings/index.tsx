@@ -15,6 +15,7 @@ import { SettingsSection } from '../../../components/settings/SettingsSection';
 import { SettingsRow } from '../../../components/settings/SettingsRow';
 import { SubscriptionCard } from '../../../components/settings/SubscriptionCard';
 import { ChangePasswordModal } from '../../../components/settings/ChangePasswordModal';
+import { DeliveryReminderModal } from '../../../components/settings/DeliveryReminderModal';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -30,9 +31,34 @@ export default function SettingsScreen() {
   const updatePrefsMutation = useUpdateNotificationPrefs();
 
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
+  const [isDeliveryReminderVisible, setDeliveryReminderVisible] = useState(false);
   const { colors, themeMode, toggleTheme } = useThemeStore();
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const [biometricTypeStr, setBiometricTypeStr] = useState<string | null>(null);
+
+  const getReminderSummary = () => {
+    const reminder = notificationPrefs?.deliveryReminder;
+    if (!reminder || !reminder.enabled) {
+      return t('settings.deliveryReminder.disabledSummary');
+    }
+    if (reminder.hoursEnabled && reminder.daysEnabled) {
+      return t('settings.deliveryReminder.activeSummary', {
+        hours: reminder.hours ?? 5,
+        days: reminder.days ?? 1,
+      });
+    }
+    if (reminder.hoursEnabled) {
+      return t('settings.deliveryReminder.hoursOnlySummary', {
+        hours: reminder.hours ?? 5,
+      });
+    }
+    if (reminder.daysEnabled) {
+      return t('settings.deliveryReminder.daysOnlySummary', {
+        days: reminder.days ?? 1,
+      });
+    }
+    return t('settings.deliveryReminder.disabledSummary');
+  };
 
   useEffect(() => {
     fetchNotificationPrefs();
@@ -177,6 +203,12 @@ export default function SettingsScreen() {
             icon="megaphone-outline" 
             title={t('settings.promotions')} 
             onPress={() => router.push('/(app)/promotions')} 
+          />
+          <SettingsRow 
+            icon="alarm-outline" 
+            title={t('settings.deliveryReminder.title')} 
+            value={getReminderSummary()}
+            onPress={() => setDeliveryReminderVisible(true)} 
             isLast
           />
         </SettingsSection>
@@ -309,6 +341,11 @@ export default function SettingsScreen() {
       <ChangePasswordModal 
         visible={isPasswordModalVisible} 
         onClose={() => setPasswordModalVisible(false)} 
+      />
+
+      <DeliveryReminderModal
+        visible={isDeliveryReminderVisible}
+        onClose={() => setDeliveryReminderVisible(false)}
       />
     </SafeAreaView>
   );

@@ -10,8 +10,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            sender_id: string;
             message: string;
+            sender_id: string;
             attachment_url: string;
             attachment_type: string;
             is_read: boolean;
@@ -27,11 +27,11 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
+            message: string | null;
             laundry_id: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
-            message: string | null;
             attachment_url: string | null;
             attachment_type: string | null;
             is_read: boolean;
@@ -46,8 +46,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            sender_id: string;
             message: string;
+            sender_id: string;
             attachment_url: string;
             attachment_type: string;
             is_read: boolean;
@@ -63,11 +63,11 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
+            message: string | null;
             laundry_id: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
-            message: string | null;
             attachment_url: string | null;
             attachment_type: string | null;
             is_read: boolean;
@@ -82,11 +82,11 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
+            message: string | null;
             laundry_id: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
-            message: string | null;
             attachment_url: string | null;
             attachment_type: string | null;
             is_read: boolean;
@@ -118,8 +118,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            sender_id: string;
             message: string;
+            sender_id: string;
             attachment_url: string;
             attachment_type: string;
             is_read: boolean;
@@ -143,8 +143,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            sender_id: string;
             message: string;
+            sender_id: string;
             attachment_url: string;
             attachment_type: string;
             is_read: boolean;
@@ -160,11 +160,11 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
+            message: string | null;
             laundry_id: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
-            message: string | null;
             attachment_url: string | null;
             attachment_type: string | null;
             is_read: boolean;

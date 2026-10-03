@@ -123,6 +123,10 @@ export default function NewInvoiceScreen() {
       Alert.alert(t('common.error', 'خطأ'), t('invoice.validation.paymentRequired', 'طريقة الدفع مطلوبة'));
       return false;
     }
+    if (!store.expectedDeliveryAt) {
+      Alert.alert(t('common.error', 'خطأ'), t('invoice.validation.deliveryDateRequired', 'تاريخ التسليم المتوقع مطلوب'));
+      return false;
+    }
     return true;
   };
 
@@ -480,7 +484,25 @@ export default function NewInvoiceScreen() {
       
       <TouchableOpacity 
         style={styles.urgencyRow} 
-        onPress={() => store.setUrgent(!store.isUrgent)}
+        onPress={() => {
+          const nextUrgent = !store.isUrgent;
+          store.setUrgent(nextUrgent);
+
+          if (nextUrgent) {
+            // ضبط موعد التسليم تلقائياً على 24 ساعة من الآن
+            const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            store.setExpectedDeliveryAt(in24h.toISOString());
+          } else {
+            // عند إلغاء المستعجل: امسح التاريخ فقط إذا كان ضمن 24 ساعة (أي مُضبط تلقائياً)
+            if (store.expectedDeliveryAt) {
+              const deliveryDate = new Date(store.expectedDeliveryAt);
+              const diffHours = (deliveryDate.getTime() - Date.now()) / (1000 * 60 * 60);
+              if (diffHours <= 24) {
+                store.setExpectedDeliveryAt(undefined);
+              }
+            }
+          }
+        }}
         activeOpacity={0.7}
       >
         <Ionicons 
@@ -507,11 +529,11 @@ export default function NewInvoiceScreen() {
 
       <View style={[styles.urgencyDivider, { marginTop: 16, marginBottom: 16, height: 1, backgroundColor: colors.border }]} />
       <View style={styles.deliveryDateContainer}>
-        <Text style={styles.deliveryDateLabel}>تاريخ التسليم المتوقع (اختياري)</Text>
-        <TouchableOpacity style={styles.deliveryDateBtn} onPress={() => setShowDatePicker(true)}>
-          <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
-          <Text style={styles.deliveryDateText}>
-            {store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt).toLocaleDateString('ar-SA') : 'تحديد تاريخ'}
+        <Text style={styles.deliveryDateLabel}>تاريخ التسليم المتوقع<Text style={{ color: 'red' }}>*</Text></Text>
+        <TouchableOpacity style={[styles.deliveryDateBtn, !store.expectedDeliveryAt && styles.deliveryDateBtnRequired]} onPress={() => setShowDatePicker(true)}>
+          <Ionicons name="calendar-outline" size={18} color={!store.expectedDeliveryAt ? 'red' : colors.textSecondary} />
+          <Text style={[styles.deliveryDateText, !store.expectedDeliveryAt && { color: 'red' }]}>
+            {store.expectedDeliveryAt ? new Date(store.expectedDeliveryAt).toLocaleDateString('ar-SA') : 'تحديد تاريخ (مطلوب)'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -853,6 +875,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   deliveryDateContainer: { marginTop: 4 },
   deliveryDateLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, fontWeight: '500' },
   deliveryDateBtn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 12, backgroundColor: colors.background },
+  deliveryDateBtnRequired: { borderColor: 'red', borderWidth: 1.5 },
   deliveryDateText: { fontSize: 14, color: colors.text, marginLeft: 8 },
 
   // Part E

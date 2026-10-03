@@ -688,7 +688,7 @@ export class SubscriptionService {
     const settings = await this.prisma.app_settings.findMany({
       where: {
         key: {
-          in: ['default_commission_rate', 'default_trial_days', 'default_debt_limit', 'min_recharge_amount'],
+          in: ['default_commission_rate', 'default_trial_days', 'default_initial_balance', 'default_debt_limit', 'min_recharge_amount'],
         },
       },
     });
@@ -701,15 +701,16 @@ export class SubscriptionService {
     return {
       success: true,
       data: {
-        defaultCommissionRate: map['default_commission_rate'] ? Number(map['default_commission_rate']) : 10,
+        defaultCommissionRate: map['default_commission_rate'] ? Number(map['default_commission_rate']) : 1,
         defaultTrialDays: map['default_trial_days'] ? Number(map['default_trial_days']) : 30,
+        defaultInitialBalance: map['default_initial_balance'] ? Number(map['default_initial_balance']) : 2000,
         defaultDebtLimit: map['default_debt_limit'] ? Number(map['default_debt_limit']) : 500,
         minRechargeAmount: map['min_recharge_amount'] ? Number(map['min_recharge_amount']) : 100,
       },
     };
   }
 
-  async updateCommissionSettings(adminId: string, data: { defaultCommissionRate?: number; defaultTrialDays?: number; defaultDebtLimit?: number; minRechargeAmount?: number }) {
+  async updateCommissionSettings(adminId: string, data: { defaultCommissionRate?: number; defaultTrialDays?: number; defaultInitialBalance?: number; defaultDebtLimit?: number; minRechargeAmount?: number }) {
     const updates: Promise<any>[] = [];
 
     if (data.defaultCommissionRate !== undefined) {
@@ -728,6 +729,16 @@ export class SubscriptionService {
           where: { key: 'default_trial_days' },
           update: { value: String(data.defaultTrialDays), updated_by: adminId, updated_at: new Date() },
           create: { key: 'default_trial_days', value: String(data.defaultTrialDays), description: 'Default trial days for new laundries', updated_by: adminId },
+        }),
+      );
+    }
+
+    if (data.defaultInitialBalance !== undefined) {
+      updates.push(
+        this.prisma.app_settings.upsert({
+          where: { key: 'default_initial_balance' },
+          update: { value: String(data.defaultInitialBalance), updated_by: adminId, updated_at: new Date() },
+          create: { key: 'default_initial_balance', value: String(data.defaultInitialBalance), description: 'Default initial welcome balance for new laundries in SAR', updated_by: adminId },
         }),
       );
     }

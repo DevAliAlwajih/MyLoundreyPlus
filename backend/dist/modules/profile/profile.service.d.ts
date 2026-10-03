@@ -8,7 +8,6 @@ export declare class ProfileService {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
             phoneNumber: string;
             uniqueId: string;
             email: string;
@@ -17,6 +16,7 @@ export declare class ProfileService {
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
+            createdAt: Date;
             country: string;
             currency: string;
         };
@@ -25,7 +25,6 @@ export declare class ProfileService {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
             phoneNumber: string;
             uniqueId: string;
             email: string;
@@ -34,6 +33,7 @@ export declare class ProfileService {
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
+            createdAt: Date;
             country: string;
             currency: string;
         };
@@ -61,12 +61,7 @@ export declare class ProfileService {
     }>;
     getNotificationPrefs(userId: string): Promise<{
         success: boolean;
-        data: string | number | true | import("@prisma/client/runtime/library").JsonObject | import("@prisma/client/runtime/library").JsonArray | {
-            newBooking: boolean;
-            invoiceStatus: boolean;
-            paymentReceived: boolean;
-            systemAlerts: boolean;
-        };
+        data: any;
     }>;
     updateNotificationPrefs(userId: string, prefs: any): Promise<{
         success: boolean;

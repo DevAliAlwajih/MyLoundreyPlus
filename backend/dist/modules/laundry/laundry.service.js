@@ -621,7 +621,7 @@ let LaundryService = class LaundryService {
             const defaultRateSetting = await this.prisma.app_settings.findUnique({
                 where: { key: 'default_commission_rate' },
             });
-            actualCommissionRate = defaultRateSetting?.value ? Number(defaultRateSetting.value) : 10;
+            actualCommissionRate = defaultRateSetting?.value ? Number(defaultRateSetting.value) : 1;
         }
         return {
             success: true,
@@ -633,38 +633,101 @@ let LaundryService = class LaundryService {
             },
         };
     }
-    async getWalletTransactions(ownerId, page = 1, limit = 20) {
+    async getWalletTransactions(ownerId, page = 1, limit = 20, filter = 'all') {
         const laundry = await this.getLaundryByOwner(ownerId);
         const skip = (page - 1) * limit;
-        const [transactions, total] = await Promise.all([
-            this.prisma.commissionTransaction.findMany({
-                where: { laundry_id: laundry.id },
-                orderBy: { created_at: 'desc' },
-                skip,
-                take: Number(limit),
-                include: {
-                    invoice: {
-                        select: { invoiceNumber: true },
+        if (filter === 'invoices') {
+            const [transactions, total] = await Promise.all([
+                this.prisma.commissionTransaction.findMany({
+                    where: { laundry_id: laundry.id },
+                    orderBy: { created_at: 'desc' },
+                    skip,
+                    take: Number(limit),
+                    include: {
+                        invoice: {
+                            select: { invoiceNumber: true },
+                        },
                     },
+                }),
+                this.prisma.commissionTransaction.count({
+                    where: { laundry_id: laundry.id },
+                }),
+            ]);
+            const formatted = transactions.map((t) => ({
+                id: t.id,
+                kind: 'invoice',
+                type: t.type,
+                invoiceId: t.invoice_id,
+                invoiceNumber: t.invoice?.invoiceNumber,
+                invoiceTotal: Number(t.invoice_total),
+                commissionRate: Number(t.commission_rate),
+                commissionAmount: Number(t.commission_amount),
+                amount: Number(t.commission_amount),
+                balanceAfter: Number(t.balance_after),
+                createdAt: t.created_at,
+            }));
+            return {
+                success: true,
+                data: formatted,
+                meta: {
+                    page: Number(page),
+                    limit: Number(limit),
+                    total,
+                    totalPages: Math.ceil(total / limit),
                 },
-            }),
-            this.prisma.commissionTransaction.count({
-                where: { laundry_id: laundry.id },
-            }),
+            };
+        }
+        if (filter === 'receipts' || filter === 'recharges') {
+            const { records, total } = await this.getLaundryRecharges(laundry.id, skip, Number(limit));
+            return {
+                success: true,
+                data: records,
+                meta: {
+                    page: Number(page),
+                    limit: Number(limit),
+                    total,
+                    totalPages: Math.ceil(total / limit),
+                },
+            };
+        }
+        const [invoicesResult, rechargesResult] = await Promise.all([
+            Promise.all([
+                this.prisma.commissionTransaction.findMany({
+                    where: { laundry_id: laundry.id },
+                    orderBy: { created_at: 'desc' },
+                    take: skip + Number(limit),
+                    include: {
+                        invoice: {
+                            select: { invoiceNumber: true },
+                        },
+                    },
+                }),
+                this.prisma.commissionTransaction.count({ where: { laundry_id: laundry.id } }),
+            ]),
+            this.getLaundryRecharges(laundry.id, 0, skip + Number(limit)),
         ]);
-        const formattedTransactions = transactions.map((t) => ({
+        const [invoices, totalInvoices] = invoicesResult;
+        const { records: formattedRecharges, total: totalRecharges } = rechargesResult;
+        const formattedInvoices = invoices.map((t) => ({
             id: t.id,
+            kind: 'invoice',
+            type: t.type,
             invoiceId: t.invoice_id,
             invoiceNumber: t.invoice?.invoiceNumber,
             invoiceTotal: Number(t.invoice_total),
             commissionRate: Number(t.commission_rate),
             commissionAmount: Number(t.commission_amount),
+            amount: Number(t.commission_amount),
             balanceAfter: Number(t.balance_after),
             createdAt: t.created_at,
         }));
+        const merged = [...formattedInvoices, ...formattedRecharges]
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(skip, skip + Number(limit));
+        const total = totalInvoices + totalRecharges;
         return {
             success: true,
-            data: formattedTransactions,
+            data: merged,
             meta: {
                 page: Number(page),
                 limit: Number(limit),
@@ -672,6 +735,81 @@ let LaundryService = class LaundryService {
                 totalPages: Math.ceil(total / limit),
             },
         };
+    }
+    async getLaundryRecharges(laundryId, skip, take) {
+        try {
+            if (this.prisma.walletRecharge?.findMany) {
+                const [recharges, total] = await Promise.all([
+                    this.prisma.walletRecharge.findMany({
+                        where: { laundry_id: laundryId },
+                        orderBy: { created_at: 'desc' },
+                        skip,
+                        take,
+                        include: {
+                            admin: { select: { fullName: true } },
+                        },
+                    }),
+                    this.prisma.walletRecharge.count({
+                        where: { laundry_id: laundryId },
+                    }),
+                ]);
+                return {
+                    total,
+                    records: recharges.map((r) => ({
+                        id: r.id,
+                        kind: 'receipt',
+                        type: 'recharge',
+                        amount: Number(r.amount),
+                        balanceBefore: Number(r.balance_before ?? r.balanceBefore ?? 0),
+                        balanceAfter: Number(r.balance_after ?? r.balanceAfter ?? 0),
+                        paymentMethod: r.payment_method ?? r.paymentMethod,
+                        referenceNumber: r.reference_number ?? r.referenceNumber,
+                        notes: r.notes,
+                        adminName: r.admin?.fullName || null,
+                        createdAt: r.created_at ?? r.createdAt,
+                    })),
+                };
+            }
+        }
+        catch (e) {
+        }
+        const [records, countResult] = await Promise.all([
+            this.prisma.$queryRaw `
+        SELECT
+          wr.id,
+          wr.amount,
+          wr.balance_before,
+          wr.balance_after,
+          wr.payment_method,
+          wr.reference_number,
+          wr.notes,
+          wr.created_at,
+          u.full_name AS admin_name
+        FROM wallet_recharges wr
+        LEFT JOIN users u ON u.id = wr.created_by
+        WHERE wr.laundry_id = ${laundryId}::uuid
+        ORDER BY wr.created_at DESC
+        LIMIT ${take} OFFSET ${skip}
+      `,
+            this.prisma.$queryRaw `
+        SELECT COUNT(*)::int AS total FROM wallet_recharges WHERE laundry_id = ${laundryId}::uuid
+      `,
+        ]);
+        const total = Number(countResult[0]?.total ?? 0);
+        const formatted = (records || []).map((r) => ({
+            id: r.id,
+            kind: 'receipt',
+            type: 'recharge',
+            amount: Number(r.amount),
+            balanceBefore: Number(r.balance_before ?? 0),
+            balanceAfter: Number(r.balance_after ?? 0),
+            paymentMethod: r.payment_method,
+            referenceNumber: r.reference_number,
+            notes: r.notes,
+            adminName: r.admin_name || null,
+            createdAt: r.created_at,
+        }));
+        return { total, records: formatted };
     }
     async getLaundryByOwner(ownerId) {
         const laundry = await this.prisma.laundry.findFirst({

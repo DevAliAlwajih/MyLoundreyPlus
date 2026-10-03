@@ -39,17 +39,17 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            createdAt: Date;
             name: string;
-            phoneNumber: string;
-            country: string;
             nameAr: string;
+            phoneNumber: string;
             address: string;
             city: string;
+            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
+            createdAt: Date;
         };
     }>;
     getMenu(laundryId: string): Promise<{
@@ -73,17 +73,17 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            createdAt: Date;
             name: string;
-            phoneNumber: string;
-            country: string;
             nameAr: string;
+            phoneNumber: string;
             address: string;
             city: string;
+            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
+            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: Prisma.Decimal;
             urgency_enabled: boolean;
@@ -97,17 +97,17 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            createdAt: Date;
             name: string;
-            phoneNumber: string;
-            country: string;
             nameAr: string;
+            phoneNumber: string;
             address: string;
             city: string;
+            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
             status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
+            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: Prisma.Decimal;
             urgency_enabled: boolean;
@@ -138,18 +138,18 @@ export declare class LaundryService {
         success: boolean;
         data: {
             id: string;
+            name: string;
             sortOrder: number;
             isActive: boolean;
-            name: string;
         };
     }>;
     updateCategory(ownerId: string, categoryId: string, dto: UpdateCategoryDto): Promise<{
         success: boolean;
         data: {
             id: string;
+            name: string;
             sortOrder: number;
             isActive: boolean;
-            name: string;
         };
     }>;
     deleteCategory(ownerId: string, categoryId: string): Promise<{
@@ -161,9 +161,9 @@ export declare class LaundryService {
         data: {
             basePrice: number;
             id: string;
+            nameAr: string;
             sortOrder: number;
             isActive: boolean;
-            nameAr: string;
             nameEn: string;
             washing_price: Prisma.Decimal;
             ironing_price: Prisma.Decimal;
@@ -174,9 +174,9 @@ export declare class LaundryService {
         data: {
             basePrice: number;
             id: string;
+            nameAr: string;
             sortOrder: number;
             isActive: boolean;
-            nameAr: string;
             nameEn: string;
             washing_price: Prisma.Decimal;
             ironing_price: Prisma.Decimal;
@@ -224,25 +224,17 @@ export declare class LaundryService {
             trialCommissionEndsAt: Date;
         };
     }>;
-    getWalletTransactions(ownerId: string, page?: number, limit?: number): Promise<{
+    getWalletTransactions(ownerId: string, page?: number, limit?: number, filter?: string): Promise<{
         success: boolean;
-        data: {
-            id: string;
-            invoiceId: string;
-            invoiceNumber: string;
-            invoiceTotal: number;
-            commissionRate: number;
-            commissionAmount: number;
-            balanceAfter: number;
-            createdAt: Date;
-        }[];
+        data: any;
         meta: {
             page: number;
             limit: number;
-            total: number;
+            total: any;
             totalPages: number;
         };
     }>;
+    private getLaundryRecharges;
     private getLaundryByOwner;
     getReports(ownerId: string, period?: string, from?: string, to?: string): Promise<{
         success: boolean;

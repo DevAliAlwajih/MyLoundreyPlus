@@ -225,6 +225,25 @@ export class InvoiceService {
       return inv;
     });
 
+    // ─── إشعار فوري: إذا كان موعد التسليم خلال 24 ساعة ───
+    if (dto.expectedDeliveryAt) {
+      const deliveryDate = new Date(dto.expectedDeliveryAt);
+      const now = new Date();
+      const diffMs = deliveryDate.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      if (diffHours > 0 && diffHours <= 24) {
+        this.notificationService
+          .sendToLaundryOwner(
+            laundryId,
+            'اقتراب موعد التسليم ⏰',
+            `تنبيه: الفاتورة رقم ${invoice.invoiceNumber} موعد تسليمها خلال أقل من 24 ساعة.`,
+            { type: 'invoice_delivery_soon', referenceId: invoice.id },
+          )
+          .catch((err) => console.error('Delivery reminder notification error:', err));
+      }
+    }
+
     return { success: true, data: this.formatDetail(invoice) };
   }
 

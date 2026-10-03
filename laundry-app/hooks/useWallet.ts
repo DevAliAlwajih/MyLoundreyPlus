@@ -19,23 +19,35 @@ export function useWallet() {
   });
 }
 
+export type TransactionFilter = 'all' | 'invoices' | 'receipts';
+
 export interface WalletTransaction {
   id: string;
-  invoiceId: string;
-  invoiceNumber: string | null;
-  invoiceTotal: number;
-  commissionRate: number;
-  commissionAmount: number;
+  kind?: 'invoice' | 'receipt';
+  type?: 'charge' | 'refund' | 'recharge' | 'receipt' | string;
+  // Invoice transaction fields
+  invoiceId?: string;
+  invoiceNumber?: string | null;
+  invoiceTotal?: number;
+  commissionRate?: number;
+  commissionAmount?: number;
+  // Receipt voucher fields
+  amount?: number;
+  balanceBefore?: number;
   balanceAfter: number;
+  paymentMethod?: 'cash' | 'bank_transfer' | 'cheque' | 'electronic' | 'other' | string;
+  referenceNumber?: string | null;
+  notes?: string | null;
+  adminName?: string | null;
   createdAt: string;
 }
 
-export function useWalletTransactions() {
+export function useWalletTransactions(filter: TransactionFilter = 'all') {
   return useInfiniteQuery({
-    queryKey: ['wallet-transactions'],
+    queryKey: ['wallet-transactions', filter],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await api.get('/my-laundry/wallet/transactions', {
-        params: { page: pageParam, limit: 15 },
+        params: { page: pageParam, limit: 15, filter },
       });
       return response.data; // { success, data: [...], meta: { page, limit, total, totalPages } }
     },

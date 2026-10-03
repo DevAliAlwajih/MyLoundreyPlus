@@ -69,17 +69,23 @@ export class AuthService {
           },
         });
 
-        // جلب الإعدادات الافتراضية للعمولة من app_settings
-        const [rateRow, balanceRow, trialDaysRow, debtLimitRow] = await Promise.all([
+        // جلب الإعدادات الافتراضية للعمولة من app_settings والباقة التجريبية النشطة
+        const [rateRow, balanceRow, trialDaysRow, debtLimitRow, activeTrialPlan] = await Promise.all([
           tx.app_settings.findUnique({ where: { key: 'default_commission_rate' } }),
           tx.app_settings.findUnique({ where: { key: 'default_initial_balance' } }),
           tx.app_settings.findUnique({ where: { key: 'default_trial_days' } }),
           tx.app_settings.findUnique({ where: { key: 'default_debt_limit' } }),
+          tx.subscriptionPlan.findFirst({
+            where: { isActive: true, priceSar: 0 },
+            orderBy: { createdAt: 'desc' },
+          }),
         ]);
 
-        const defaultRate      = rateRow      ? Number(rateRow.value)      : 10;
+        const defaultRate      = rateRow      ? Number(rateRow.value)      : 1;
         const initialBalance   = balanceRow   ? Number(balanceRow.value)   : 2000;
-        const trialDays        = trialDaysRow  ? Number(trialDaysRow.value)  : 30;
+        const trialDays        = activeTrialPlan?.durationDays 
+                                  ? activeTrialPlan.durationDays 
+                                  : (trialDaysRow ? Number(trialDaysRow.value) : 30);
         const debtLimit        = debtLimitRow  ? Number(debtLimitRow.value)  : 5000;
 
         const trialEndsAt = new Date();

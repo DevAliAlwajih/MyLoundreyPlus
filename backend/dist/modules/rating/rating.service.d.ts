@@ -77,8 +77,6 @@ export declare class RatingService {
     getMyRatings(customerId: string): Promise<{
         success: boolean;
         data: {
-            id: string;
-            createdAt: Date;
             laundry: {
                 id: string;
                 name: string;
@@ -87,6 +85,8 @@ export declare class RatingService {
             invoice: {
                 invoiceNumber: string;
             };
+            id: string;
+            createdAt: Date;
             stars: number;
             comment: string;
         }[];

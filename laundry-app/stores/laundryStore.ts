@@ -38,11 +38,20 @@ export interface LaundryProfile {
   urgency_fee: number | null;
 }
 
+export interface DeliveryReminderPrefs {
+  enabled: boolean;
+  hoursEnabled: boolean;
+  hours: number;
+  daysEnabled: boolean;
+  days: number;
+}
+
 export interface NotificationPrefs {
   newBooking: boolean;
   invoiceStatus: boolean;
   paymentReceived: boolean;
   systemAlerts: boolean;
+  deliveryReminder?: DeliveryReminderPrefs;
 }
 
 export interface SubscriptionInfo {
@@ -73,13 +82,37 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
     invoiceStatus: true,
     paymentReceived: true,
     systemAlerts: true,
+    deliveryReminder: {
+      enabled: true,
+      hoursEnabled: true,
+      hours: 5,
+      daysEnabled: true,
+      days: 1,
+    },
   },
   subscription: null,
 
   fetchNotificationPrefs: async () => {
     try {
       const response = await api.get('/profile/notifications');
-      set({ notificationPrefs: response.data?.data });
+      const data = response.data?.data;
+      if (data) {
+        set({
+          notificationPrefs: {
+            newBooking: data.newBooking ?? true,
+            invoiceStatus: data.invoiceStatus ?? true,
+            paymentReceived: data.paymentReceived ?? true,
+            systemAlerts: data.systemAlerts ?? true,
+            deliveryReminder: {
+              enabled: data.deliveryReminder?.enabled ?? true,
+              hoursEnabled: data.deliveryReminder?.hoursEnabled ?? true,
+              hours: data.deliveryReminder?.hours ?? 5,
+              daysEnabled: data.deliveryReminder?.daysEnabled ?? true,
+              days: data.deliveryReminder?.days ?? 1,
+            },
+          },
+        });
+      }
     } catch (error) {
       // Handle error gracefully if endpoint is missing in this mock
       console.warn('Could not fetch notification preferences', error);

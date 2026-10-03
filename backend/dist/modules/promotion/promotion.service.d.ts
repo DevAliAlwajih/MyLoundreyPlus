@@ -9,11 +9,11 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
+            description: string;
             title: string;
             startDate: Date;
             endDate: Date;
-            createdAt: Date;
-            description: string;
             imageUrl: string;
         }[];
     }>;
@@ -21,14 +21,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
-            title: string;
-            startDate: Date | null;
-            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             description: string | null;
+            title: string;
             laundryId: string;
+            startDate: Date | null;
+            endDate: Date | null;
             imageUrl: string | null;
         };
     }>;
@@ -42,14 +42,14 @@ export declare class PromotionService {
             isExpired: boolean;
             isUpcoming: boolean;
             id: string;
-            title: string;
-            startDate: Date | null;
-            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             description: string | null;
+            title: string;
             laundryId: string;
+            startDate: Date | null;
+            endDate: Date | null;
             imageUrl: string | null;
         }[];
         meta: {
@@ -63,14 +63,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
-            title: string;
-            startDate: Date | null;
-            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             description: string | null;
+            title: string;
             laundryId: string;
+            startDate: Date | null;
+            endDate: Date | null;
             imageUrl: string | null;
         };
     }>;
@@ -78,14 +78,14 @@ export declare class PromotionService {
         success: boolean;
         data: {
             id: string;
-            title: string;
-            startDate: Date | null;
-            endDate: Date | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             description: string | null;
+            title: string;
             laundryId: string;
+            startDate: Date | null;
+            endDate: Date | null;
             imageUrl: string | null;
         };
     }>;
