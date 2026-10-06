@@ -11,36 +11,36 @@ export declare class NotificationService {
         data?: Record<string, string>;
     }): Promise<{
         id: string;
-        userId: string;
         title: string;
         body: string;
         type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     sendInvoiceStatusNotification(customerId: string | null, invoiceNumber: string, newStatus: string, invoiceId: string): Promise<{
         id: string;
-        userId: string;
         title: string;
         body: string;
         type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     sendToLaundryOwner(laundryId: string, title: string, body: string, options?: {
         type?: string;
         referenceId?: string;
     }): Promise<{
         id: string;
-        userId: string;
         title: string;
         body: string;
         type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     getNotifications(userId: string, page?: number, limit?: number, unreadOnly?: boolean): Promise<{
         success: boolean;

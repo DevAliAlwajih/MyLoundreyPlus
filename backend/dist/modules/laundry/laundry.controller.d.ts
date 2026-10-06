@@ -38,6 +38,8 @@ export declare class LaundryPublicController {
             latitude: number;
             longitude: number;
             id: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            createdAt: Date;
             name: string;
             nameAr: string;
             phoneNumber: string;
@@ -46,9 +48,7 @@ export declare class LaundryPublicController {
             country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
         };
     }>;
     getMenu(id: string): Promise<{
@@ -91,6 +91,9 @@ export declare class LaundryOwnerController {
             latitude: number;
             longitude: number;
             id: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            createdAt: Date;
+            urgency_fee: import("@prisma/client/runtime/library").Decimal;
             name: string;
             nameAr: string;
             phoneNumber: string;
@@ -99,13 +102,10 @@ export declare class LaundryOwnerController {
             country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal;
             urgency_enabled: boolean;
-            urgency_fee: import("@prisma/client/runtime/library").Decimal;
         };
     }>;
     getReports(req: any, period?: string, from?: string, to?: string): Promise<{
@@ -133,6 +133,9 @@ export declare class LaundryOwnerController {
             latitude: number;
             longitude: number;
             id: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            createdAt: Date;
+            urgency_fee: import("@prisma/client/runtime/library").Decimal;
             name: string;
             nameAr: string;
             phoneNumber: string;
@@ -141,13 +144,10 @@ export declare class LaundryOwnerController {
             country: string;
             workingHours: import("@prisma/client/runtime/library").JsonValue;
             logoUrl: string;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
-            createdAt: Date;
             tax_enabled: boolean;
             tax_rate: import("@prisma/client/runtime/library").Decimal;
             urgency_enabled: boolean;
-            urgency_fee: import("@prisma/client/runtime/library").Decimal;
         };
     }>;
     getMyMenu(req: any): Promise<{
@@ -194,8 +194,8 @@ export declare class LaundryOwnerController {
         data: {
             id: string;
             name: string;
-            sortOrder: number;
             isActive: boolean;
+            sortOrder: number;
         };
     }>;
     updateCategory(req: any, id: string, dto: UpdateCategoryDto): Promise<{
@@ -203,8 +203,8 @@ export declare class LaundryOwnerController {
         data: {
             id: string;
             name: string;
-            sortOrder: number;
             isActive: boolean;
+            sortOrder: number;
         };
     }>;
     deleteCategory(req: any, id: string): Promise<{
@@ -217,9 +217,9 @@ export declare class LaundryOwnerController {
             basePrice: number;
             id: string;
             nameAr: string;
-            sortOrder: number;
             isActive: boolean;
             nameEn: string;
+            sortOrder: number;
             washing_price: import("@prisma/client/runtime/library").Decimal;
             ironing_price: import("@prisma/client/runtime/library").Decimal;
         };
@@ -230,9 +230,9 @@ export declare class LaundryOwnerController {
             basePrice: number;
             id: string;
             nameAr: string;
-            sortOrder: number;
             isActive: boolean;
             nameEn: string;
+            sortOrder: number;
             washing_price: import("@prisma/client/runtime/library").Decimal;
             ironing_price: import("@prisma/client/runtime/library").Decimal;
         };
@@ -329,11 +329,11 @@ export declare class LaundryOwnerController {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             laundryId: string;
             customerId: string | null;
             notes: string | null;
+            createdAt: Date;
+            updatedAt: Date;
             phone: string | null;
             localName: string | null;
             localPhone: string | null;

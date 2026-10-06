@@ -49,4 +49,9 @@ export class ProfileController {
   updateNotificationPrefs(@Req() req: any, @Body() prefs: any) {
     return this.profileService.updateNotificationPrefs(req.user.id, prefs);
   }
+
+  @Patch('device-token')
+  updateDeviceToken(@Req() req: any, @Body() body: { fcmToken: string; deviceId?: string }) {
+    return this.profileService.updateDeviceToken(req.user.id, body.fcmToken, body.deviceId);
+  }
 }

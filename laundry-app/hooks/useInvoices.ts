@@ -130,7 +130,19 @@ export const useInvoices = (filters: any) => {
       const response = await api.get('/invoices', { params: filters });
       const rawData = response.data?.data;
       if (Array.isArray(rawData)) {
-        return rawData.map(normalizeInvoice);
+        const normalized = rawData.map(normalizeInvoice);
+        // مزامنة تنبيهات مواعيد التسليم إذا كانت مفعلة
+        try {
+          const { syncInvoicesReminders } = await import('../services/deliveryReminderService');
+          const { useLaundryStore } = await import('../stores/laundryStore');
+          const prefs = useLaundryStore.getState().notificationPrefs?.deliveryReminder;
+          if (prefs?.enabled) {
+            syncInvoicesReminders(normalized, prefs).catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+        return normalized;
       }
       return [];
     },

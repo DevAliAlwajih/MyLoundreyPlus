@@ -180,7 +180,7 @@ let ProfileService = class ProfileService {
             paymentReceived: true,
             systemAlerts: true,
             deliveryReminder: {
-                enabled: true,
+                enabled: false,
                 hoursEnabled: true,
                 hours: 5,
                 daysEnabled: true,
@@ -201,15 +201,61 @@ let ProfileService = class ProfileService {
         };
     }
     async updateNotificationPrefs(userId, prefs) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { notification_prefs: true },
+        });
+        const currentPrefs = user?.notification_prefs || {};
+        const mergedPrefs = {
+            ...currentPrefs,
+            ...prefs,
+            deliveryReminder: {
+                ...(currentPrefs.deliveryReminder || {}),
+                ...(prefs.deliveryReminder || {}),
+            },
+        };
         const updated = await this.prisma.user.update({
             where: { id: userId },
-            data: { notification_prefs: prefs },
+            data: { notification_prefs: mergedPrefs },
             select: { notification_prefs: true },
         });
         return {
             success: true,
             data: updated.notification_prefs,
         };
+    }
+    async updateDeviceToken(userId, fcmToken, deviceId) {
+        if (!fcmToken)
+            return { success: true };
+        try {
+            if (deviceId) {
+                await this.prisma.userDevice.upsert({
+                    where: { id: deviceId },
+                    update: { fcmToken, isActive: true, lastLoginAt: new Date() },
+                    create: {
+                        id: deviceId,
+                        userId,
+                        fcmToken,
+                        isActive: true,
+                    },
+                });
+            }
+            else {
+                const device = await this.prisma.userDevice.findFirst({
+                    where: { userId, isActive: true },
+                    orderBy: { lastLoginAt: 'desc' },
+                });
+                if (device) {
+                    await this.prisma.userDevice.update({
+                        where: { id: device.id },
+                        data: { fcmToken },
+                    });
+                }
+            }
+        }
+        catch {
+        }
+        return { success: true };
     }
 };
 exports.ProfileService = ProfileService;

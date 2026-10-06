@@ -473,7 +473,14 @@
       "activeSummary": "Active: {{hours}}h / {{days}}d",
       "hoursOnlySummary": "Active: {{hours}}h",
       "daysOnlySummary": "Active: {{days}}d",
-      "disabledSummary": "Disabled"
+      "disabledSummary": "Disabled",
+      "testNotification": "Send Test Alert",
+      "testSent": "Test alert sent successfully",
+      "permissionDenied": "Device Notifications Disabled",
+      "permissionDeniedDesc": "Tap here to open device settings and enable notifications",
+      "permissionGranted": "Notifications Active ✓",
+      "enabledSuccessTitle": "Delivery Reminders Enabled ⏰",
+      "enabledSuccessBody": "Delivery alerts enabled. You will receive automatic reminders before delivery time."
     },
     "business": "Business Management",
     "profile": "Laundry Profile",
@@ -488,6 +495,11 @@
     "subscriptionExpired": "Subscription Expired",
     "daysRemaining": "{{days}} days remaining",
     "appPreferences": "App Preferences",
+    "currency": {
+      "title": "Currency",
+      "subtitle": "Select the currency to display in the app",
+      "label": "Currency"
+    },
     "language": "Language",
     "theme": "Theme",
     "light": "Light",

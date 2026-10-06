@@ -74,6 +74,12 @@ interface LaundryStore {
   fetchSubscription: () => Promise<void>;
 }
 
+import { 
+  saveReminderPrefsLocally, 
+  loadReminderPrefsLocally, 
+  cancelAllDeliveryReminders 
+} from '../services/deliveryReminderService';
+
 export const useLaundryStore = create<LaundryStore>((set) => ({
   profile: null,
   setProfile: (profile) => set({ profile }),
@@ -83,7 +89,7 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
     paymentReceived: true,
     systemAlerts: true,
     deliveryReminder: {
-      enabled: true,
+      enabled: false,
       hoursEnabled: true,
       hours: 5,
       daysEnabled: true,
@@ -93,28 +99,48 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
   subscription: null,
 
   fetchNotificationPrefs: async () => {
+    // 1. استرجاع الإعدادات المحفوظة محلياً بشكل فوري
+    const cachedReminder = await loadReminderPrefsLocally();
+    if (cachedReminder) {
+      set((state) => ({
+        notificationPrefs: {
+          ...(state.notificationPrefs || {
+            newBooking: true,
+            invoiceStatus: true,
+            paymentReceived: true,
+            systemAlerts: true,
+          }),
+          deliveryReminder: cachedReminder,
+        },
+      }));
+    }
+
+    // 2. المزامنة مع الخادم
     try {
       const response = await api.get('/profile/notifications');
       const data = response.data?.data;
       if (data) {
+        const reminderPrefs: DeliveryReminderPrefs = {
+          enabled: data.deliveryReminder?.enabled ?? cachedReminder?.enabled ?? false,
+          hoursEnabled: data.deliveryReminder?.hoursEnabled ?? cachedReminder?.hoursEnabled ?? true,
+          hours: data.deliveryReminder?.hours ?? cachedReminder?.hours ?? 5,
+          daysEnabled: data.deliveryReminder?.daysEnabled ?? cachedReminder?.daysEnabled ?? true,
+          days: data.deliveryReminder?.days ?? cachedReminder?.days ?? 1,
+        };
+
+        await saveReminderPrefsLocally(reminderPrefs);
+
         set({
           notificationPrefs: {
             newBooking: data.newBooking ?? true,
             invoiceStatus: data.invoiceStatus ?? true,
             paymentReceived: data.paymentReceived ?? true,
             systemAlerts: data.systemAlerts ?? true,
-            deliveryReminder: {
-              enabled: data.deliveryReminder?.enabled ?? true,
-              hoursEnabled: data.deliveryReminder?.hoursEnabled ?? true,
-              hours: data.deliveryReminder?.hours ?? 5,
-              daysEnabled: data.deliveryReminder?.daysEnabled ?? true,
-              days: data.deliveryReminder?.days ?? 1,
-            },
+            deliveryReminder: reminderPrefs,
           },
         });
       }
     } catch (error) {
-      // Handle error gracefully if endpoint is missing in this mock
       console.warn('Could not fetch notification preferences', error);
     }
   },
@@ -123,9 +149,21 @@ export const useLaundryStore = create<LaundryStore>((set) => ({
     try {
       // Optimistic update
       set({ notificationPrefs: prefs });
-      await api.patch('/profile/notifications', prefs);
+
+      if (prefs.deliveryReminder) {
+        await saveReminderPrefsLocally(prefs.deliveryReminder);
+        if (!prefs.deliveryReminder.enabled) {
+          await cancelAllDeliveryReminders();
+        }
+      }
+
+      const response = await api.patch('/profile/notifications', prefs);
+      if (response?.data?.data) {
+        set({ notificationPrefs: response.data.data });
+      }
     } catch (error) {
       console.warn('Could not update notification preferences', error);
+      throw error;
     }
   },
 

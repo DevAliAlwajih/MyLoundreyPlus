@@ -194,9 +194,33 @@ let InvoiceService = class InvoiceService {
             const diffMs = deliveryDate.getTime() - now.getTime();
             const diffHours = diffMs / (1000 * 60 * 60);
             if (diffHours > 0 && diffHours <= 24) {
-                this.notificationService
-                    .sendToLaundryOwner(laundryId, 'اقتراب موعد التسليم ⏰', `تنبيه: الفاتورة رقم ${invoice.invoiceNumber} موعد تسليمها خلال أقل من 24 ساعة.`, { type: 'invoice_delivery_soon', referenceId: invoice.id })
-                    .catch((err) => console.error('Delivery reminder notification error:', err));
+                try {
+                    const laundryOwner = await this.prisma.laundry.findUnique({
+                        where: { id: laundryId },
+                        select: { owner: { select: { notification_prefs: true } } },
+                    });
+                    const prefs = laundryOwner?.owner?.notification_prefs || {};
+                    const reminder = prefs?.deliveryReminder;
+                    const deliveryReminderEnabled = reminder?.enabled !== false;
+                    if (deliveryReminderEnabled) {
+                        const hoursEnabled = reminder?.hoursEnabled !== false;
+                        const targetHours = reminder?.hours ?? 5;
+                        const daysEnabled = reminder?.daysEnabled !== false;
+                        const targetDays = reminder?.days ?? 1;
+                        const diffDays = diffHours / 24;
+                        const matchesHours = hoursEnabled && diffHours <= targetHours;
+                        const matchesDays = daysEnabled && diffDays <= targetDays;
+                        if (matchesHours || matchesDays) {
+                            const label = matchesHours ? `${Math.ceil(diffHours)} ساعة` : `${Math.ceil(diffDays)} يوم`;
+                            this.notificationService
+                                .sendToLaundryOwner(laundryId, 'اقتراب موعد التسليم ⏰', `تنبيه: الفاتورة رقم ${invoice.invoiceNumber} موعد تسليمها خلال ${label} تقريباً.`, { type: 'invoice_delivery_soon', referenceId: invoice.id })
+                                .catch((err) => console.error('Delivery reminder notification error:', err));
+                        }
+                    }
+                }
+                catch (err) {
+                    console.error('Error checking delivery reminder prefs:', err);
+                }
             }
         }
         return { success: true, data: this.formatDetail(invoice) };

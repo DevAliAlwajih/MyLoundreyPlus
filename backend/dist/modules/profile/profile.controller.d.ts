@@ -8,16 +8,16 @@ export declare class ProfileController {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
             phoneNumber: string;
-            uniqueId: string;
-            email: string;
+            country: string;
             fullName: string;
+            uniqueId: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
-            createdAt: Date;
-            country: string;
+            email: string;
             currency: string;
         };
     }>;
@@ -25,16 +25,16 @@ export declare class ProfileController {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
             phoneNumber: string;
-            uniqueId: string;
-            email: string;
+            country: string;
             fullName: string;
+            uniqueId: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
-            createdAt: Date;
-            country: string;
+            email: string;
             currency: string;
         };
     }>;
@@ -66,5 +66,11 @@ export declare class ProfileController {
     updateNotificationPrefs(req: any, prefs: any): Promise<{
         success: boolean;
         data: import("@prisma/client/runtime/library").JsonValue;
+    }>;
+    updateDeviceToken(req: any, body: {
+        fcmToken: string;
+        deviceId?: string;
+    }): Promise<{
+        success: boolean;
     }>;
 }

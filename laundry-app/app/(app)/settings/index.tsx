@@ -16,6 +16,13 @@ import { SettingsRow } from '../../../components/settings/SettingsRow';
 import { SubscriptionCard } from '../../../components/settings/SubscriptionCard';
 import { ChangePasswordModal } from '../../../components/settings/ChangePasswordModal';
 import { DeliveryReminderModal } from '../../../components/settings/DeliveryReminderModal';
+import { CurrencyPickerModal } from '../../../components/settings/CurrencyPickerModal';
+import { useCurrencyStore } from '../../../stores/currencyStore';
+import { 
+  requestNotificationPermissions, 
+  cancelAllDeliveryReminders, 
+  getExpoNotifications 
+} from '../../../services/deliveryReminderService';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -32,6 +39,8 @@ export default function SettingsScreen() {
 
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [isDeliveryReminderVisible, setDeliveryReminderVisible] = useState(false);
+  const [isCurrencyPickerVisible, setCurrencyPickerVisible] = useState(false);
+  const { currency } = useCurrencyStore();
   const { colors, themeMode, toggleTheme } = useThemeStore();
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const [biometricTypeStr, setBiometricTypeStr] = useState<string | null>(null);
@@ -162,6 +171,77 @@ export default function SettingsScreen() {
     updatePrefsMutation.mutate(newPrefs as any);
   };
 
+  const handleDeliveryReminderToggle = async (val: boolean) => {
+    if (!notificationPrefs) return;
+
+    if (!val) {
+      // تعطيل التنبيهات وحذف المجدول محلياً
+      const newPrefs = {
+        ...notificationPrefs,
+        deliveryReminder: {
+          ...(notificationPrefs.deliveryReminder || {
+            hoursEnabled: true,
+            hours: 5,
+            daysEnabled: true,
+            days: 1,
+          }),
+          enabled: false,
+        },
+      };
+      await cancelAllDeliveryReminders();
+      updatePrefsMutation.mutate(newPrefs as any);
+      return;
+    }
+
+    // تفعيل التنبيهات مع فحص صلاحيات الجهاز
+    const granted = await requestNotificationPermissions();
+    if (!granted) {
+      Alert.alert(
+        t('settings.deliveryReminder.permissionDenied', 'إشعارات الجهاز مُعطَّلة'),
+        t(
+          'settings.deliveryReminder.permissionDeniedDesc',
+          'لتلقّي تنبيهات مواعيد التسليم يجب السماح بالإشعارات من إعدادات الجهاز.'
+        ),
+        [
+          { text: t('common.cancel', 'إلغاء'), style: 'cancel' },
+          { text: t('settings.openSettings', 'فتح الإعدادات'), onPress: () => Linking.openSettings() },
+        ],
+      );
+      return;
+    }
+
+    const currentReminder = notificationPrefs.deliveryReminder;
+    const newPrefs = {
+      ...notificationPrefs,
+      deliveryReminder: {
+        enabled: true,
+        hoursEnabled: currentReminder?.hoursEnabled ?? true,
+        hours: currentReminder?.hours ?? 5,
+        daysEnabled: currentReminder?.daysEnabled ?? true,
+        days: currentReminder?.days ?? 1,
+      },
+    };
+    updatePrefsMutation.mutate(newPrefs as any);
+
+    // إشعار تأكيد فوري للمستخدم
+    try {
+      const Notifications = await getExpoNotifications();
+      await Notifications?.scheduleNotificationAsync({
+        content: {
+          title: t('settings.deliveryReminder.enabledSuccessTitle', 'تنبيهات مواعيد التسليم مفعّلة ⏰'),
+          body: t(
+            'settings.deliveryReminder.enabledSuccessBody',
+            'تم تفعيل التنبيهات بنجاح. ستتلقى إشعارات تلقائية قبل مواعيد التسليم.'
+          ),
+          sound: 'default',
+        },
+        trigger: null,
+      });
+    } catch {
+      // ignore
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert(
       t('settings.logout'),
@@ -247,6 +327,12 @@ export default function SettingsScreen() {
 
         <SettingsSection title={t('settings.appPreferences')}>
           <SettingsRow 
+            icon="cash-outline" 
+            title={t('settings.currency.label')} 
+            value={`${currency.flag} ${currency.code} · ${currency.symbol}`}
+            onPress={() => setCurrencyPickerVisible(true)}
+          />
+          <SettingsRow 
             icon="language-outline" 
             title={t('settings.language')} 
             value={i18n.language === 'ar' ? 'العربية' : 'English'}
@@ -266,6 +352,19 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title={t('settings.notifications')}>
+          <SettingsRow 
+            icon="alarm-outline" 
+            title={t('settings.deliveryReminder.title')} 
+            isSwitch
+            switchValue={notificationPrefs?.deliveryReminder?.enabled ?? false}
+            onSwitchChange={handleDeliveryReminderToggle}
+          />
+          <SettingsRow 
+            icon="timer-outline" 
+            title={t('settings.deliveryReminder.subtitle')} 
+            value={getReminderSummary()}
+            onPress={() => setDeliveryReminderVisible(true)} 
+          />
           <SettingsRow 
             icon="calendar-outline" 
             title={t('settings.newBooking')} 
@@ -346,6 +445,11 @@ export default function SettingsScreen() {
       <DeliveryReminderModal
         visible={isDeliveryReminderVisible}
         onClose={() => setDeliveryReminderVisible(false)}
+      />
+
+      <CurrencyPickerModal
+        visible={isCurrencyPickerVisible}
+        onClose={() => setCurrencyPickerVisible(false)}
       />
     </SafeAreaView>
   );

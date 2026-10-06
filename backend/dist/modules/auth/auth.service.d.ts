@@ -100,10 +100,10 @@ export declare class AuthService {
         success: boolean;
         data: {
             id: string;
-            uniqueId: string;
-            email: string;
             fullName: string;
+            uniqueId: string;
             role: import(".prisma/client").$Enums.user_role;
+            email: string;
         };
     }>;
     requestEmailChange(userId: string, newEmail: string): Promise<{
@@ -114,10 +114,10 @@ export declare class AuthService {
         success: boolean;
         data: {
             id: string;
-            uniqueId: string;
-            email: string;
             fullName: string;
+            uniqueId: string;
             role: import(".prisma/client").$Enums.user_role;
+            email: string;
         };
         message: string;
     }>;

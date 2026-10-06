@@ -23,9 +23,9 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             title: string;
             sortOrder: number | null;
             startDate: Date | null;
@@ -45,9 +45,9 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             title: string;
             sortOrder: number | null;
             startDate: Date | null;
@@ -64,9 +64,9 @@ export declare class AdsService {
         success: boolean;
         data: {
             id: string;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             title: string;
             sortOrder: number | null;
             startDate: Date | null;
@@ -95,9 +95,9 @@ export declare class AdsService {
         data: {
             viewsCount: number;
             id: string;
-            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             title: string;
             sortOrder: number | null;
             startDate: Date | null;

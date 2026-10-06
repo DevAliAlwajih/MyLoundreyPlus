@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,30 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+import api from '../../lib/axios';
 import { useThemeStore } from '../../stores/themeStore';
 import { useLaundryStore, DeliveryReminderPrefs } from '../../stores/laundryStore';
 import { useUpdateNotificationPrefs } from '../../hooks/useSettings';
+
+// Helper to safely load expo-notifications without crashing in Expo Go on Android (SDK 53+)
+const getExpoNotifications = async () => {
+  const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+  if (isExpoGo && Platform.OS === 'android') {
+    return null;
+  }
+  try {
+    return await import('expo-notifications');
+  } catch {
+    return null;
+  }
+};
+
+type PermissionStatus = 'granted' | 'denied' | 'undetermined' | 'checking';
 
 interface DeliveryReminderModalProps {
   visible: boolean;
@@ -37,28 +55,163 @@ export const DeliveryReminderModal: React.FC<DeliveryReminderModalProps> = ({
   const { notificationPrefs } = useLaundryStore();
   const updatePrefsMutation = useUpdateNotificationPrefs();
 
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(false);
   const [hoursEnabled, setHoursEnabled] = useState(true);
   const [hours, setHours] = useState(5);
   const [daysEnabled, setDaysEnabled] = useState(true);
   const [days, setDays] = useState(1);
+  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>('checking');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // ── Helper to setup Android channels ──────────────────────────────────────
+  const setupAndroidChannel = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const Notifications = await getExpoNotifications();
+        if (!Notifications) return;
+        await Notifications.setNotificationChannelAsync('delivery_reminders', {
+          name: 'تنبيهات مواعيد التسليم',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#2563eb',
+        });
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'الإشعارات العامة',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#2563eb',
+        });
+      } catch (err) {
+        console.warn('Channel setup error:', err);
+      }
+    }
+  };
+
+  // ── Check permission status on open ───────────────────────────────────────
+  const checkPermissions = useCallback(async () => {
+    setPermissionStatus('checking');
+    try {
+      const Notifications = await getExpoNotifications();
+      if (!Notifications) {
+        setPermissionStatus('granted');
+        return;
+      }
+      const { status } = await Notifications.getPermissionsAsync();
+      setPermissionStatus(status as PermissionStatus);
+    } catch {
+      setPermissionStatus('undetermined');
+    }
+  }, []);
 
   // Sync state when modal opens or store changes
   useEffect(() => {
-    if (visible && notificationPrefs?.deliveryReminder) {
-      setEnabled(notificationPrefs.deliveryReminder.enabled ?? true);
+    if (!visible) return;
+    checkPermissions();
+    if (notificationPrefs?.deliveryReminder) {
+      setEnabled(notificationPrefs.deliveryReminder.enabled ?? false);
       setHoursEnabled(notificationPrefs.deliveryReminder.hoursEnabled ?? true);
       setHours(notificationPrefs.deliveryReminder.hours ?? 5);
       setDaysEnabled(notificationPrefs.deliveryReminder.daysEnabled ?? true);
       setDays(notificationPrefs.deliveryReminder.days ?? 1);
-    } else if (visible) {
-      setEnabled(true);
+    } else {
+      setEnabled(false);
       setHoursEnabled(true);
       setHours(5);
       setDaysEnabled(true);
       setDays(1);
     }
   }, [visible, notificationPrefs]);
+
+  // ── Handle enabling toggle with permission check ───────────────────────────
+  const handleEnableToggle = async (val: boolean) => {
+    if (!val) {
+      // Disabling: turn off and clear any scheduled local notifications
+      setEnabled(false);
+      try {
+        const { cancelAllDeliveryReminders } = await import('../../services/deliveryReminderService');
+        await cancelAllDeliveryReminders();
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    // Enabling: make sure notifications are permitted
+    try {
+      const { requestNotificationPermissions, setupNotificationChannels, getExpoNotifications } = await import(
+        '../../services/deliveryReminderService'
+      );
+      await setupNotificationChannels();
+
+      const granted = await requestNotificationPermissions();
+      setPermissionStatus(granted ? 'granted' : 'denied');
+
+      if (granted) {
+        setEnabled(true);
+        const Notifications = await getExpoNotifications();
+        // Show immediate local confirmation notification so user knows notifications work
+        try {
+          await Notifications?.scheduleNotificationAsync({
+            content: {
+              title: t('settings.deliveryReminder.enabledSuccessTitle', 'تنبيهات مواعيد التسليم مفعّلة ⏰'),
+              body: t(
+                'settings.deliveryReminder.enabledSuccessBody',
+                'تم تفعيل التنبيهات بنجاح. ستتلقى إشعارات تلقائية قبل مواعيد التسليم.'
+              ),
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        } catch {
+          // ignore
+        }
+      } else {
+        // User denied — inform & offer to open settings
+        Alert.alert(
+          t('settings.deliveryReminder.permissionDenied', 'إشعارات الجهاز مُعطَّلة'),
+          t(
+            'settings.deliveryReminder.permissionDeniedDesc',
+            'لتلقّي تنبيهات مواعيد التسليم يجب السماح بالإشعارات من إعدادات الجهاز.'
+          ),
+          [
+            { text: t('common.cancel', 'إلغاء'), style: 'cancel' },
+            { text: t('settings.openSettings', 'فتح الإعدادات'), onPress: () => Linking.openSettings() },
+          ],
+        );
+        setEnabled(false);
+      }
+    } catch {
+      setEnabled(false);
+    }
+  };
+
+  // ── Send Test Notification ────────────────────────────────────────────────
+  const handleSendTestNotification = async () => {
+    setIsSendingTest(true);
+    try {
+      const { sendTestDeliveryNotification } = await import('../../services/deliveryReminderService');
+      await sendTestDeliveryNotification(hours, days, hoursEnabled && !daysEnabled);
+      Alert.alert(
+        t('common.success', 'نجاح'),
+        t('settings.deliveryReminder.testSent', 'تم إرسال إشعار تجريبي بنجاح')
+      );
+    } catch (err: any) {
+      console.warn('Test notification error:', err);
+      if (err?.message === 'PERMISSION_NOT_GRANTED') {
+        Alert.alert(
+          t('common.error', 'تنبيه'),
+          t('settings.deliveryReminder.permissionDeniedDesc', 'يرجى تفعيل صلاحية الإشعارات أولاً لإرسال إشعار تجريبي.')
+        );
+      } else {
+        Alert.alert(
+          t('common.info', 'تنبيه'),
+          'اختبار الإشعارات غير مدعوم داخل تطبيق Expo Go على نظام أندرويد في هذا الإصدار (يتطلب تطبيق Development Build).'
+        );
+      }
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   const handleStepHours = (step: number) => {
     setHours((prev) => {
@@ -150,6 +303,28 @@ export const DeliveryReminderModal: React.FC<DeliveryReminderModalProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollBody}
           >
+            {/* Permission Status Banner */}
+            {permissionStatus === 'denied' && (
+              <TouchableOpacity
+                onPress={() => Linking.openSettings()}
+                style={styles.permissionBanner}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="warning-outline" size={18} color="#b45309" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.permissionBannerTitle}>إشعارات الجهاز مُعطَّلة</Text>
+                  <Text style={styles.permissionBannerDesc}>اضغط هنا لفتح إعدادات الجهاز وتفعيلها</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#b45309" />
+              </TouchableOpacity>
+            )}
+            {permissionStatus === 'granted' && enabled && (
+              <View style={styles.permissionGrantedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color="#15803d" />
+                <Text style={styles.permissionGrantedText}>الإشعارات مفعّلة ✓</Text>
+              </View>
+            )}
+
             {/* Master Toggle */}
             <View
               style={[
@@ -171,7 +346,7 @@ export const DeliveryReminderModal: React.FC<DeliveryReminderModalProps> = ({
                 </View>
                 <Switch
                   value={enabled}
-                  onValueChange={setEnabled}
+                  onValueChange={handleEnableToggle}
                   trackColor={{ false: colors.border, true: colors.primary + '80' }}
                   thumbColor={enabled ? colors.primary : colors.surface}
                 />
@@ -458,6 +633,29 @@ export const DeliveryReminderModal: React.FC<DeliveryReminderModalProps> = ({
                         </Text>
                       </View>
                     )}
+
+                    {/* Test notification button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.testBtn,
+                        { borderColor: colors.primary, backgroundColor: colors.surface },
+                        isSendingTest && styles.disabledBtn,
+                      ]}
+                      onPress={handleSendTestNotification}
+                      disabled={isSendingTest}
+                      activeOpacity={0.8}
+                    >
+                      {isSendingTest ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : (
+                        <View style={styles.testBtnContent}>
+                          <Ionicons name="paper-plane-outline" size={18} color={colors.primary} />
+                          <Text style={[styles.testBtnText, { color: colors.primary }]}>
+                            {t('settings.deliveryReminder.testNotification')}
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
                   </View>
                 )}
               </>
@@ -544,6 +742,45 @@ const styles = StyleSheet.create({
   scrollBody: {
     padding: 20,
     paddingBottom: 20,
+  },
+  permissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 10,
+  },
+  permissionBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400e',
+  },
+  permissionBannerDesc: {
+    fontSize: 12,
+    color: '#b45309',
+    marginTop: 2,
+  },
+  permissionGrantedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    gap: 6,
+    alignSelf: 'flex-start',
+  },
+  permissionGrantedText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803d',
   },
   card: {
     borderRadius: 16,
@@ -712,5 +949,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  testBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  testBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -205,7 +205,7 @@ export class ProfileService {
       paymentReceived: true,
       systemAlerts: true,
       deliveryReminder: {
-        enabled: true,
+        enabled: false,
         hoursEnabled: true,
         hours: 5,
         daysEnabled: true,
@@ -230,9 +230,23 @@ export class ProfileService {
 
   // 7. تحديث إعدادات الإشعارات
   async updateNotificationPrefs(userId: string, prefs: any) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notification_prefs: true },
+    });
+    const currentPrefs = (user?.notification_prefs as any) || {};
+    const mergedPrefs = {
+      ...currentPrefs,
+      ...prefs,
+      deliveryReminder: {
+        ...(currentPrefs.deliveryReminder || {}),
+        ...(prefs.deliveryReminder || {}),
+      },
+    };
+
     const updated = await this.prisma.user.update({
       where: { id: userId },
-      data: { notification_prefs: prefs },
+      data: { notification_prefs: mergedPrefs },
       select: { notification_prefs: true },
     });
 
@@ -240,5 +254,38 @@ export class ProfileService {
       success: true,
       data: updated.notification_prefs,
     };
+  }
+
+  // 8. تحديث رمز FCM للجهاز
+  async updateDeviceToken(userId: string, fcmToken: string, deviceId?: string) {
+    if (!fcmToken) return { success: true };
+    try {
+      if (deviceId) {
+        await this.prisma.userDevice.upsert({
+          where: { id: deviceId },
+          update: { fcmToken, isActive: true, lastLoginAt: new Date() },
+          create: {
+            id: deviceId,
+            userId,
+            fcmToken,
+            isActive: true,
+          },
+        });
+      } else {
+        const device = await this.prisma.userDevice.findFirst({
+          where: { userId, isActive: true },
+          orderBy: { lastLoginAt: 'desc' },
+        });
+        if (device) {
+          await this.prisma.userDevice.update({
+            where: { id: device.id },
+            data: { fcmToken },
+          });
+        }
+      }
+    } catch {
+      // Ignore device token update errors
+    }
+    return { success: true };
   }
 }

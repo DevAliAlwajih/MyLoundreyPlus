@@ -46,6 +46,7 @@ export default function RootLayout() {
       try {
         await initI18n();
         await useThemeStore.getState().initTheme();
+        await (await import('../stores/currencyStore')).useCurrencyStore.getState().initCurrency();
         await checkAuthStatus();
       } catch (error) {
         console.error('[RootLayout] Error during initialization:', error);

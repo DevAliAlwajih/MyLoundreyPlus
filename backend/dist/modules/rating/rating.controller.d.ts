@@ -8,10 +8,10 @@ export declare class RatingController {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            invoiceId: string;
             laundryId: string;
             customerId: string;
+            createdAt: Date;
+            invoiceId: string;
             stars: number;
             comment: string | null;
         };
@@ -19,16 +19,16 @@ export declare class RatingController {
     getMyRatings(req: any): Promise<{
         success: boolean;
         data: {
-            laundry: {
-                id: string;
-                name: string;
-                logoUrl: string;
-            };
             invoice: {
                 invoiceNumber: string;
             };
             id: string;
             createdAt: Date;
+            laundry: {
+                id: string;
+                name: string;
+                logoUrl: string;
+            };
             stars: number;
             comment: string;
         }[];
@@ -47,10 +47,10 @@ export declare class RatingController {
             reason: string;
             existingRating: {
                 id: string;
-                createdAt: Date;
-                invoiceId: string;
                 laundryId: string;
                 customerId: string;
+                createdAt: Date;
+                invoiceId: string;
                 stars: number;
                 comment: string | null;
             };

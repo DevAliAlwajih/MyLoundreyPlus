@@ -474,7 +474,14 @@
       "activeSummary": "مفعّل: {{hours}} س / {{days}} ي",
       "hoursOnlySummary": "مفعّل: {{hours}} س",
       "daysOnlySummary": "مفعّل: {{days}} ي",
-      "disabledSummary": "معطّل"
+      "disabledSummary": "معطّل",
+      "testNotification": "إرسال إشعار تجريبي",
+      "testSent": "تم إرسال إشعار تجريبي بنجاح",
+      "permissionDenied": "إشعارات الجهاز مُعطَّلة",
+      "permissionDeniedDesc": "اضغط هنا لفتح إعدادات الجهاز وتفعيلها",
+      "permissionGranted": "الإشعارات مفعّلة ✓",
+      "enabledSuccessTitle": "تنبيهات مواعيد التسليم مفعّلة ⏰",
+      "enabledSuccessBody": "تم تفعيل التنبيهات بنجاح. ستتلقى إشعارات تلقائية قبل مواعيد التسليم."
     },
     "business": "إدارة المغسلة",
     "profile": "بيانات المغسلة",
@@ -489,6 +496,11 @@
     "subscriptionExpired": "انتهى اشتراكك",
     "daysRemaining": "متبقي {{days}} يوماً",
     "appPreferences": "التطبيق",
+    "currency": {
+      "title": "العملة",
+      "subtitle": "اختر العملة التي تريد عرضها في التطبيق",
+      "label": "العملة"
+    },
     "language": "اللغة",
     "theme": "المظهر",
     "light": "فاتح",
