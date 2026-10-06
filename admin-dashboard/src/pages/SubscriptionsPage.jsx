@@ -1,16 +1,126 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../App'
 import { packagesApi, promoCodesApi, commissionsApi, rechargesApi } from '../services/api'
 import {
   CreditCard, Plus, Tag, Calendar, CheckCircle, XCircle, Percent,
   DollarSign, Trash2, Edit, Coins, Sparkles, Clock, AlertCircle,
   Save, RefreshCw, Check, ShieldAlert, Layers, TrendingUp, Info,
-  Wallet, Search, Banknote, User
+  Wallet, Search, Banknote, User, ChevronDown
 } from 'lucide-react'
+
+// ─── Currency Data ────────────────────────────────────────────────────────────
+const CURRENCIES = [
+  { code: 'SAR', flag: '🇸🇦', nameAr: 'ريال سعودي',    nameEn: 'Saudi Riyal',    symbolAr: 'ر.س', symbolEn: 'SAR' },
+  { code: 'AED', flag: '🇦🇪', nameAr: 'درهم إماراتي',  nameEn: 'UAE Dirham',     symbolAr: 'د.إ', symbolEn: 'AED' },
+  { code: 'QAR', flag: '🇶🇦', nameAr: 'ريال قطري',     nameEn: 'Qatari Riyal',   symbolAr: 'ر.ق', symbolEn: 'QAR' },
+  { code: 'KWD', flag: '🇰🇼', nameAr: 'دينار كويتي',   nameEn: 'Kuwaiti Dinar',  symbolAr: 'د.ك', symbolEn: 'KWD' },
+  { code: 'OMR', flag: '🇴🇲', nameAr: 'ريال عُماني',   nameEn: 'Omani Rial',     symbolAr: 'ر.ع', symbolEn: 'OMR' },
+  { code: 'BHD', flag: '🇧🇭', nameAr: 'دينار بحريني',  nameEn: 'Bahraini Dinar', symbolAr: 'د.ب', symbolEn: 'BHD' },
+  { code: 'YER', flag: '🇾🇪', nameAr: 'ريال يمني',     nameEn: 'Yemeni Rial',    symbolAr: 'ر.ي', symbolEn: 'YER' },
+]
+
+// ─── CurrencySelector Component ───────────────────────────────────────────────
+function CurrencySelector({ currency, setCurrency, lang }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const label = (ar, en) => (lang === 'ar' ? ar : en)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const selected = CURRENCIES.find((c) => c.code === currency) || CURRENCIES[0]
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 14px', borderRadius: 10,
+          border: '1.5px solid var(--border-color, #e5e7eb)',
+          background: 'var(--card-bg, #fff)', cursor: 'pointer',
+          fontWeight: 700, fontSize: 13, color: 'var(--text-primary)',
+          transition: 'all 0.18s',
+          boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.15)' : 'none',
+          outline: 'none', whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ fontSize: 18, lineHeight: 1 }}>{selected.flag}</span>
+        <span>{label(selected.symbolAr, selected.symbolEn)}</span>
+        <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}>{selected.code}</span>
+        <ChevronDown
+          size={14}
+          style={{
+            marginInlineStart: 2, transition: 'transform 0.2s',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            color: 'var(--text-muted)',
+          }}
+        />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute', top: 'calc(100% + 6px)', insetInlineEnd: 0,
+            minWidth: 230, background: 'var(--card-bg, #fff)',
+            border: '1.5px solid var(--border-color, #e5e7eb)',
+            borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+            zIndex: 999, overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: '8px 12px 6px', borderBottom: '1px solid var(--border-color, #e5e7eb)' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {label('اختر العملة', 'Select Currency')}
+            </span>
+          </div>
+          {CURRENCIES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => { setCurrency(c.code); setOpen(false) }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                width: '100%', padding: '10px 14px', border: 'none',
+                background: c.code === currency ? 'rgba(99,102,241,0.08)' : 'transparent',
+                cursor: 'pointer', textAlign: 'start', transition: 'background 0.12s',
+                borderInlineStart: c.code === currency ? '3px solid #6366f1' : '3px solid transparent',
+              }}
+              onMouseEnter={(e) => { if (c.code !== currency) e.currentTarget.style.background = 'var(--bg-subtle, rgba(0,0,0,0.04))' }}
+              onMouseLeave={(e) => { if (c.code !== currency) e.currentTarget.style.background = 'transparent' }}
+            >
+              <span style={{ fontSize: 20 }}>{c.flag}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{label(c.nameAr, c.nameEn)}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.symbolAr} · {c.symbolEn} · {c.code}</div>
+              </div>
+              {c.code === currency && <Check size={14} color="#6366f1" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function SubscriptionsPage() {
   const { lang } = useTheme()
   const label = (ar, en) => (lang === 'ar' ? ar : en)
+
+  // Currency state – persisted in localStorage
+  const [currency, setCurrencyState] = useState(
+    () => localStorage.getItem('admin_currency') || 'SAR'
+  )
+  const setCurrency = (code) => {
+    setCurrencyState(code)
+    localStorage.setItem('admin_currency', code)
+  }
+  const currencyInfo = CURRENCIES.find((c) => c.code === currency) || CURRENCIES[0]
+  const currSymbol = label(currencyInfo.symbolAr, currencyInfo.symbolEn)
+  const currCode   = currencyInfo.code
 
   const [tab, setTab] = useState('plans') // 'plans' | 'promos' | 'settings' | 'transactions' | 'recharges'
   const [loading, setLoading] = useState(false)
@@ -374,12 +484,14 @@ export default function SubscriptionsPage() {
           <h1 className="page-title">{label('الباقات ونظام العمولات', 'Packages & Commission System')}</h1>
           <p className="page-subtitle">
             {label(
-              'إدارة الباقات التجريبية (بالأيام)، باقات شحن وتفعيل الرصيد (بالريال)، العروض الترويجية، وإعدادات العمولات',
-              'Manage trial packages (days), recharge packages (SAR), promotional offers, and commission rates'
+              `إدارة الباقات التجريبية (بالأيام)، باقات شحن وتفعيل الرصيد (بـ${currSymbol})، العروض الترويجية، وإعدادات العمولات`,
+              `Manage trial packages (days), recharge packages (${currCode}), promotional offers, and commission rates`
             )}
           </p>
         </div>
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-center flex-wrap">
+          {/* Currency Selector */}
+          <CurrencySelector currency={currency} setCurrency={setCurrency} lang={lang} />
           <button className="btn btn-secondary" onClick={loadAllData} disabled={loading}>
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             {label('تحديث', 'Refresh')}
@@ -431,7 +543,7 @@ export default function SubscriptionsPage() {
               </div>
             </div>
             <p className="fs-xs text-muted mt-8">
-              {label('تجريبي:', 'Trial:')} {commissionSettings.defaultTrialDays} {label('يوم', 'days')} | {label('هدية التفعيل:', 'Welcome:')} {Number(commissionSettings.defaultInitialBalance ?? 2000).toLocaleString()} {label('ر.س', 'SAR')}
+              {label('تجريبي:', 'Trial:')} {commissionSettings.defaultTrialDays} {label('يوم', 'days')} | {label('هدية التفعيل:', 'Welcome:')} {Number(commissionSettings.defaultInitialBalance ?? 2000).toLocaleString()} {currSymbol}
             </p>
           </div>
         </div>
@@ -461,7 +573,7 @@ export default function SubscriptionsPage() {
               <div>
                 <p className="text-muted fs-xs fw-bold text-uppercase">{label('إجمالي العمولات المحصلة', 'Commission Collected')}</p>
                 <h3 className="fs-2xl fw-black mt-4" style={{ color: '#f59e0b' }}>
-                  {Number(txStats.totalCommission).toLocaleString()} {label('ر.س', 'SAR')}
+                  {Number(txStats.totalCommission).toLocaleString()} {currSymbol}
                 </h3>
               </div>
               <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', padding: 12, borderRadius: 12 }}>
@@ -594,7 +706,7 @@ export default function SubscriptionsPage() {
                               <span className="fs-3xl fw-black" style={{ color: '#10b981' }}>
                                 {Number(finalPrice).toLocaleString()}
                               </span>
-                              <span className="fs-sm fw-bold text-muted">{label('ريال رصيد', 'SAR Balance')}</span>
+                              <span className="fs-sm fw-bold text-muted">{currSymbol} {label('رصيد', 'Balance')}</span>
                               {hasDiscount && (
                                 <span className="fs-sm text-muted text-line-through">
                                   {Number(p.priceSar).toLocaleString()}
@@ -725,7 +837,7 @@ export default function SubscriptionsPage() {
                         </td>
                         <td className="fw-bold text-primary">
                           {pr.discountValue}
-                          {pr.discountType === 'percent' ? '%' : ` ${label('ريال', 'SAR')}`}
+                          {pr.discountType === 'percent' ? '%' : ` ${currSymbol}`}
                         </td>
                         <td>
                           <div>
@@ -852,7 +964,7 @@ export default function SubscriptionsPage() {
 
               <div className="form-group">
                 <label className="form-label fw-bold">
-                  {label('رصيد هدية التفعيل الافتراضي (ريال)', 'Default Initial Welcome Balance (SAR)')}
+                  {label(`رصيد هدية التفعيل الافتراضي (${currSymbol})`, `Default Initial Welcome Balance (${currCode})`)}
                 </label>
                 <div className="flex items-center gap-8">
                   <input
@@ -865,16 +977,16 @@ export default function SubscriptionsPage() {
                     }
                     required
                   />
-                  <span className="fs-sm fw-bold text-muted">{label('ريال', 'SAR')}</span>
+                  <span className="fs-sm fw-bold text-muted">{currSymbol}</span>
                 </div>
                 <span className="fs-xs text-muted mt-4">
-                  {label('الرصيد الترحيبي المجاني الذي يضاف تلقائياً لمحفظة أي مغسلة جديدة عند التسجيل (مثل 2,000 ريال) ليظل رصيداً لها.', 'Free welcome credit granted automatically to new laundries upon registration.')}
+                  {label('الرصيد الترحيبي المجاني الذي يضاف تلقائياً لمحفظة أي مغسلة جديدة عند التسجيل ليظل رصيداً لها.', 'Free welcome credit granted automatically to new laundries upon registration.')}
                 </span>
               </div>
 
               <div className="form-group">
                 <label className="form-label fw-bold">
-                  {label('الحد الائتماني للمديونية (ريال)', 'Debt Limit in SAR')}
+                  {label(`الحد الائتماني للمديونية (${currSymbol})`, `Debt Limit (${currCode})`)}
                 </label>
                 <div className="flex items-center gap-8">
                   <input
@@ -887,7 +999,7 @@ export default function SubscriptionsPage() {
                     }
                     required
                   />
-                  <span className="fs-sm fw-bold text-muted">{label('ريال', 'SAR')}</span>
+                  <span className="fs-sm fw-bold text-muted">{currSymbol}</span>
                 </div>
                 <span className="fs-xs text-muted mt-4">
                   {label('الحد الأقصى المسموح للمغسلة بالعمل فيه برصيد سالب قبل إيقاف إصدار الفواتير لحين الشحن.', 'Max negative balance before requiring a recharge.')}
@@ -896,7 +1008,7 @@ export default function SubscriptionsPage() {
 
               <div className="form-group">
                 <label className="form-label fw-bold">
-                  {label('الحد الأدنى لمبلغ شحن الرصيد (ريال)', 'Minimum Recharge Amount (SAR)')}
+                  {label(`الحد الأدنى لمبلغ شحن الرصيد (${currSymbol})`, `Minimum Recharge Amount (${currCode})`)}
                 </label>
                 <div className="flex items-center gap-8">
                   <input
@@ -909,8 +1021,11 @@ export default function SubscriptionsPage() {
                     }
                     required
                   />
-                  <span className="fs-sm fw-bold text-muted">{label('ريال', 'SAR')}</span>
+                  <span className="fs-sm fw-bold text-muted">{currSymbol}</span>
                 </div>
+                <span className="fs-xs text-muted mt-4">
+                  {label('أقل مبلغ يمكن للمغسلة إيداعه لشحن رصيدها في محفظتها.', 'Minimum amount a laundry can deposit to recharge its wallet balance.')}
+                </span>
               </div>
 
               <div className="pt-12">
@@ -1011,14 +1126,14 @@ export default function SubscriptionsPage() {
                           {tx.invoiceNumber || tx.invoiceId?.substring(0, 8) || '-'}
                         </span>
                       </td>
-                      <td className="fw-semi">{Number(tx.invoiceTotal).toLocaleString()} {label('ر.س', 'SAR')}</td>
+                      <td className="fw-semi">{Number(tx.invoiceTotal).toLocaleString()} {currSymbol}</td>
                       <td>{tx.commissionRate}%</td>
                       <td className="fw-bold" style={{ color: tx.commissionAmount > 0 ? 'var(--danger)' : '#10b981' }}>
-                        {tx.commissionAmount > 0 ? `-${tx.commissionAmount}` : tx.commissionAmount} {label('ر.س', 'SAR')}
+                        {tx.commissionAmount > 0 ? `-${tx.commissionAmount}` : tx.commissionAmount} {currSymbol}
                       </td>
                       <td className="fw-semi">
                         <span style={{ color: tx.balanceAfter < 0 ? 'var(--danger)' : '#10b981' }}>
-                          {Number(tx.balanceAfter).toLocaleString()} {label('ر.س', 'SAR')}
+                          {Number(tx.balanceAfter).toLocaleString()} {currSymbol}
                         </span>
                       </td>
                       <td>
@@ -1106,7 +1221,7 @@ export default function SubscriptionsPage() {
               <div>
                 <span className="fs-xs text-muted block">{label('إجمالي المبالغ المسددة', 'Total Recharged')}</span>
                 <span className="fw-black fs-md text-success">
-                  +{Number(rechargeStats.totalRecharged || 0).toLocaleString()} <small className="fs-xs font-normal">ر.س</small>
+                  +{Number(rechargeStats.totalRecharged || 0).toLocaleString()} <small className="fs-xs font-normal">{currSymbol}</small>
                 </span>
               </div>
             </div>
@@ -1190,7 +1305,7 @@ export default function SubscriptionsPage() {
                         </td>
                         <td>
                           <span className="fw-black fs-md text-success">
-                            +{Number(rc.amount).toLocaleString()} <small className="fs-xs font-normal">ر.س</small>
+                            +{Number(rc.amount).toLocaleString()} <small className="fs-xs font-normal">{currSymbol}</small>
                           </span>
                         </td>
                         <td>
@@ -1214,7 +1329,7 @@ export default function SubscriptionsPage() {
                             </span>
                             <span>→</span>
                             <span className="fw-bold text-success">
-                              {Number(rc.balance_after ?? rc.balanceAfter ?? 0).toLocaleString()} ر.س
+                              {Number(rc.balance_after ?? rc.balanceAfter ?? 0).toLocaleString()} {currSymbol}
                             </span>
                           </div>
                         </td>
@@ -1293,7 +1408,7 @@ export default function SubscriptionsPage() {
                       }
                     >
                       <DollarSign size={16} />
-                      {label('باقة شحن وتفعيل (مبلغ بالريال)', 'Recharge Package (SAR Amount)')}
+                      {label(`باقة شحن وتفعيل (مبلغ بـ${currSymbol})`, `Recharge Package (${currCode} Amount)`)}
                     </button>
                   </div>
                 </div>
@@ -1343,8 +1458,8 @@ export default function SubscriptionsPage() {
                   <div className="form-group">
                     <label className="form-label">
                       {planForm.planType === 'trial'
-                        ? label('السعر (0 ريال - مجاني)', 'Price (0 SAR - Free)')
-                        : label('مبلغ الشحن والسعر (ريال)', 'Recharge Amount / Price (SAR)')}
+                        ? label(`السعر (0 ${currSymbol} - مجاني)`, `Price (0 ${currCode} - Free)`)
+                        : label(`مبلغ الشحن والسعر (${currSymbol})`, `Recharge Amount / Price (${currCode})`)}
                     </label>
                     <input
                       type="number"
@@ -1524,7 +1639,7 @@ export default function SubscriptionsPage() {
                       onChange={(e) => setPromoForm({ ...promoForm, discountType: e.target.value })}
                     >
                       <option value="percent">{label('نسبة مئوية (%)', 'Percentage (%)')}</option>
-                      <option value="fixed">{label('مبلغ ثابت (ريال)', 'Fixed Amount (SAR)')}</option>
+                      <option value="fixed">{label(`مبلغ ثابت (${currSymbol})`, `Fixed Amount (${currCode})`)}</option>
                     </select>
                   </div>
                   <div className="form-group">
