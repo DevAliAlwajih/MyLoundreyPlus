@@ -26,6 +26,7 @@ interface CurrencyState {
   isInitialized: boolean;
   initCurrency: () => Promise<void>;
   setCurrency: (currency: Currency) => Promise<void>;
+  setCurrencyByCode: (code: string) => Promise<void>;
 }
 
 export const useCurrencyStore = create<CurrencyState>((set) => ({
@@ -54,6 +55,19 @@ export const useCurrencyStore = create<CurrencyState>((set) => ({
       await SecureStore.setItemAsync(SECURE_STORE_KEY, currency.code);
     } catch (error) {
       console.error('Failed to save currency to SecureStore', error);
+    }
+  },
+
+  setCurrencyByCode: async (code: string) => {
+    if (!code) return;
+    const found = CURRENCIES.find((c) => c.code.toUpperCase() === code.toUpperCase());
+    if (found) {
+      set({ currency: found });
+      try {
+        await SecureStore.setItemAsync(SECURE_STORE_KEY, found.code);
+      } catch (error) {
+        console.error('Failed to save currency to SecureStore', error);
+      }
     }
   },
 }));

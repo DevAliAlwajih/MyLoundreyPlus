@@ -36,6 +36,7 @@ export interface LaundryProfile {
   tax_rate: number | null;
   urgency_enabled: boolean;
   urgency_fee: number | null;
+  currency?: string;
 }
 
 export interface DeliveryReminderPrefs {
