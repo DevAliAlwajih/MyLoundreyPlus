@@ -21,12 +21,12 @@ export declare class PromotionController {
             isExpired: boolean;
             isUpcoming: boolean;
             id: string;
-            laundryId: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
-            title: string;
             description: string | null;
+            laundryId: string;
+            title: string;
             startDate: Date | null;
             endDate: Date | null;
             imageUrl: string | null;
@@ -42,12 +42,12 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
-            laundryId: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
-            title: string;
             description: string | null;
+            laundryId: string;
+            title: string;
             startDate: Date | null;
             endDate: Date | null;
             imageUrl: string | null;
@@ -64,12 +64,12 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
-            laundryId: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
-            title: string;
             description: string | null;
+            laundryId: string;
+            title: string;
             startDate: Date | null;
             endDate: Date | null;
             imageUrl: string | null;
@@ -84,8 +84,8 @@ export declare class PromotionController {
         data: {
             id: string;
             createdAt: Date;
-            title: string;
             description: string;
+            title: string;
             startDate: Date;
             endDate: Date;
             imageUrl: string;
@@ -95,12 +95,12 @@ export declare class PromotionController {
         success: boolean;
         data: {
             id: string;
-            laundryId: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
-            title: string;
             description: string | null;
+            laundryId: string;
+            title: string;
             startDate: Date | null;
             endDate: Date | null;
             imageUrl: string | null;

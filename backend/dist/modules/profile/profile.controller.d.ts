@@ -8,16 +8,16 @@ export declare class ProfileController {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            phoneNumber: string;
-            country: string;
             fullName: string;
+            phoneNumber: string;
             uniqueId: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
+            createdAt: Date;
             email: string;
+            country: string;
             currency: string;
         };
     }>;
@@ -25,16 +25,16 @@ export declare class ProfileController {
         success: boolean;
         data: {
             id: string;
-            createdAt: Date;
-            phoneNumber: string;
-            country: string;
             fullName: string;
+            phoneNumber: string;
             uniqueId: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
+            createdAt: Date;
             email: string;
+            country: string;
             currency: string;
         };
     }>;

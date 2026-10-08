@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, I18nManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, Tabs } from 'expo-router';
@@ -13,6 +13,7 @@ import { QRScannerModal } from '../../../components/invoices/QRScannerModal';
 import { UniqueIdModal } from '../../../components/invoices/UniqueIdModal';
 import { useThemeStore } from '../../../stores/themeStore';
 import api from '../../../lib/axios';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 export default function NewInvoiceScreen() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function NewInvoiceScreen() {
   
   const store = useInvoiceStore();
   const laundryStore = useLaundryStore();
+  const { currency } = useCurrencyStore();
   const { data: menuData, isLoading: loadingCatalog } = useCatalogMenu();
   const createMutation = useCreateInvoice();
 
@@ -371,7 +373,7 @@ export default function NewInvoiceScreen() {
                          <View key={item.itemId} style={[styles.itemRow, isSelected && styles.itemRowSelected]}>
                            <View style={styles.itemRowHeader}>
                              <Text style={styles.itemName}>{item.nameAr}</Text>
-                             <Text style={styles.itemBasePrice}>{(Number(item.fullServicePrice) || 0).toFixed(2)} ر.س</Text>
+                             <Text style={styles.itemBasePrice}>{(Number(item.fullServicePrice) || 0).toFixed(2)} {currency.symbol}</Text>
                            </View>
                            
                            <View style={styles.serviceTypesRow}>
@@ -410,7 +412,7 @@ export default function NewInvoiceScreen() {
                                  keyboardType="decimal-pad"
                                  editable={isSelected}
                                />
-                               <Text style={styles.priceLabel}> ر.س</Text>
+                               <Text style={styles.priceLabel}> {currency.symbol}</Text>
                              </View>
                              
                              <View style={styles.stepper}>
@@ -522,7 +524,7 @@ export default function NewInvoiceScreen() {
               value={(Number(store.urgencyFeeAmount) || 0).toFixed(2)}
               editable={false}
             />
-            <Text style={styles.urgencyFeeCurrency}>ر.س</Text>
+            <Text style={styles.urgencyFeeCurrency}>{currency.symbol}</Text>
           </View>
         </View>
       )}
@@ -565,7 +567,7 @@ export default function NewInvoiceScreen() {
       <View style={styles.totalsContainer}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>المجموع الفرعي:</Text>
-          <Text style={styles.totalValue}>{(Number(store.subtotal) || 0).toFixed(2)} ر.س</Text>
+          <Text style={styles.totalValue}>{(Number(store.subtotal) || 0).toFixed(2)} {currency.symbol}</Text>
         </View>
         
         <View style={styles.totalRow}>
@@ -582,26 +584,26 @@ export default function NewInvoiceScreen() {
               <Text style={styles.discountPercent}>%</Text>
             </View>
           </View>
-          <Text style={styles.discountValue}>- {(Number(store.discountAmount) || 0).toFixed(2)} ر.س</Text>
+          <Text style={styles.discountValue}>- {(Number(store.discountAmount) || 0).toFixed(2)} {currency.symbol}</Text>
         </View>
         
         {store.isUrgent && (
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>رسوم الاستعجال:</Text>
-            <Text style={styles.totalValue}>+ {(Number(store.urgencyFeeAmount) || 0).toFixed(2)} ر.س</Text>
+            <Text style={styles.totalValue}>+ {(Number(store.urgencyFeeAmount) || 0).toFixed(2)} {currency.symbol}</Text>
           </View>
         )}
         
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>ضريبة ({store.taxPercent}%):</Text>
-          <Text style={styles.totalValue}>+ {(Number(store.taxAmount) || 0).toFixed(2)} ر.س</Text>
+          <Text style={styles.totalValue}>+ {(Number(store.taxAmount) || 0).toFixed(2)} {currency.symbol}</Text>
         </View>
         
         <View style={styles.totalsDivider} />
         
         <View style={styles.totalRow}>
           <Text style={styles.finalTotalLabel}>الإجمالي:</Text>
-          <Text style={styles.finalTotalValue}>{(Number(store.total) || 0).toFixed(2)} ر.س</Text>
+          <Text style={styles.finalTotalValue}>{(Number(store.total) || 0).toFixed(2)} {currency.symbol}</Text>
         </View>
       </View>
       

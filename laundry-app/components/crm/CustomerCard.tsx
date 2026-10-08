@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Customer } from '../../stores/crmStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -13,6 +14,7 @@ interface CustomerCardProps {
 export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress }) => {
   const { t, i18n } = useTranslation();
   const { colors } = useThemeStore();
+  const { currency } = useCurrencyStore();
 
   const deferredBalance = Number(customer.deferredBalance) || 0;
   const lastVisitDate = customer.lastVisit ? new Date(customer.lastVisit) : null;
@@ -56,7 +58,7 @@ export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onPress })
         <View style={styles.statItem}>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('crm.deferredBalance')}</Text>
           <Text style={[styles.statValue, deferredBalance > 0 ? styles.debtValue : styles.noDebtValue]}>
-            {deferredBalance.toFixed(2)} ر.س
+            {deferredBalance.toFixed(2)} {currency.symbol}
           </Text>
         </View>
       </View>

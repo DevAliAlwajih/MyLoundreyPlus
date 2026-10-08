@@ -15,6 +15,7 @@ import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterDto } from './dto/register.dto';
+import { getCurrencyByCountry, getCountryIsoCode } from '../../common/country-currency.map';
 
 @Injectable()
 export class AuthService {
@@ -55,6 +56,9 @@ export class AuthService {
       const password_hash = await bcrypt.hash(dto.password, 10);
       const uniqueId = this.generateUniqueId();
 
+      const resolvedCountry = getCountryIsoCode(dto.countryCode);
+      const resolvedCurrency = getCurrencyByCountry(dto.countryCode);
+
       return await this.prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
@@ -62,7 +66,8 @@ export class AuthService {
             email        : normalizedEmail,
             password_hash,
             phoneNumber  : fullPhone,
-            country      : dto.countryCode,
+            country      : resolvedCountry,
+            currency     : resolvedCurrency,
             uniqueId,
             role         : 'laundry',
             isVerified   : false,
@@ -96,6 +101,8 @@ export class AuthService {
             name                     : dto.laundryName,
             phoneNumber              : fullPhone,
             ownerId                  : user.id,
+            country                  : resolvedCountry,
+            currency                 : resolvedCurrency,
             status                   : 'pending',
             billing_type             : 'commission',
             commission_rate          : defaultRate,
@@ -585,6 +592,8 @@ export class AuthService {
         email   : user.email,
         role    : user.role,
         uniqueId: user.uniqueId,
+        country : user.country,
+        currency: user.currency,
       },
     };
   }

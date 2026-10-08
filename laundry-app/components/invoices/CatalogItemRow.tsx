@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { CatalogItem } from '../../hooks/useInvoices';
 import { Swipeable } from 'react-native-gesture-handler';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface CatalogItemRowProps {
   item: CatalogItem;
@@ -17,6 +18,7 @@ export const CatalogItemRow: React.FC<CatalogItemRowProps> = ({ item, onEdit, on
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const displayName = isArabic ? item.nameAr : (item.nameEn || item.nameAr);
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
 
   const renderRightActions = () => {
     return (
@@ -39,17 +41,17 @@ export const CatalogItemRow: React.FC<CatalogItemRowProps> = ({ item, onEdit, on
         <View style={styles.pricesRow}>
           <View style={styles.priceItem}>
             <Text style={styles.priceLabel}>{t('catalog.washingPrice')}:</Text>
-            <Text style={styles.priceValue}>{item.washingPrice ?? '-'} ر.س</Text>
+            <Text style={styles.priceValue}>{item.washingPrice ?? '-'} {symbol}</Text>
           </View>
           <View style={styles.priceDivider} />
           <View style={styles.priceItem}>
             <Text style={styles.priceLabel}>{t('catalog.ironingPrice')}:</Text>
-            <Text style={styles.priceValue}>{item.ironingPrice ?? '-'} ر.س</Text>
+            <Text style={styles.priceValue}>{item.ironingPrice ?? '-'} {symbol}</Text>
           </View>
           <View style={styles.priceDivider} />
           <View style={styles.priceItem}>
             <Text style={styles.priceLabel}>{t('catalog.fullPrice')}:</Text>
-            <Text style={[styles.priceValue, styles.fullPrice]}>{item.fullServicePrice} ر.س</Text>
+            <Text style={[styles.priceValue, styles.fullPrice]}>{item.fullServicePrice} {symbol}</Text>
           </View>
         </View>
       </View>

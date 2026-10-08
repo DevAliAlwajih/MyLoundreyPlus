@@ -22,6 +22,8 @@ export declare class AuthService {
                 email: any;
                 role: any;
                 uniqueId: any;
+                country: any;
+                currency: any;
             };
         };
     }>;
@@ -34,6 +36,8 @@ export declare class AuthService {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     debugUser(email: string): Promise<{
@@ -68,6 +72,8 @@ export declare class AuthService {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     resetPassword(email: string, otp: string, newPassword: string): Promise<{
@@ -83,6 +89,8 @@ export declare class AuthService {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     refreshToken(refreshToken: string): Promise<{
@@ -94,6 +102,8 @@ export declare class AuthService {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     updateMe(userId: string, dto: import('./dto/update-me.dto').UpdateMeDto): Promise<{
@@ -135,6 +145,8 @@ export declare class AuthService {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     private generateUniqueId;

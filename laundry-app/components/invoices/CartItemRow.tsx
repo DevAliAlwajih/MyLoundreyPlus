@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { CartItem } from '../../stores/invoiceStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -17,6 +18,7 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item, onUpdateQuantity
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const displayName = isArabic ? item.nameAr : item.nameEn;
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
 
   return (
     <View style={styles.container}>
@@ -28,7 +30,7 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item, onUpdateQuantity
       </View>
       
       <View style={styles.detailsRow}>
-        <Text style={styles.price}>{item.unitPrice.toFixed(2)} ر.س / الوحدة</Text>
+        <Text style={styles.price}>{item.unitPrice.toFixed(2)} {symbol} / الوحدة</Text>
         
         <View style={styles.stepper}>
           <TouchableOpacity 
@@ -46,7 +48,7 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item, onUpdateQuantity
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.totalPrice}>{item.totalPrice.toFixed(2)} ر.س</Text>
+        <Text style={styles.totalPrice}>{item.totalPrice.toFixed(2)} {symbol}</Text>
       </View>
 
       <View style={styles.serviceTypeRow}>

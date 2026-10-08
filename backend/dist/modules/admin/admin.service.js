@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const notification_service_1 = require("../notification/notification.service");
 const bcrypt = require("bcrypt");
+const country_currency_map_1 = require("../../common/country-currency.map");
 let AdminService = class AdminService {
     constructor(prisma, notificationService) {
         this.prisma = prisma;
@@ -120,6 +121,10 @@ let AdminService = class AdminService {
                 error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
             });
         }
+        let resolvedCurrency = dto.currency;
+        if (dto.country !== undefined && dto.currency === undefined) {
+            resolvedCurrency = (0, country_currency_map_1.getCurrencyByCountry)(dto.country);
+        }
         const updated = await this.prisma.laundry.update({
             where: { id: laundryId },
             data: {
@@ -129,6 +134,7 @@ let AdminService = class AdminService {
                 ...(dto.address !== undefined && { address: dto.address }),
                 ...(dto.city !== undefined && { city: dto.city }),
                 ...(dto.country !== undefined && { country: dto.country }),
+                ...(resolvedCurrency !== undefined && { currency: resolvedCurrency }),
                 ...(dto.latitude !== undefined && { latitude: dto.latitude }),
                 ...(dto.longitude !== undefined && { longitude: dto.longitude }),
                 ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),
@@ -179,6 +185,42 @@ let AdminService = class AdminService {
                     totalRevenue: totalRevenue._sum.totalAmount ?? 0,
                 },
             },
+        };
+    }
+    async updateLaundryCurrency(laundryId, currency) {
+        const laundry = await this.prisma.laundry.findUnique({
+            where: { id: laundryId },
+            select: { id: true },
+        });
+        if (!laundry) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+            });
+        }
+        if (!currency || typeof currency !== 'string') {
+            throw new common_1.BadRequestException({
+                success: false,
+                error: { code: 'INVALID_CURRENCY', message: 'رمز العملة غير صالح' },
+            });
+        }
+        const updated = await this.prisma.laundry.update({
+            where: { id: laundryId },
+            data: {
+                currency: currency.toUpperCase().trim(),
+                updatedAt: new Date(),
+            },
+            select: {
+                id: true,
+                name: true,
+                country: true,
+                currency: true,
+            },
+        });
+        return {
+            success: true,
+            message: 'تم تحديث العملة بنجاح',
+            data: updated,
         };
     }
     async updateLaundryOwnerAccount(laundryId, dto) {

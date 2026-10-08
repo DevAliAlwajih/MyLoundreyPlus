@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const notification_service_1 = require("../notification/notification.service");
+const country_currency_map_1 = require("../../common/country-currency.map");
 function haversineKm(lat1, lng1, lat2, lng2) {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -34,6 +35,7 @@ const LAUNDRY_PUBLIC_SELECT = {
     address: true,
     city: true,
     country: true,
+    currency: true,
     latitude: true,
     longitude: true,
     workingHours: true,
@@ -240,6 +242,10 @@ let LaundryService = class LaundryService {
                 },
             });
         }
+        let resolvedCurrency = dto.currency;
+        if (dto.country !== undefined && dto.currency === undefined) {
+            resolvedCurrency = (0, country_currency_map_1.getCurrencyByCountry)(dto.country);
+        }
         const updated = await this.prisma.laundry.update({
             where: { id: laundry.id },
             data: {
@@ -249,6 +255,7 @@ let LaundryService = class LaundryService {
                 ...(dto.address !== undefined && { address: dto.address }),
                 ...(dto.city !== undefined && { city: dto.city }),
                 ...(dto.country !== undefined && { country: dto.country }),
+                ...(resolvedCurrency !== undefined && { currency: resolvedCurrency }),
                 ...(dto.latitude !== undefined && { latitude: dto.latitude }),
                 ...(dto.longitude !== undefined && { longitude: dto.longitude }),
                 ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),

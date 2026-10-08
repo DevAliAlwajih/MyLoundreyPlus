@@ -19,6 +19,7 @@ const config_1 = require("@nestjs/config");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const uuid_1 = require("uuid");
+const country_currency_map_1 = require("../../common/country-currency.map");
 let AuthService = AuthService_1 = class AuthService {
     constructor(prisma, redis, jwtService, configService) {
         this.prisma = prisma;
@@ -47,6 +48,8 @@ let AuthService = AuthService_1 = class AuthService {
             }
             const password_hash = await bcrypt.hash(dto.password, 10);
             const uniqueId = this.generateUniqueId();
+            const resolvedCountry = (0, country_currency_map_1.getCountryIsoCode)(dto.countryCode);
+            const resolvedCurrency = (0, country_currency_map_1.getCurrencyByCountry)(dto.countryCode);
             return await this.prisma.$transaction(async (tx) => {
                 const user = await tx.user.create({
                     data: {
@@ -54,7 +57,8 @@ let AuthService = AuthService_1 = class AuthService {
                         email: normalizedEmail,
                         password_hash,
                         phoneNumber: fullPhone,
-                        country: dto.countryCode,
+                        country: resolvedCountry,
+                        currency: resolvedCurrency,
                         uniqueId,
                         role: 'laundry',
                         isVerified: false,
@@ -83,6 +87,8 @@ let AuthService = AuthService_1 = class AuthService {
                         name: dto.laundryName,
                         phoneNumber: fullPhone,
                         ownerId: user.id,
+                        country: resolvedCountry,
+                        currency: resolvedCurrency,
                         status: 'pending',
                         billing_type: 'commission',
                         commission_rate: defaultRate,
@@ -439,6 +445,8 @@ let AuthService = AuthService_1 = class AuthService {
                 email: user.email,
                 role: user.role,
                 uniqueId: user.uniqueId,
+                country: user.country,
+                currency: user.currency,
             },
         };
     }

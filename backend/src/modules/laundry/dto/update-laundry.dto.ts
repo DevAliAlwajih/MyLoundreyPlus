@@ -53,6 +53,11 @@ export class UpdateLaundryDto {
   country?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  currency?: string;
+
+
   @Type(() => Number)
   @IsNumber()
   latitude?: number;

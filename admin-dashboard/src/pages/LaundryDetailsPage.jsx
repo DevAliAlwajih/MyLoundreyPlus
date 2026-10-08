@@ -31,11 +31,31 @@ const PAYMENT_METHOD_BADGES = {
   other: { labelAr: 'أخرى', labelEn: 'Other', badge: 'neutral' },
 }
 
+const SUPPORTED_CURRENCIES = [
+  { code: 'SAR', flag: '🇸🇦', nameAr: 'ريال سعودي', nameEn: 'Saudi Riyal', symbolAr: 'ر.س', symbolEn: 'SAR' },
+  { code: 'YER', flag: '🇾🇪', nameAr: 'ريال يمني', nameEn: 'Yemeni Rial', symbolAr: 'ر.ي', symbolEn: 'YER' },
+  { code: 'AED', flag: '🇦🇪', nameAr: 'درهم إماراتي', nameEn: 'UAE Dirham', symbolAr: 'د.إ', symbolEn: 'AED' },
+  { code: 'QAR', flag: '🇶🇦', nameAr: 'ريال قطري', nameEn: 'Qatari Riyal', symbolAr: 'ر.ق', symbolEn: 'QAR' },
+  { code: 'KWD', flag: '🇰🇼', nameAr: 'دينار كويتي', nameEn: 'Kuwaiti Dinar', symbolAr: 'د.ك', symbolEn: 'KWD' },
+  { code: 'OMR', flag: '🇴🇲', nameAr: 'ريال عُماني', nameEn: 'Omani Rial', symbolAr: 'ر.ع', symbolEn: 'OMR' },
+  { code: 'BHD', flag: '🇧🇭', nameAr: 'دينار بحريني', nameEn: 'Bahraini Dinar', symbolAr: 'د.ب', symbolEn: 'BHD' },
+  { code: 'EGP', flag: '🇪🇬', nameAr: 'جنيه مصري', nameEn: 'Egyptian Pound', symbolAr: 'ج.م', symbolEn: 'EGP' },
+  { code: 'JOD', flag: '🇯🇴', nameAr: 'دينار أردني', nameEn: 'Jordanian Dinar', symbolAr: 'د.أ', symbolEn: 'JOD' },
+  { code: 'USD', flag: '🇺🇸', nameAr: 'دولار أمريكي', nameEn: 'US Dollar', symbolAr: '$', symbolEn: 'USD' },
+  { code: 'EUR', flag: '🇪🇺', nameAr: 'يورو', nameEn: 'Euro', symbolAr: '€', symbolEn: 'EUR' },
+  { code: 'GBP', flag: '🇬🇧', nameAr: 'جنيه إسترليني', nameEn: 'British Pound', symbolAr: '£', symbolEn: 'GBP' },
+]
+
 export default function LaundryDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { lang } = useTheme()
   const label = (ar, en) => lang === 'ar' ? ar : en
+  const getCurrencySymbol = (code) => {
+    const c = SUPPORTED_CURRENCIES.find((item) => item.code === (code || laundry?.currency || 'SAR'))
+    if (!c) return code || (lang === 'ar' ? 'ر.س' : 'SAR')
+    return lang === 'ar' ? c.symbolAr : c.symbolEn
+  }
 
   const [laundry, setLaundry] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -84,6 +104,7 @@ export default function LaundryDetailsPage() {
         address: data.address || '',
         city: data.city || '',
         country: data.country || 'SA',
+        currency: data.currency || 'SAR',
         status: data.status || 'pending',
         billing_type: data.billing_type || 'subscription',
         commission_rate: data.commission_rate ?? '',
@@ -135,6 +156,7 @@ export default function LaundryDetailsPage() {
         address: form.address,
         city: form.city,
         country: form.country,
+        currency: form.currency,
         logoUrl: form.logoUrl,
         tax_enabled: form.tax_enabled,
         tax_rate: form.tax_rate === '' ? undefined : Number(form.tax_rate),
@@ -238,7 +260,7 @@ export default function LaundryDetailsPage() {
               <div>
                 <p className="text-muted fs-xs fw-bold text-uppercase">{label('الرصيد الحالي للمحفظة', 'Current Wallet Balance')}</p>
                 <h3 className={`fs-2xl fw-black mt-4 ${Number(laundry.balance ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
-                  {Number(laundry.balance ?? 0) > 0 ? `+${Number(laundry.balance ?? 0).toLocaleString()}` : Number(laundry.balance ?? 0).toLocaleString()} {label('ر.س', 'SAR')}
+                  {Number(laundry.balance ?? 0) > 0 ? `+${Number(laundry.balance ?? 0).toLocaleString()}` : Number(laundry.balance ?? 0).toLocaleString()} {getCurrencySymbol(laundry.currency)}
                 </h3>
               </div>
               <div
@@ -275,7 +297,7 @@ export default function LaundryDetailsPage() {
               <div>
                 <p className="text-muted fs-xs fw-bold text-uppercase">{label('حد الدين الائتماني', 'Credit Debt Limit')}</p>
                 <h3 className="fs-2xl fw-black mt-4">
-                  {Number(laundry.debt_limit ?? 500).toLocaleString()} {label('ر.س', 'SAR')}
+                  {Number(laundry.debt_limit ?? 500).toLocaleString()} {getCurrencySymbol(laundry.currency)}
                 </h3>
               </div>
               <div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: 12, borderRadius: 14 }}>
@@ -294,7 +316,7 @@ export default function LaundryDetailsPage() {
               <div>
                 <p className="text-muted fs-xs fw-bold text-uppercase">{label('إجمالي التسديدات السابقة', 'Total Recharged')}</p>
                 <h3 className="fs-2xl fw-black mt-4" style={{ color: '#10b981' }}>
-                  {Number(rechargeStats.totalRecharged ?? 0).toLocaleString()} {label('ر.س', 'SAR')}
+                  {Number(rechargeStats.totalRecharged ?? 0).toLocaleString()} {getCurrencySymbol(laundry.currency)}
                 </h3>
               </div>
               <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: 12, borderRadius: 14 }}>
@@ -331,6 +353,21 @@ export default function LaundryDetailsPage() {
                 <div className="form-group">
                   <label className="form-label">{label('الدولة', 'Country')}</label>
                   <input className="form-control" name="country" value={form.country || ''} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{label('العملة المعتمدة', 'Currency')}</label>
+                  <select
+                    className="form-control"
+                    name="currency"
+                    value={form.currency || 'SAR'}
+                    onChange={handleChange}
+                  >
+                    {SUPPORTED_CURRENCIES.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {label(c.nameAr, c.nameEn)} ({c.code} - {label(c.symbolAr, c.symbolEn)})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">{label('العنوان', 'Address')}</label>
@@ -623,7 +660,7 @@ export default function LaundryDetailsPage() {
                     <tr key={item.id}>
                       <td>
                         <span className="fw-black fs-md text-success">
-                          +{Number(item.amount).toLocaleString()} <small className="fs-xs font-normal">ر.س</small>
+                          +{Number(item.amount).toLocaleString()} <small className="fs-xs font-normal">{getCurrencySymbol(laundry.currency)}</small>
                         </span>
                       </td>
                       <td>
@@ -647,7 +684,7 @@ export default function LaundryDetailsPage() {
                           </span>
                           <span>→</span>
                           <span className="fw-bold text-success">
-                            {Number(item.balanceAfter ?? item.balance_after ?? 0).toLocaleString()} ر.س
+                            {Number(item.balanceAfter ?? item.balance_after ?? 0).toLocaleString()} {getCurrencySymbol(laundry.currency)}
                           </span>
                         </div>
                       </td>

@@ -5,6 +5,7 @@ export declare class UpdateLaundryDto {
     address?: string;
     city?: string;
     country?: string;
+    currency?: string;
     latitude?: number;
     longitude?: number;
     workingHours?: Record<string, {

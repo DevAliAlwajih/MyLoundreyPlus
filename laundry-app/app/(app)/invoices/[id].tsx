@@ -15,6 +15,7 @@ import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { APP_LOGO_BASE64 } from '../../../constants/AppLogoBase64';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 
 // --- Add Item Modal Component (Reusing catalog logic from new.tsx) ---
@@ -111,7 +112,7 @@ const AddItemModal = ({ visible, onClose, onSelect }: { visible: boolean, onClos
                           }}
                         >
                           <Text style={styles.itemName}>{item.nameAr}</Text>
-                          <Text style={styles.itemTotal}>{(Number(item.fullServicePrice) || 0).toFixed(2)} ر.س</Text>
+                          <Text style={styles.itemTotal}>{(Number(item.fullServicePrice) || 0).toFixed(2)} {useCurrencyStore.getState().currency.symbol}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -140,6 +141,7 @@ export default function InvoiceDetailScreen() {
   const { data: invoice, isLoading, isError, refetch } = useInvoiceById(id);
   const updateStatusMutation = useUpdateInvoiceStatus();
   const updateInvoiceMutation = useUpdateInvoice();
+  const { currency } = useCurrencyStore();
 
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
@@ -491,10 +493,10 @@ export default function InvoiceDetailScreen() {
             </table>
 
             <div class="totals">
-              <div class="line"><span>المجموع الفرعي</span><span>${subtotal.toFixed(2)} ر.س</span></div>
-              <div class="line"><span>الخصم</span><span>-${discount.toFixed(2)} ر.س</span></div>
-              <div class="line"><span>ضريبة القيمة المضافة</span><span>${tax.toFixed(2)} ر.س</span></div>
-              <div class="line grand"><span>الإجمالي</span><span>${total.toFixed(2)} ر.س</span></div>
+              <div class="line"><span>المجموع الفرعي</span><span>${subtotal.toFixed(2)} ${useCurrencyStore.getState().currency.symbol}</span></div>
+              <div class="line"><span>الخصم</span><span>-${discount.toFixed(2)} ${useCurrencyStore.getState().currency.symbol}</span></div>
+              <div class="line"><span>ضريبة القيمة المضافة</span><span>${tax.toFixed(2)} ${useCurrencyStore.getState().currency.symbol}</span></div>
+              <div class="line grand"><span>الإجمالي</span><span>${total.toFixed(2)} ${useCurrencyStore.getState().currency.symbol}</span></div>
             </div>
 
             ${invoice.notes ? `
@@ -581,19 +583,19 @@ export default function InvoiceDetailScreen() {
     message += `*التاريخ:* ${new Date(invoice.createdAt).toLocaleDateString(i18n.language)}\n`;
     message += `\n*الخدمات:*\n`;
     invoice.items.forEach((item: any) => {
-      message += `- ${item.itemNameAr || item.itemName} (${item.quantity} x ${(Number(item.unitPrice) || 0).toFixed(2)}) = ${(Number(item.unitPrice * item.quantity) || 0).toFixed(2)} ر.س\n`;
+      message += `- ${item.itemNameAr || item.itemName} (${item.quantity} x ${(Number(item.unitPrice) || 0).toFixed(2)}) = ${(Number(item.unitPrice * item.quantity) || 0).toFixed(2)} ${currency.symbol}\n`;
     });
     
     if (invoice.discountAmount > 0) {
-      message += `\n*الخصم:* ${(Number(invoice.discountAmount) || 0).toFixed(2)} ر.س`;
+      message += `\n*الخصم:* ${(Number(invoice.discountAmount) || 0).toFixed(2)} ${currency.symbol}`;
     }
     if (invoice.urgencyFeeAmount > 0) {
-      message += `\n*رسوم الاستعجال:* ${(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ر.س`;
+      message += `\n*رسوم الاستعجال:* ${(Number(invoice.urgencyFeeAmount) || 0).toFixed(2)} ${currency.symbol}`;
     }
     if (invoice.taxAmount > 0) {
-      message += `\n*الضريبة (${invoice.taxPercent}%):* ${(Number(invoice.taxAmount) || 0).toFixed(2)} ر.س`;
+      message += `\n*الضريبة (${invoice.taxPercent}%):* ${(Number(invoice.taxAmount) || 0).toFixed(2)} ${currency.symbol}`;
     }
-    message += `\n\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ر.س\n`;
+    message += `\n\n*المجموع الإجمالي:* ${(Number(invoice.total) || 0).toFixed(2)} ${currency.symbol}\n`;
     
     message += `\nشكراً لتعاملكم مع ${laundry?.name || 'المغسلة'} 🙏`;
     return message;
@@ -742,7 +744,7 @@ export default function InvoiceDetailScreen() {
     <View style={[styles.totalsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.row}>
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('invoice.subtotal')}</Text>
-        <Text style={[styles.value, { color: colors.text }]}>{(Number(activeSubtotal) || 0).toFixed(2)} ر.س</Text>
+        <Text style={[styles.value, { color: colors.text }]}>{(Number(activeSubtotal) || 0).toFixed(2)} {currency.symbol}</Text>
       </View>
       {(isEditing || activeDiscount > 0) && (
         <View style={styles.row}>
@@ -755,27 +757,27 @@ export default function InvoiceDetailScreen() {
                 onChangeText={v => setDiscount(parseFloat(v) || 0)} 
                 keyboardType="decimal-pad" 
               />
-              <Text style={styles.valueNegative}> ر.س</Text>
+              <Text style={styles.valueNegative}> {currency.symbol}</Text>
             </View>
           ) : (
-            <Text style={styles.valueNegative}>- {(Number(activeDiscount) || 0).toFixed(2)} ر.س</Text>
+            <Text style={styles.valueNegative}>- {(Number(activeDiscount) || 0).toFixed(2)} {currency.symbol}</Text>
           )}
         </View>
       )}
       {invoice.isUrgent && (
         <View style={styles.row}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('invoice.urgencyFee')}</Text>
-          <Text style={[styles.valuePositive, { color: colors.primary }]}>+ {(Number(activeUrgency) || 0).toFixed(2)} ر.س</Text>
+          <Text style={[styles.valuePositive, { color: colors.primary }]}>+ {(Number(activeUrgency) || 0).toFixed(2)} {currency.symbol}</Text>
         </View>
       )}
       <View style={styles.row}>
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('invoice.tax')} {isEditing && laundry?.tax_enabled ? `(${laundry.tax_rate}%)` : `(${invoice.taxPercent}%)`}</Text>
-        <Text style={[styles.valuePositive, { color: colors.primary }]}>+ {(Number(activeTax) || 0).toFixed(2)} ر.س</Text>
+        <Text style={[styles.valuePositive, { color: colors.primary }]}>+ {(Number(activeTax) || 0).toFixed(2)} {currency.symbol}</Text>
       </View>
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
       <View style={styles.row}>
         <Text style={[styles.totalLabel, { color: colors.text }]}>{t('invoice.total')}</Text>
-        <Text style={[styles.totalValue, { color: colors.primary }]}>{(Number(activeTotal) || 0).toFixed(2)} ر.س</Text>
+        <Text style={[styles.totalValue, { color: colors.primary }]}>{(Number(activeTotal) || 0).toFixed(2)} {currency.symbol}</Text>
       </View>
     </View>
   );

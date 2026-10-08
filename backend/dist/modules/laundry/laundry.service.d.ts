@@ -39,16 +39,17 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            status: import(".prisma/client").$Enums.laundry_status;
+            phoneNumber: string;
             createdAt: Date;
+            country: string;
+            currency: string;
             name: string;
             nameAr: string;
-            phoneNumber: string;
             address: string;
             city: string;
-            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
+            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
         };
     }>;
@@ -73,21 +74,22 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            status: import(".prisma/client").$Enums.laundry_status;
+            phoneNumber: string;
             createdAt: Date;
-            urgency_fee: Prisma.Decimal;
+            country: string;
+            currency: string;
             name: string;
             nameAr: string;
-            phoneNumber: string;
             address: string;
             city: string;
-            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
+            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
             tax_enabled: boolean;
             tax_rate: Prisma.Decimal;
             urgency_enabled: boolean;
+            urgency_fee: Prisma.Decimal;
         };
     }>;
     updateMyLaundry(ownerId: string, dto: UpdateLaundryDto): Promise<{
@@ -97,21 +99,22 @@ export declare class LaundryService {
             latitude: number;
             longitude: number;
             id: string;
-            status: import(".prisma/client").$Enums.laundry_status;
+            phoneNumber: string;
             createdAt: Date;
-            urgency_fee: Prisma.Decimal;
+            country: string;
+            currency: string;
             name: string;
             nameAr: string;
-            phoneNumber: string;
             address: string;
             city: string;
-            country: string;
             workingHours: Prisma.JsonValue;
             logoUrl: string;
+            status: import(".prisma/client").$Enums.laundry_status;
             ratingCount: number;
             tax_enabled: boolean;
             tax_rate: Prisma.Decimal;
             urgency_enabled: boolean;
+            urgency_fee: Prisma.Decimal;
         };
     }>;
     getMyMenu(ownerId: string): Promise<{
@@ -138,8 +141,8 @@ export declare class LaundryService {
         success: boolean;
         data: {
             id: string;
-            name: string;
             isActive: boolean;
+            name: string;
             sortOrder: number;
         };
     }>;
@@ -147,8 +150,8 @@ export declare class LaundryService {
         success: boolean;
         data: {
             id: string;
-            name: string;
             isActive: boolean;
+            name: string;
             sortOrder: number;
         };
     }>;
@@ -161,8 +164,8 @@ export declare class LaundryService {
         data: {
             basePrice: number;
             id: string;
-            nameAr: string;
             isActive: boolean;
+            nameAr: string;
             nameEn: string;
             sortOrder: number;
             washing_price: Prisma.Decimal;
@@ -174,8 +177,8 @@ export declare class LaundryService {
         data: {
             basePrice: number;
             id: string;
-            nameAr: string;
             isActive: boolean;
+            nameAr: string;
             nameEn: string;
             sortOrder: number;
             washing_price: Prisma.Decimal;
@@ -313,11 +316,11 @@ export declare class LaundryService {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             laundryId: string;
             customerId: string | null;
             notes: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             phone: string | null;
             localName: string | null;
             localPhone: string | null;

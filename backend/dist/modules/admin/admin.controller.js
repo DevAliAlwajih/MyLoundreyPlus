@@ -54,6 +54,9 @@ let AdminController = class AdminController {
     updateLaundryDetails(id, dto) {
         return this.adminService.updateLaundryDetails(id, dto);
     }
+    updateLaundryCurrency(id, currency) {
+        return this.adminService.updateLaundryCurrency(id, currency);
+    }
     updateLaundryOwnerAccount(id, dto) {
         return this.adminService.updateLaundryOwnerAccount(id, dto);
     }
@@ -164,6 +167,15 @@ __decorate([
     __metadata("design:paramtypes", [String, update_laundry_dto_1.UpdateLaundryDto]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "updateLaundryDetails", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Override laundry currency manually' }),
+    (0, common_1.Patch)('laundries/:id/currency'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)('currency')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateLaundryCurrency", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Update laundry owner account credentials' }),
     (0, common_1.Patch)('laundries/:id/owner-account'),

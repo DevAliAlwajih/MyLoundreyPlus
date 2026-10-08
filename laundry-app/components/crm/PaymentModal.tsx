@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ActivityInd
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Invoice } from '../../hooks/useInvoices';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface PaymentModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ interface PaymentModalProps {
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({ visible, invoice, onClose, onSubmit, isSubmitting }) => {
   const { t } = useTranslation();
+  const { currency } = useCurrencyStore();
   
   const [amountStr, setAmountStr] = useState('');
   const [method, setMethod] = useState<'cash' | 'card' | 'electronic'>('cash');
@@ -56,7 +58,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ visible, invoice, on
 
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>{t('crm.invoiceNum')}: {invoice.invoiceNumber}</Text>
-              <Text style={styles.remText}>{t('crm.remaining')}: {remaining.toFixed(2)} ر.س</Text>
+              <Text style={styles.remText}>{t('crm.remaining')}: {remaining.toFixed(2)} {currency.symbol}</Text>
             </View>
 
             <Text style={styles.label}>{t('crm.paidAmount')}</Text>

@@ -96,6 +96,15 @@ export class AdminController {
     return this.adminService.updateLaundryDetails(id, dto);
   }
 
+  @ApiOperation({ summary: 'Admin: Override laundry currency manually' })
+  @Patch('laundries/:id/currency')
+  updateLaundryCurrency(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('currency') currency: string,
+  ) {
+    return this.adminService.updateLaundryCurrency(id, currency);
+  }
+
   @ApiOperation({ summary: 'Admin: Update laundry owner account credentials' })
   @Patch('laundries/:id/owner-account')
   updateLaundryOwnerAccount(

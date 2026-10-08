@@ -7,6 +7,7 @@ import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
 import { laundry_status, user_role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { getCurrencyByCountry } from '../../common/country-currency.map';
 
 @Injectable()
 export class AdminService {
@@ -130,6 +131,12 @@ export class AdminService {
       });
     }
 
+    // ── منطق العملة: إذا غيّر الأدمين الدولة ولم يحدد العملة يدوياً، تُطبد تلقائياً ──
+    let resolvedCurrency = dto.currency;
+    if (dto.country !== undefined && dto.currency === undefined) {
+      resolvedCurrency = getCurrencyByCountry(dto.country);
+    }
+
     const updated = await this.prisma.laundry.update({
       where: { id: laundryId },
       data: {
@@ -139,6 +146,7 @@ export class AdminService {
         ...(dto.address !== undefined && { address: dto.address }),
         ...(dto.city !== undefined && { city: dto.city }),
         ...(dto.country !== undefined && { country: dto.country }),
+        ...(resolvedCurrency !== undefined && { currency: resolvedCurrency }),
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
         ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),
@@ -191,6 +199,47 @@ export class AdminService {
           totalRevenue: totalRevenue._sum.totalAmount ?? 0,
         },
       },
+    };
+  }
+
+  async updateLaundryCurrency(laundryId: string, currency: string) {
+    const laundry = await this.prisma.laundry.findUnique({
+      where: { id: laundryId },
+      select: { id: true },
+    });
+
+    if (!laundry) {
+      throw new NotFoundException({
+        success: false,
+        error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+      });
+    }
+
+    if (!currency || typeof currency !== 'string') {
+      throw new BadRequestException({
+        success: false,
+        error: { code: 'INVALID_CURRENCY', message: 'رمز العملة غير صالح' },
+      });
+    }
+
+    const updated = await this.prisma.laundry.update({
+      where: { id: laundryId },
+      data: {
+        currency: currency.toUpperCase().trim(),
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        name: true,
+        country: true,
+        currency: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'تم تحديث العملة بنجاح',
+      data: updated,
     };
   }
 

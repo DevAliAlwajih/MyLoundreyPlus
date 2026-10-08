@@ -13,6 +13,7 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { CreateItemDto, UpdateItemDto, UpdatePriceDto } from './dto/item.dto';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
 import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
+import { getCurrencyByCountry } from '../../common/country-currency.map';
 
 // ─────────────────────────────────────────
 // Haversine Formula — حساب المسافة بالكيلومتر
@@ -47,6 +48,7 @@ const LAUNDRY_PUBLIC_SELECT = {
   address: true,
   city: true,
   country: true,
+  currency: true,
   latitude: true,
   longitude: true,
   workingHours: true,
@@ -323,6 +325,12 @@ export class LaundryService {
       });
     }
 
+    // ── منطق العملة التلقائي: إذا تغيرت الدولة ولم تُحدَّد العملة يدوياً، نستنتجها تلقائياً ──
+    let resolvedCurrency = dto.currency;
+    if (dto.country !== undefined && dto.currency === undefined) {
+      resolvedCurrency = getCurrencyByCountry(dto.country);
+    }
+
     const updated = await this.prisma.laundry.update({
       where: { id: laundry.id },
       data: {
@@ -332,6 +340,7 @@ export class LaundryService {
         ...(dto.address !== undefined && { address: dto.address }),
         ...(dto.city !== undefined && { city: dto.city }),
         ...(dto.country !== undefined && { country: dto.country }),
+        ...(resolvedCurrency !== undefined && { currency: resolvedCurrency }),
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
         ...(dto.workingHours !== undefined && { workingHours: dto.workingHours }),

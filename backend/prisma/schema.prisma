@@ -65,6 +65,7 @@ model Laundry {
   address                  String?
   city                     String?                  @db.VarChar(100)
   country                  String?                  @default("SA") @db.VarChar(10)
+  currency                 String                   @default("SAR") @db.VarChar(10)
   latitude                 Decimal?                 @db.Decimal(10, 8)
   longitude                Decimal?                 @db.Decimal(11, 8)
   workingHours             Json?                    @map("working_hours")

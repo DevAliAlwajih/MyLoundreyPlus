@@ -25,6 +25,8 @@ export declare class AuthController {
                 email: any;
                 role: any;
                 uniqueId: any;
+                country: any;
+                currency: any;
             };
         };
     }>;
@@ -37,6 +39,8 @@ export declare class AuthController {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     debugUser(email: string): Promise<{
@@ -71,6 +75,8 @@ export declare class AuthController {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
@@ -86,6 +92,8 @@ export declare class AuthController {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     updateMe(req: any, dto: UpdateMeDto): Promise<{
@@ -122,6 +130,8 @@ export declare class AuthController {
             email: any;
             role: any;
             uniqueId: any;
+            country: any;
+            currency: any;
         };
     }>;
     googleAuth(): Promise<void>;

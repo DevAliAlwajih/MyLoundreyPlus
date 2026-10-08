@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/axios';
 import { useLaundryStore, LaundryProfile, LaundryHoliday } from '../stores/laundryStore';
 import { useAuthStore } from '../stores/authStore';
+import { useCurrencyStore } from '../stores/currencyStore';
 
 const formatProfileData = (data: any) => {
   if (data && data.workingHours && !Array.isArray(data.workingHours)) {
@@ -28,6 +29,7 @@ const formatProfileData = (data: any) => {
 
 export const useProfile = () => {
   const { setProfile } = useLaundryStore();
+  const { setCurrencyByCode } = useCurrencyStore();
 
   return useQuery({
     queryKey: ['my-laundry-profile'],
@@ -37,6 +39,12 @@ export const useProfile = () => {
 
       const formattedData = formatProfileData(data);
       setProfile(formattedData);
+
+      // ضبط العملة تلقائياً من بيانات المغسلة القادمة من الباك إند
+      if (formattedData?.currency) {
+        setCurrencyByCode(formattedData.currency);
+      }
+
       return formattedData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

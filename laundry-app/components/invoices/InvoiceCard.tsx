@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Invoice } from '../../hooks/useInvoices';
 import { StatusBadge } from './StatusBadge';
 import { useThemeStore } from '../../stores/themeStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface InvoiceCardProps {
   invoice: Invoice;
@@ -14,6 +15,7 @@ interface InvoiceCardProps {
 export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress }) => {
   const { t, i18n } = useTranslation();
   const { colors } = useThemeStore();
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
 
   const getPaymentIcon = (type: string) => {
     switch (type) {
@@ -56,7 +58,7 @@ export const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress }) =>
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <View style={styles.amountContainer}>
-          <Text style={[styles.totalText, { color: colors.primary }]}>{(Number(invoice.total ?? (invoice as any).totalAmount) || 0).toFixed(2)} ر.س</Text>
+          <Text style={[styles.totalText, { color: colors.primary }]}>{(Number(invoice.total ?? (invoice as any).totalAmount) || 0).toFixed(2)} {symbol}</Text>
           <Ionicons name={getPaymentIcon(invoice.paymentType)} size={16} color={colors.primary} style={styles.paymentIcon} />
         </View>
         <View style={{ alignItems: 'flex-end' }}>

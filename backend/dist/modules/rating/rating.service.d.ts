@@ -10,9 +10,9 @@ export declare class RatingService {
         success: boolean;
         data: {
             id: string;
+            createdAt: Date;
             laundryId: string;
             customerId: string;
-            createdAt: Date;
             invoiceId: string;
             stars: number;
             comment: string | null;
@@ -32,9 +32,9 @@ export declare class RatingService {
             reason: string;
             existingRating: {
                 id: string;
+                createdAt: Date;
                 laundryId: string;
                 customerId: string;
-                createdAt: Date;
                 invoiceId: string;
                 stars: number;
                 comment: string | null;
@@ -77,16 +77,16 @@ export declare class RatingService {
     getMyRatings(customerId: string): Promise<{
         success: boolean;
         data: {
-            invoice: {
-                invoiceNumber: string;
-            };
-            id: string;
-            createdAt: Date;
             laundry: {
                 id: string;
                 name: string;
                 logoUrl: string;
             };
+            invoice: {
+                invoiceNumber: string;
+            };
+            id: string;
+            createdAt: Date;
             stars: number;
             comment: string;
         }[];

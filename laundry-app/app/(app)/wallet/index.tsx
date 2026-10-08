@@ -25,13 +25,17 @@ import {
 } from '../../../hooks/useWallet';
 import { useThemeStore } from '../../../stores/themeStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 const PRIMARY = '#1a5fa8';
 
-function fmtCurrency(n: number | string | undefined | null): string {
-  if (n == null) return '—';
-  const num = Number(n);
-  return `${num.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
+function useFmtCurrency() {
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
+  return (n: number | string | undefined | null): string => {
+    if (n == null) return '—';
+    const num = Number(n);
+    return `${num.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
+  };
 }
 
 function formatDate(dateStr: string) {
@@ -181,6 +185,7 @@ export default function WalletScreen() {
   const profile = useLaundryStore((s) => s.profile);
   const isAr = i18n.language === 'ar';
   const isDark = themeMode === 'dark';
+  const fmtCurrency = useFmtCurrency();
 
   const laundryName = profile?.nameAr || profile?.name || 'مغسلتي';
 

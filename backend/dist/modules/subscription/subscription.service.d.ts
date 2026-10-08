@@ -51,10 +51,10 @@ export declare class SubscriptionService {
                 priceSar: number;
                 discount_percent: number;
                 id: string;
+                isActive: boolean;
                 createdAt: Date;
                 updatedAt: Date;
                 nameAr: string;
-                isActive: boolean;
                 nameEn: string;
                 durationDays: number;
                 features: import("@prisma/client/runtime/library").JsonValue | null;
@@ -66,12 +66,12 @@ export declare class SubscriptionService {
             daysRemaining: number;
             isExpiringSoon: boolean;
             isExpired: boolean;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -90,12 +90,12 @@ export declare class SubscriptionService {
                 nameEn: string;
                 durationDays: number;
             };
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -121,10 +121,10 @@ export declare class SubscriptionService {
             plan: {
                 priceSar: number;
                 id: string;
+                isActive: boolean;
                 createdAt: Date;
                 updatedAt: Date;
                 nameAr: string;
-                isActive: boolean;
                 nameEn: string;
                 durationDays: number;
                 features: import("@prisma/client/runtime/library").JsonValue | null;
@@ -134,12 +134,12 @@ export declare class SubscriptionService {
                 offer_valid_from: Date | null;
                 offer_valid_until: Date | null;
             };
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -151,12 +151,12 @@ export declare class SubscriptionService {
         success: boolean;
         data: {
             amountPaid: number;
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -178,15 +178,15 @@ export declare class SubscriptionService {
             amountPaid: number;
             laundry: {
                 id: string;
-                name: string;
                 phoneNumber: string;
+                name: string;
             };
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -208,12 +208,12 @@ export declare class SubscriptionService {
                 nameEn: string;
                 durationDays: number;
             };
+            promoCode: string | null;
             id: string;
+            isActive: boolean;
+            createdAt: Date;
             laundryId: string;
             notes: string | null;
-            createdAt: Date;
-            isActive: boolean;
-            promoCode: string | null;
             paymentMethod: string | null;
             planId: string;
             startDate: Date;
@@ -246,10 +246,10 @@ export declare class SubscriptionService {
             priceSar: number;
             discountPercent: number;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             nameAr: string;
-            isActive: boolean;
             nameEn: string;
             durationDays: number;
             features: import("@prisma/client/runtime/library").JsonValue | null;
@@ -267,10 +267,10 @@ export declare class SubscriptionService {
             priceSar: number;
             discountPercent: number;
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
             nameAr: string;
-            isActive: boolean;
             nameEn: string;
             durationDays: number;
             features: import("@prisma/client/runtime/library").JsonValue | null;
@@ -308,8 +308,8 @@ export declare class SubscriptionService {
         data: {
             discountValue: number;
             id: string;
-            createdAt: Date;
             isActive: boolean;
+            createdAt: Date;
             description: string | null;
             createdBy: string | null;
             code: string;
@@ -326,8 +326,8 @@ export declare class SubscriptionService {
         data: {
             discountValue: number;
             id: string;
-            createdAt: Date;
             isActive: boolean;
+            createdAt: Date;
             description: string | null;
             createdBy: string | null;
             code: string;

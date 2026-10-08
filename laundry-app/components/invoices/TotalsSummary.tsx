@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useInvoiceStore } from '../../stores/invoiceStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 export const TotalsSummary: React.FC = () => {
   const { t } = useTranslation();
@@ -16,13 +17,14 @@ export const TotalsSummary: React.FC = () => {
     isUrgent,
     setDiscount 
   } = useInvoiceStore();
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
 
   return (
     <View style={styles.container}>
       {/* Subtotal */}
       <View style={styles.row}>
         <Text style={styles.label}>{t('invoice.subtotal')}</Text>
-        <Text style={styles.value}>{subtotal.toFixed(2)} ر.س</Text>
+        <Text style={styles.value}>{subtotal.toFixed(2)} {symbol}</Text>
       </View>
 
       {/* Discount */}
@@ -38,21 +40,21 @@ export const TotalsSummary: React.FC = () => {
             textAlign="center"
           />
         </View>
-        <Text style={styles.valueNegative}>- {discountAmount.toFixed(2)} ر.س</Text>
+        <Text style={styles.valueNegative}>- {discountAmount.toFixed(2)} {symbol}</Text>
       </View>
 
       {/* Urgency Fee */}
       {isUrgent && (
         <View style={styles.row}>
           <Text style={styles.label}>{t('invoice.urgencyFee')}</Text>
-          <Text style={styles.valuePositive}>+ {urgencyFeeAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.valuePositive}>+ {urgencyFeeAmount.toFixed(2)} {symbol}</Text>
         </View>
       )}
 
       {/* Tax */}
       <View style={styles.row}>
         <Text style={styles.label}>{t('invoice.tax')} ({taxPercent}%)</Text>
-        <Text style={styles.valuePositive}>+ {taxAmount.toFixed(2)} ر.س</Text>
+        <Text style={styles.valuePositive}>+ {taxAmount.toFixed(2)} {symbol}</Text>
       </View>
 
       <View style={styles.divider} />
@@ -60,7 +62,7 @@ export const TotalsSummary: React.FC = () => {
       {/* Total */}
       <View style={styles.row}>
         <Text style={styles.totalLabel}>{t('invoice.total')}</Text>
-        <Text style={styles.totalValue}>{total.toFixed(2)} ر.س</Text>
+        <Text style={styles.totalValue}>{total.toFixed(2)} {symbol}</Text>
       </View>
     </View>
   );

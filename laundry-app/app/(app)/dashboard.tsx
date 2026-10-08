@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
 import { useLaundryStore } from '../../stores/laundryStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 import { useBookings } from '../../hooks/useBookings';
 import { useInvoices } from '../../hooks/useInvoices';
 import { useWallet } from '../../hooks/useWallet';
@@ -38,9 +39,12 @@ function getGreeting(): string {
   return 'مساء النور 🌙';
 }
 
-function fmtCurrency(n: number | undefined | null): string {
-  if (n == null) return '—';
-  return `${n.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
+function useFmtCurrency() {
+  const symbol = useCurrencyStore((s) => s.currency.symbol);
+  return (n: number | undefined | null): string => {
+    if (n == null) return '—';
+    return `${n.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
+  };
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -125,6 +129,7 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
   const { colors } = useThemeStore();
   const styles = getStyles(colors);
+  const fmtCurrency = useFmtCurrency();
 
   const [isFocused, setIsFocused] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

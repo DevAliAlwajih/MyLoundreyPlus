@@ -27,8 +27,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            message: string | null;
             laundry_id: string | null;
+            message: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
@@ -63,8 +63,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            message: string | null;
             laundry_id: string | null;
+            message: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
@@ -82,8 +82,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            message: string | null;
             laundry_id: string | null;
+            message: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
@@ -160,8 +160,8 @@ export declare class ChatService {
         success: boolean;
         data: {
             id: string;
-            message: string | null;
             laundry_id: string | null;
+            message: string | null;
             customer_id: string | null;
             admin_id: string | null;
             sender_id: string;
