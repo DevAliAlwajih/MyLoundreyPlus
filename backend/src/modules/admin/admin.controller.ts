@@ -214,6 +214,33 @@ export class AdminController {
   }
 
   // ────────────────────────────────────────────────────
+  // 👥 Customers (Alias routes)
+  // ────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Admin: Get all customers' })
+  @Get('customers')
+  getCustomers(@Query() dto: QueryAdminUsersDto) {
+    return this.adminService.getUsers({ ...dto, role: 'customer' });
+  }
+
+  @ApiOperation({ summary: 'Admin: Update customer status' })
+  @Patch('customers/:id/status')
+  updateCustomerStatus(
+    @Req() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: any,
+  ) {
+    const isActive = dto.isActive !== undefined ? dto.isActive : dto.is_active;
+    return this.adminService.updateUserStatus(id, req.user.id, { isActive, reason: dto.reason });
+  }
+
+  @ApiOperation({ summary: 'Admin: Delete customer' })
+  @Delete('customers/:id')
+  deleteCustomer(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.deleteUser(id);
+  }
+
+  // ────────────────────────────────────────────────────
   // 💳 Wallet Recharges & Payments (تسديدات وشحن أرصدة المغاسل)
   // ────────────────────────────────────────────────────
 

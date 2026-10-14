@@ -78,7 +78,7 @@ export interface Invoice {
 }
 
 // Normalize raw API response to frontend Invoice shape safely
-function normalizeInvoice(raw: any): Invoice {
+export function normalizeInvoice(raw: any): Invoice {
   const toNum = (v: any) => (v !== null && v !== undefined ? Number(v) : 0);
   return {
     id: raw.id,

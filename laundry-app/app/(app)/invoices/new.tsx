@@ -7,10 +7,11 @@ import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useInvoiceStore, PaymentType } from '../../../stores/invoiceStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
-import { useCatalogMenu, useCreateInvoice, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
+import { useCatalogMenu, useCreateInvoice, normalizeInvoice, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
 import { useCustomers } from '../../../hooks/useCRM';
 import { QRScannerModal } from '../../../components/invoices/QRScannerModal';
 import { UniqueIdModal } from '../../../components/invoices/UniqueIdModal';
+import { InvoiceActionSheet } from '../../../components/invoices/InvoiceActionSheet';
 import { useThemeStore } from '../../../stores/themeStore';
 import api from '../../../lib/axios';
 import { useCurrencyStore } from '../../../stores/currencyStore';
@@ -26,6 +27,10 @@ export default function NewInvoiceScreen() {
   const { currency } = useCurrencyStore();
   const { data: menuData, isLoading: loadingCatalog } = useCatalogMenu();
   const createMutation = useCreateInvoice();
+
+  // ── State لـ Action Sheet بعد الحفظ ──────────────────────────────────
+  const [actionSheetVisible, setActionSheetVisible]   = useState(false);
+  const [createdInvoiceData, setCreatedInvoiceData] = useState<any>(null);
 
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
@@ -158,9 +163,13 @@ export default function NewInvoiceScreen() {
     };
 
     createMutation.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (data: any) => {
         store.clearCart();
-        router.replace('/(app)/invoices');
+        // إظهار Action Sheet بدلاً من الانتقال المباشر
+        // تطبيع البيانات لضمان وجود customerPhone وباقي الحقول بشكل صحيح
+        const rawInvoice = data?.data ?? data;
+        setCreatedInvoiceData(normalizeInvoice(rawInvoice));
+        setActionSheetVisible(true);
       },
       onError: (err: any) => {
         Alert.alert(t('common.error', 'خطأ'), err.response?.data?.message || t('invoice.createFailed', 'فشل إنشاء الفاتورة'));
@@ -662,6 +671,16 @@ export default function NewInvoiceScreen() {
         <QRScannerModal visible={qrModalVisible} onClose={() => setQrModalVisible(false)} onScan={handleFetchCustomer} />
         <UniqueIdModal visible={idModalVisible} onClose={() => setIdModalVisible(false)} onSubmit={handleFetchCustomer} />
       </KeyboardAvoidingView>
+
+      {/* Action Sheet يظهر بعد حفظ الفاتورة بنجاح */}
+      <InvoiceActionSheet
+        visible={actionSheetVisible}
+        invoiceData={createdInvoiceData}
+        onClose={() => {
+          setActionSheetVisible(false);
+          router.replace('/(app)/invoices');
+        }}
+      />
     </SafeAreaView>
   );
 }
