@@ -642,11 +642,7 @@ export default function NewInvoiceScreen() {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace('/(app)/invoices');
-              }
+              router.replace('/(app)/invoices');
             }}
           >
             <Ionicons name={I18nManager.isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />

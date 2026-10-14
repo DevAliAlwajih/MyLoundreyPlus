@@ -20,18 +20,51 @@ function TabIcon({
   return <Ionicons name={name} size={size} color={color} />;
 }
 
-function resetTabStackOnPress(navigation: any, e: any, routeName: string) {
+/**
+ * يضمن هذا الـ helper أن الضغط على أيقونة التبويب يُعيد المكدس إلى الصفحة الرئيسية للتبويب.
+ * - إذا كان التبويب مفتوحاً وبه صفحات متراكمة: يقوم بـ popToTop لتصفيتها.
+ * - إذا كان التبويب مفتوحاً وبه صفحة واحدة (الـ index): لا يفعل شيئاً (السلوك الافتراضي).
+ * - إذا لم يكن التبويب نشطاً: يمنع التصرف الافتراضي وينتقل يدوياً إلى route محدد
+ *   لضمان الوصول إلى index وليس إلى آخر شاشة فرعية كانت مفتوحة.
+ */
+function resetTabStackOnPress(
+  navigation: any,
+  e: any,
+  routeName: string,
+  fallbackPath: string,
+) {
   const state = navigation.getState();
-  const currentRoute = state.routes.find((r: any) => r.key === e.target || r.name === routeName);
-  if (currentRoute?.state) {
-    const childState = currentRoute.state as any;
-    if (childState.key && childState.index > 0) {
-      navigation.dispatch({
-        ...StackActions.popToTop(),
-        target: childState.key,
-      });
-    }
+  const activeIndex = state.index;
+  const currentRouteAtIndex = state.routes[activeIndex];
+
+  // هل التبويب المضغوط هو التبويب النشط حالياً؟
+  const targetRoute = state.routes.find(
+    (r: any) => r.key === e.target || r.name === routeName,
+  );
+
+  if (!targetRoute) return; // لم يُعثر على التبويب — دع السلوك الافتراضي
+
+  const isTabCurrentlyActive = currentRouteAtIndex?.name === routeName;
+  const childState = targetRoute.state as any;
+  const hasNestedStack = childState?.key && childState?.index > 0;
+
+  if (isTabCurrentlyActive && hasNestedStack) {
+    // التبويب نشط وبه صفحات متراكمة → أفرغ المكدس
+    navigation.dispatch({
+      ...StackActions.popToTop(),
+      target: childState.key,
+    });
+  } else if (!isTabCurrentlyActive && hasNestedStack) {
+    // التبويب غير نشط لكن لديه صفحات متراكمة محفوظة →
+    // نمنع التصرف الافتراضي الذي سيعيد آخر شاشة فرعية، وننتقل يدوياً إلى الـ index
+    e.preventDefault();
+    navigation.dispatch({
+      ...StackActions.popToTop(),
+      target: childState.key,
+    });
+    navigation.navigate(routeName);
   }
+  // في باقي الحالات: دع السلوك الافتراضي يعمل (الانتقال العادي للتبويب)
 }
 
 export default function AppLayout() {
@@ -89,7 +122,7 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            resetTabStackOnPress(navigation, e, 'invoices');
+            resetTabStackOnPress(navigation, e, 'invoices', '/(app)/invoices');
           },
         })}
       />
@@ -105,7 +138,7 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            resetTabStackOnPress(navigation, e, 'conversations');
+            resetTabStackOnPress(navigation, e, 'conversations', '/(app)/conversations');
           },
         })}
       />

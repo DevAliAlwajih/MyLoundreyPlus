@@ -788,13 +788,7 @@ export default function InvoiceDetailScreen() {
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/(app)/invoices');
-            }
-          }}
+          onPress={() => router.replace('/(app)/invoices')}
         >
           <Ionicons name={I18nManager.isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />
         </TouchableOpacity>
