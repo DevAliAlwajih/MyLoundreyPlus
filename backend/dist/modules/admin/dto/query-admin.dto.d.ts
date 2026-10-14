@@ -2,6 +2,7 @@ export declare class QueryAdminLaundriesDto {
     status?: string;
     search?: string;
     country?: string;
+    currency?: string;
     page?: number;
     limit?: number;
 }

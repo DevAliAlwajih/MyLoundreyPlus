@@ -23,45 +23,20 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyMetadata> = {
   KWD: { code: 'KWD', nameAr: 'دينار كويتي', nameEn: 'Kuwaiti Dinar', symbolAr: 'د.ك', symbolEn: 'KWD', flag: '🇰🇼', decimals: 3 },
   OMR: { code: 'OMR', nameAr: 'ريال عُماني', nameEn: 'Omani Rial', symbolAr: 'ر.ع', symbolEn: 'OMR', flag: '🇴🇲', decimals: 3 },
   BHD: { code: 'BHD', nameAr: 'دينار بحريني', nameEn: 'Bahraini Dinar', symbolAr: 'د.ب', symbolEn: 'BHD', flag: '🇧🇭', decimals: 3 },
-  EGP: { code: 'EGP', nameAr: 'جنيه مصري', nameEn: 'Egyptian Pound', symbolAr: 'ج.م', symbolEn: 'EGP', flag: '🇪🇬', decimals: 2 },
-  JOD: { code: 'JOD', nameAr: 'دينار أردني', nameEn: 'Jordanian Dinar', symbolAr: 'د.أ', symbolEn: 'JOD', flag: '🇯🇴', decimals: 3 },
-  USD: { code: 'USD', nameAr: 'دولار أمريكي', nameEn: 'US Dollar', symbolAr: '$', symbolEn: 'USD', flag: '🇺🇸', decimals: 2 },
-  EUR: { code: 'EUR', nameAr: 'يورو', nameEn: 'Euro', symbolAr: '€', symbolEn: 'EUR', flag: '🇪🇺', decimals: 2 },
-  GBP: { code: 'GBP', nameAr: 'جنيه إسترليني', nameEn: 'British Pound', symbolAr: '£', symbolEn: 'GBP', flag: '🇬🇧', decimals: 2 },
 };
 
-// خريطة كود الدولة ISO → رمز العملة
+// خريطة كود الدولة ISO → رمز العملة (دول الخليج + اليمن)
 export const COUNTRY_CURRENCY_MAP: Record<string, string> = {
-  // الخليج العربي
-  SA: 'SAR',
-  AE: 'AED',
-  QA: 'QAR',
-  KW: 'KWD',
-  OM: 'OMR',
-  BH: 'BHD',
-  // اليمن
-  YE: 'YER',
-  // دول عربية أخرى
-  EG: 'EGP',
-  MA: 'MAD',
-  TN: 'TND',
-  LY: 'LYD',
-  DZ: 'DZD',
-  SD: 'SDG',
-  JO: 'JOD',
-  IQ: 'IQD',
-  SY: 'SYP',
-  LB: 'LBP',
-  PS: 'ILS',
-  // دول أخرى
-  TR: 'TRY',
-  PK: 'PKR',
-  IN: 'INR',
-  US: 'USD',
-  GB: 'GBP',
+  SA: 'SAR', // السعودية
+  YE: 'YER', // اليمن
+  AE: 'AED', // الإمارات
+  QA: 'QAR', // قطر
+  KW: 'KWD', // الكويت
+  OM: 'OMR', // سلطنة عُمان
+  BH: 'BHD', // البحرين
 };
 
-// خريطة كود الاتصال الهاتفي → كود الدولة ISO والعملة
+// خريطة كود الاتصال الهاتفي → كود الدولة ISO والعملة (دول الخليج + اليمن)
 export const DIAL_CODE_MAP: Record<string, { country: string; currency: string }> = {
   '+966': { country: 'SA', currency: 'SAR' },
   '966':  { country: 'SA', currency: 'SAR' },
@@ -77,12 +52,6 @@ export const DIAL_CODE_MAP: Record<string, { country: string; currency: string }
   '968':  { country: 'OM', currency: 'OMR' },
   '+973': { country: 'BH', currency: 'BHD' },
   '973':  { country: 'BH', currency: 'BHD' },
-  '+20':  { country: 'EG', currency: 'EGP' },
-  '20':   { country: 'EG', currency: 'EGP' },
-  '+962': { country: 'JO', currency: 'JOD' },
-  '962':  { country: 'JO', currency: 'JOD' },
-  '+1':   { country: 'US', currency: 'USD' },
-  '1':    { country: 'US', currency: 'USD' },
 };
 
 /**

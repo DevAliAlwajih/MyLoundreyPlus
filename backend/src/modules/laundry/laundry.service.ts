@@ -77,6 +77,7 @@ export class LaundryService {
       sort = 'distance',
       city,
       country,
+      currency,
       page = 1,
       limit = 20,
     } = query;
@@ -87,6 +88,7 @@ export class LaundryService {
     const where: any = { status: 'active' };
     if (city) where.city = { contains: city, mode: 'insensitive' };
     if (country) where.country = country;
+    if (currency) where.currency = currency;
 
     // جلب كل المغاسل المطابقة (للفلترة الجغرافية نحتاج كل النتائج أولاً)
     const allLaundries = await this.prisma.laundry.findMany({

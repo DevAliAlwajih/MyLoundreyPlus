@@ -59,8 +59,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           errorCode = 'VALIDATION_ERROR';
         } else {
           // auth.service.ts يُرمي { message, errorCode } مباشرة
-          message   = resObj.message   ?? message;
-          errorCode = resObj.errorCode ?? this.inferErrorCode(status);
+          message   = resObj.message   ?? resObj.error?.message ?? message;
+          errorCode = resObj.errorCode ?? resObj.error?.code    ?? this.inferErrorCode(status);
         }
       }
     }

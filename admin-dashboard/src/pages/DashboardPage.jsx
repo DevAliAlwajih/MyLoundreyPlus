@@ -1,353 +1,616 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../App'
-import api from '../services/api'
+import { dashboardApi } from '../services/api'
+import CurrencyPicker from '../components/CurrencyPicker'
 import {
-  TrendingUp, Store, Users, FileText, ArrowUpRight,
-  ArrowDownRight, Calendar, Download, RefreshCw,
-  DollarSign, Activity, Star, AlertTriangle
+  SUPPORTED_CURRENCIES,
+  getCurrencyMeta,
+  formatAmount,
+} from '../constants/currencies'
+import {
+  TrendingUp,
+  Store,
+  Users,
+  FileText,
+  ArrowUpRight,
+  ArrowDownRight,
+  RefreshCw,
+  DollarSign,
+  AlertTriangle,
+  Globe,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  Database,
+  Layers,
 } from 'lucide-react'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts'
 
-// ---- Mock Data ----
-const REVENUE_DATA = [
-  { month: 'يناير', revenue: 48000, subscriptions: 32 },
-  { month: 'فبراير', revenue: 52000, subscriptions: 38 },
-  { month: 'مارس', revenue: 61000, subscriptions: 45 },
-  { month: 'أبريل', revenue: 55000, subscriptions: 41 },
-  { month: 'مايو', revenue: 73000, subscriptions: 56 },
-  { month: 'يونيو', revenue: 85000, subscriptions: 63 },
-  { month: 'يوليو', revenue: 91000, subscriptions: 70 },
-]
-
-const TOP_LAUNDRIES = [
-  { name: 'مغسلة النور', orders: 342, revenue: 12400, rating: 4.8, status: 'active' },
-  { name: 'مغسلة الربيع', orders: 298, revenue: 10200, rating: 4.6, status: 'active' },
-  { name: 'مغسلة السلام', orders: 256, revenue: 9800, rating: 4.5, status: 'active' },
-  { name: 'مغسلة المدينة', orders: 201, revenue: 7600, rating: 4.2, status: 'trial' },
-  { name: 'مغسلة الأمل', orders: 178, revenue: 6900, rating: 4.0, status: 'active' },
-]
-
-const STATUS_DATA = [
-  { name: 'نشط', value: 142, color: '#10B981' },
-  { name: 'تجريبي', value: 28,  color: '#F59E0B' },
-  { name: 'منتهي', value: 15,  color: '#EF4444' },
-  { name: 'بانتظار', value: 9,  color: '#3B82F6' },
-]
-
-const KPIS = [
-  {
-    id: 'revenue',
-    labelAr: 'إجمالي الإيرادات',
-    labelEn: 'Total Revenue',
-    valueAr: '91,500 ريال',
-    valueEn: 'SAR 91,500',
-    changeAr: '+18.4% هذا الشهر',
-    changeEn: '+18.4% this month',
-    icon: DollarSign,
-    color: 'var(--primary-500)',
-    bg: 'var(--primary-50)',
-    up: true,
-  },
-  {
-    id: 'laundries',
-    labelAr: 'المغاسل النشطة',
-    labelEn: 'Active Laundries',
-    valueAr: '142',
-    valueEn: '142',
-    changeAr: '+12 هذا الشهر',
-    changeEn: '+12 this month',
-    icon: Store,
-    color: 'var(--success)',
-    bg: 'var(--success-bg)',
-    up: true,
-  },
-  {
-    id: 'customers',
-    labelAr: 'إجمالي العملاء',
-    labelEn: 'Total Customers',
-    valueAr: '8,432',
-    valueEn: '8,432',
-    changeAr: '+234 هذا الأسبوع',
-    changeEn: '+234 this week',
-    icon: Users,
-    color: 'var(--gold)',
-    bg: 'var(--gold-light)',
-    up: true,
-  },
-  {
-    id: 'invoices',
-    labelAr: 'الفواتير اليوم',
-    labelEn: 'Today\'s Invoices',
-    valueAr: '1,284',
-    valueEn: '1,284',
-    changeAr: '-3.2% مقارنة بالأمس',
-    changeEn: '-3.2% vs yesterday',
-    icon: FileText,
-    color: 'var(--info)',
-    bg: 'var(--info-bg)',
-    up: false,
-  },
-]
-
-const ALERTS = [
-  { type: 'warning', msgAr: '15 مغسلة ستنتهي اشتراكاتها خلال 7 أيام', msgEn: '15 laundries expiring in 7 days' },
-  { type: 'info',    msgAr: '9 مغاسل بانتظار التفعيل', msgEn: '9 laundries awaiting activation' },
-  { type: 'danger',  msgAr: '3 تذاكر دعم فني عاجلة', msgEn: '3 urgent support tickets' },
-]
-
-// Custom Tooltip
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload?.length) {
-    return (
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
-        <p style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{label}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color }}>
-            {p.name}: <strong>{typeof p.value === 'number' && p.value > 1000 ? p.value.toLocaleString() + ' ريال' : p.value}</strong>
-          </p>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
-
 export default function DashboardPage() {
-  const { lang } = useTheme()
+  const { lang, currency: globalCurrency, setCurrency: setGlobalCurrency } = useTheme()
   const [period, setPeriod] = useState('month')
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return globalCurrency?.code || 'all'
+  })
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
-  const label = (ar, en) => lang === 'ar' ? ar : en
+  const [error, setError] = useState(null)
 
+  const isRTL = lang === 'ar'
+  const label = (ar, en) => (isRTL ? ar : en)
+
+  // Sync with global theme currency when it changes
   useEffect(() => {
-    fetchStats()
-  }, [])
+    if (globalCurrency?.code && globalCurrency.code !== selectedCurrency && selectedCurrency !== 'all') {
+      setSelectedCurrency(globalCurrency.code)
+    }
+  }, [globalCurrency])
 
-  const fetchStats = async () => {
+  // Fetch stats whenever selected currency changes
+  useEffect(() => {
+    fetchStats(selectedCurrency)
+  }, [selectedCurrency])
+
+  const fetchStats = async (currencyCode = selectedCurrency) => {
     setLoading(true)
+    setError(null)
     try {
-      const res = await api.get('/admin/dashboard-stats')
-      setStats(res.data.data)
+      const params = currencyCode && currencyCode !== 'all' ? { currency: currencyCode } : {}
+      const res = await dashboardApi.getStats(params)
+      if (res?.data?.data) {
+        setStats(res.data.data)
+      } else {
+        setStats(null)
+      }
     } catch (err) {
-      console.error('Failed to fetch dashboard stats', err)
+      console.error('Failed to fetch dashboard stats from backend:', err)
+      setError(err?.response?.data?.message || err.message || label('تعذر جلب البيانات من الخادم', 'Failed to fetch server data'))
+      setStats(null)
     } finally {
       setLoading(false)
     }
   }
 
+  const handleCurrencyChange = (code) => {
+    setSelectedCurrency(code)
+    if (code !== 'all' && setGlobalCurrency) {
+      const meta = getCurrencyMeta(code)
+      setGlobalCurrency(meta)
+    }
+  }
+
+  // Active currency metadata
+  const activeCurrencyCode = selectedCurrency === 'all' ? 'SAR' : selectedCurrency
+  const activeCurrencyMeta = getCurrencyMeta(activeCurrencyCode)
+
+  // Real System Revenue from Laundries (commissions + subscriptions)
+  const systemRevenue = useMemo(() => {
+    if (!stats?.revenue) return 0
+    return Number(stats.revenue) || 0
+  }, [stats])
+
+  // Real Chart Data
+  const chartData = useMemo(() => {
+    if (stats?.chartData && Array.isArray(stats.chartData)) {
+      return stats.chartData.map((c) => ({
+        month: label(c.month, c.month),
+        revenue: parseFloat(c.revenue) || 0,
+        subscriptions: parseInt(c.subscriptions) || 0,
+      }))
+    }
+    return []
+  }, [stats, lang])
+
+  // Real Status Distribution
+  const statusDistribution = useMemo(() => {
+    if (stats?.laundryStatusDistribution && stats.laundryStatusDistribution.length > 0) {
+      return stats.laundryStatusDistribution.map((s) => ({
+        name: label(
+          s.status === 'active'
+            ? 'نشطة'
+            : s.status === 'trial'
+            ? 'تجريبية'
+            : s.status === 'pending'
+            ? 'بانتظار التفعيل'
+            : s.status === 'suspended'
+            ? 'معلقة'
+            : 'منتهية',
+          s.status
+        ),
+        value: parseInt(s.count) || 0,
+        color:
+          s.status === 'active'
+            ? '#10B981'
+            : s.status === 'trial'
+            ? '#F59E0B'
+            : s.status === 'pending'
+            ? '#3B82F6'
+            : '#EF4444',
+      }))
+    }
+    return []
+  }, [stats, lang])
+
+  // Real Recent Invoices
+  const recentInvoices = useMemo(() => {
+    if (stats?.recentInvoices && Array.isArray(stats.recentInvoices)) {
+      return stats.recentInvoices.map((inv) => ({
+        invoice_number: inv.invoice_number,
+        laundry_name: inv.laundry_name,
+        currency: inv.currency || activeCurrencyCode,
+        amountFormatted: formatAmount(inv.total_amount, inv.currency || activeCurrencyCode, lang),
+        status: inv.status,
+      }))
+    }
+    return []
+  }, [stats, activeCurrencyCode, lang])
+
+  // Dynamic Alerts
+  const alerts = useMemo(() => {
+    const rawAlerts = [
+      {
+        type: 'warning',
+        count: stats?.alerts?.expiring_soon ?? 0,
+        ar: 'مغسلة ستنتهي باقاتها خلال 7 أيام',
+        en: 'laundries expiring in 7 days',
+      },
+      {
+        type: 'info',
+        count: stats?.alerts?.pending_laundries ?? 0,
+        ar: 'مغاسل جديدة بانتظار المراجعة والتفعيل',
+        en: 'new laundries awaiting review & activation',
+      },
+      {
+        type: 'danger',
+        count: stats?.alerts?.open_tickets ?? 0,
+        ar: 'تذاكر دعم فني مفتوحة تتطلب المتابعة',
+        en: 'open support tickets requiring action',
+      },
+    ]
+    return rawAlerts.filter((a) => a.count > 0)
+  }, [stats])
+
+  // KPI Cards - Real Metrics
   const kpis = [
     {
       id: 'revenue',
-      labelAr: 'إجمالي الإيرادات',
-      labelEn: 'Total Revenue',
-      valueAr: `${stats?.revenue || 0} ريال`,
-      valueEn: `SAR ${stats?.revenue || 0}`,
+      labelAr: 'عائدات النظام من المغاسل',
+      labelEn: 'System Revenue from Laundries',
+      sublabelAr: 'عمولات الفواتير واشتراكات الباقات',
+      sublabelEn: 'Order commissions & subscriptions',
+      value: formatAmount(systemRevenue, activeCurrencyCode, lang),
+      badgeText: selectedCurrency === 'all' ? label('جميع العملات', 'All Currencies') : `${activeCurrencyMeta.flag} ${activeCurrencyMeta.code}`,
       icon: DollarSign,
-      color: 'var(--primary-500)',
-      bg: 'var(--primary-50)',
-      up: true,
-      change: '+0%'
+      color: 'var(--primary-500, #4f46e5)',
+      bg: 'rgba(99, 102, 241, 0.1)',
     },
     {
       id: 'laundries',
-      labelAr: 'المغاسل النشطة',
+      labelAr: 'المغاسل المسجلة والنشطة',
       labelEn: 'Active Laundries',
-      valueAr: stats?.counts?.active_laundries || '0',
-      valueEn: stats?.counts?.active_laundries || '0',
+      sublabelAr: `${stats?.counts?.total_laundries ?? 0} إجمالي المغاسل في النظام`,
+      sublabelEn: `${stats?.counts?.total_laundries ?? 0} total registered laundries`,
+      value: (stats?.counts?.active_laundries ?? 0).toLocaleString(),
+      badgeText: label('مغسلة نشطة', 'active'),
       icon: Store,
-      color: 'var(--success)',
-      bg: 'var(--success-bg)',
-      up: true,
-      change: '+0'
+      color: '#10B981',
+      bg: 'rgba(16, 185, 129, 0.1)',
     },
     {
       id: 'customers',
-      labelAr: 'إجمالي العملاء',
-      labelEn: 'Total Customers',
-      valueAr: stats?.counts?.total_customers || '0',
-      valueEn: stats?.counts?.total_customers || '0',
+      labelAr: 'إجمالي عملاء النظام',
+      labelEn: 'Total Registered Customers',
+      sublabelAr: 'عملاء التطبيق وملفات عملاء المغاسل',
+      sublabelEn: 'App users & laundry client profiles',
+      value: (stats?.counts?.total_customers ?? 0).toLocaleString(),
+      badgeText: label('عميل مسجل', 'customers'),
       icon: Users,
-      color: 'var(--gold)',
-      bg: 'var(--gold-light)',
-      up: true,
-      change: '+0'
+      color: '#F59E0B',
+      bg: 'rgba(245, 158, 11, 0.1)',
     },
     {
       id: 'invoices',
-      labelAr: 'فواتير اليوم',
-      labelEn: 'Today\'s Invoices',
-      valueAr: stats?.counts?.today_invoices || '0',
-      valueEn: stats?.counts?.today_invoices || '0',
+      labelAr: 'فواتير المغاسل اليوم',
+      labelEn: "Today's Laundry Invoices",
+      sublabelAr: `${stats?.counts?.total_invoices ?? 0} إجمالي كافة الفواتير في النظام`,
+      sublabelEn: `${stats?.counts?.total_invoices ?? 0} total invoices recorded`,
+      value: (stats?.counts?.today_invoices ?? 0).toLocaleString(),
+      badgeText: label('فاتورة اليوم', 'today'),
       icon: FileText,
-      color: 'var(--info)',
-      bg: 'var(--info-bg)',
-      up: false,
-      change: '0'
+      color: '#3B82F6',
+      bg: 'rgba(59, 130, 246, 0.1)',
     },
   ]
 
-  const statusDistribution = stats?.laundryStatusDistribution?.map(s => ({
-    name: label(
-      s.status === 'active' ? 'نشط' : s.status === 'trial' ? 'تجريبي' : s.status === 'pending' ? 'بانتظار' : 'آخر',
-      s.status
-    ),
-    value: parseInt(s.count),
-    color: s.status === 'active' ? '#10B981' : s.status === 'trial' ? '#F59E0B' : '#3B82F6'
-  })) || []
-
-  const recentInvoices = stats?.recentInvoices || []
-
-  // Dynamic Alerts
-  const alerts = [
-    { type: 'warning', count: stats?.alerts?.expiring_soon, ar: 'مغسلة ستنتهي اشتراكاتها خلال 7 أيام', en: 'laundries expiring in 7 days' },
-    { type: 'info',    count: stats?.alerts?.pending_laundries, ar: 'مغاسل بانتظار التفعيل', en: 'laundries awaiting activation' },
-    { type: 'danger',  count: stats?.alerts?.open_tickets, ar: 'تذاكر دعم فني عاجلة', en: 'urgent support tickets' },
-  ].filter(a => a.count > 0)
-
-  // Dynamic Chart Data
-  const chartData = stats?.chartData?.map(c => ({
-    month: label(c.month, c.month),
-    revenue: parseFloat(c.revenue) || 0,
-    subscriptions: parseInt(c.subscriptions) || 0
-  })) || []
+  // Custom Chart Tooltip
+  const CustomTooltip = ({ active, payload, label: xLabel }) => {
+    if (active && payload?.length) {
+      return (
+        <div
+          style={{
+            background: 'var(--bg-card, #ffffff)',
+            border: '1px solid var(--border, #e2e8f0)',
+            borderRadius: 10,
+            padding: '10px 14px',
+            fontSize: 13,
+            boxShadow: '0 8px 18px rgba(0,0,0,0.1)',
+          }}
+        >
+          <p style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{xLabel}</p>
+          {payload.map((p, i) => (
+            <p key={i} style={{ color: p.color, margin: '2px 0' }}>
+              {p.name}:{' '}
+              <strong>
+                {p.dataKey === 'revenue'
+                  ? formatAmount(p.value, activeCurrencyCode, lang)
+                  : p.value}
+              </strong>
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
 
   return (
     <div className="animate-fade">
-      {/* Page Header */}
-      <div className="page-header">
+      {/* ─── Page Header ────────────────────────────────────────────── */}
+      <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
-          <h1 className="page-title">{label('لوحة المؤشرات', 'Dashboard')}</h1>
-          <p className="page-subtitle">{label('نظرة عامة على أداء النظام', 'System performance overview')}</p>
+          <div className="flex items-center gap-8">
+            <h1 className="page-title">{label('لوحة المؤشرات', 'Dashboard')}</h1>
+            <span
+              className="badge"
+              style={{
+                backgroundColor: error ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                color: error ? '#EF4444' : '#10B981',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                borderRadius: '8px',
+                padding: '4px 10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Database size={13} />
+              {error
+                ? label('تعذر الاتصال بقاعدة البيانات', 'DB Connection Error')
+                : label('بيانات حقيقية متصلة بالخادم', 'Live Backend Connected')}
+            </span>
+          </div>
+          <p className="page-subtitle">
+            {label(
+              'متابعة عائدات المنصة وأداء المغاسل والفواتير المباشرة من قاعدة البيانات',
+              'Real-time platform revenue, laundries performance, and live orders'
+            )}
+          </p>
         </div>
-        <div className="flex gap-8">
-          <button className="btn btn-secondary btn-sm" onClick={fetchStats}>
+
+        {/* Header Controls (Currency Picker + Refresh) */}
+        <div className="flex items-center gap-8">
+          {/* Main Currency Selector */}
+          <CurrencyPicker
+            selectedCurrency={selectedCurrency}
+            onSelect={handleCurrencyChange}
+            showAllOption={true}
+          />
+
+          {/* Refresh Button */}
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => fetchStats(selectedCurrency)}
+            disabled={loading}
+            style={{ borderRadius: '10px', padding: '7px 14px' }}
+          >
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             {label('تحديث', 'Refresh')}
           </button>
         </div>
       </div>
 
-      {/* Alerts */}
-      <div className="flex flex-col gap-8 mb-24">
-        {alerts.map((a, i) => (
-          <div key={i} className={`alert alert-${a.type}`}>
-            <AlertTriangle size={16} />
-            {a.count} {label(a.ar, a.en)}
-          </div>
-        ))}
+      {/* ─── Quick Currency Filter Strip ───────────────────────────── */}
+      <div
+        className="card mb-20"
+        style={{
+          padding: '10px 16px',
+          borderRadius: '12px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+        }}
+      >
+        <div className="flex items-center gap-8 flex-wrap">
+          <span className="fs-xs fw-bold text-muted ml-4" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Globe size={14} />
+            {label('تصنيف العملات:', 'Currency Filter:')}
+          </span>
+
+          {/* "All" Button */}
+          <button
+            className={`btn btn-sm ${selectedCurrency === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+            style={{ borderRadius: '20px', padding: '4px 12px', fontSize: '0.8rem' }}
+            onClick={() => handleCurrencyChange('all')}
+          >
+            {label('جميع العملات', 'All')}
+          </button>
+
+          {/* Supported Currencies */}
+          {SUPPORTED_CURRENCIES.map((c) => {
+            const isSelected = selectedCurrency === c.code
+            return (
+              <button
+                key={c.code}
+                className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
+                style={{
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  fontSize: '0.8rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontWeight: isSelected ? 700 : 500,
+                  boxShadow: isSelected ? '0 2px 6px rgba(99, 102, 241, 0.25)' : 'none',
+                }}
+                onClick={() => handleCurrencyChange(c.code)}
+              >
+                <span>{c.flag}</span>
+                <span>{c.code}</span>
+                <span style={{ opacity: 0.75, fontSize: '0.74rem' }}>({c.symbolAr})</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* ─── Error Alert if Backend Fails ───────────────────────────── */}
+      {error && (
+        <div className="alert alert-danger mb-20" style={{ borderRadius: '10px' }}>
+          <AlertTriangle size={18} />
+          <div className="flex-1">
+            <strong>{label('خطأ في الاتصال بالـ Backend:', 'Backend Connection Error:')}</strong> {error}
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => fetchStats(selectedCurrency)}>
+            {label('إعادة المحاولة', 'Retry')}
+          </button>
+        </div>
+      )}
+
+      {/* ─── Alerts Banner ──────────────────────────────────────────── */}
+      {alerts.length > 0 && (
+        <div className="flex flex-col gap-8 mb-20">
+          {alerts.map((a, i) => (
+            <div key={i} className={`alert alert-${a.type}`} style={{ borderRadius: '10px' }}>
+              <AlertTriangle size={16} />
+              <span>
+                <strong>{a.count}</strong> {label(a.ar, a.en)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ─── KPI Cards ──────────────────────────────────────────────── */}
       <div className="grid grid-4 mb-24">
-        {kpis.map(kpi => {
+        {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
-            <div key={kpi.id} className="card">
+            <div key={kpi.id} className="card" style={{ borderRadius: '14px', position: 'relative', overflow: 'hidden' }}>
               <div className="card-body" style={{ padding: '20px' }}>
                 <div className="flex items-start justify-between mb-16">
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: kpi.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color }}>
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 12,
+                      background: kpi.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: kpi.color,
+                    }}
+                  >
                     <Icon size={22} />
                   </div>
+                  <span
+                    className="badge"
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      backgroundColor: 'var(--bg-secondary)',
+                      color: 'var(--text-muted)',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                    }}
+                  >
+                    {kpi.badgeText}
+                  </span>
                 </div>
-                <div className="fs-2xl fw-black mb-4" style={{ color: 'var(--text-primary)' }}>
-                  {loading ? '...' : label(kpi.valueAr, kpi.valueEn)}
+                <div
+                  className="fs-2xl fw-black mb-4"
+                  style={{ color: 'var(--text-primary)', wordBreak: 'break-word', letterSpacing: '-0.3px' }}
+                >
+                  {loading ? '...' : kpi.value}
                 </div>
-                <div className="fs-sm text-muted">{label(kpi.labelAr, kpi.labelEn)}</div>
+                <div className="flex flex-col gap-2 mt-8">
+                  <div className="fs-sm fw-bold" style={{ color: 'var(--text-primary)' }}>
+                    {label(kpi.labelAr, kpi.labelEn)}
+                  </div>
+                  <div className="fs-xs text-muted">
+                    {label(kpi.sublabelAr, kpi.sublabelEn)}
+                  </div>
+                </div>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', marginBottom: 24 }}>
-        {/* Revenue Chart */}
-        <div className="card">
-          <div className="card-header">
+      {/* ─── Charts Row ─────────────────────────────────────────────── */}
+      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: 24 }}>
+        {/* System Revenue Area Chart */}
+        <div className="card" style={{ borderRadius: '14px' }}>
+          <div className="card-header flex items-center justify-between">
             <div>
-              <h3 className="fs-lg fw-bold">{label('الإيرادات الشهرية', 'Monthly Revenue')}</h3>
-              <p className="fs-xs text-muted mt-4">{label('إجمالي الإيرادات من اشتراكات المغاسل', 'Total revenue from laundry subscriptions')}</p>
+              <h3 className="fs-lg fw-bold flex items-center gap-8">
+                {label('عائدات النظام الشهرية من المغاسل', 'Monthly System Revenue from Laundries')}
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: 'var(--primary-500)',
+                    background: 'rgba(99, 102, 241, 0.08)',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  {activeCurrencyMeta.nameAr} ({activeCurrencyMeta.symbolAr})
+                </span>
+              </h3>
+              <p className="fs-xs text-muted mt-4">
+                {label(
+                  'مجموع العمولات المحصلة من فواتير المغاسل ورسوم الاشتراكات عبر الأشهر',
+                  'Total commissions charged from laundry orders plus subscriptions'
+                )}
+              </p>
             </div>
-            <div className="flex gap-8">
-              {['week', 'month', 'year'].map(p => (
+            <div className="flex gap-6">
+              {['month'].map((p) => (
                 <button
                   key={p}
-                  className={`btn btn-sm ${period === p ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setPeriod(p)}
+                  className="btn btn-sm btn-primary"
+                  style={{ borderRadius: '8px', padding: '4px 10px', fontSize: '0.8rem' }}
                 >
-                  {p === 'week' ? label('أسبوع', 'Week') : p === 'month' ? label('شهر', 'Month') : label('سنة', 'Year')}
+                  {label('الأشهر الأخيرة', 'Recent Months')}
                 </button>
               ))}
             </div>
           </div>
           <div className="card-body">
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="var(--primary-500)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--primary-500)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-muted)', fontFamily: 'Cairo' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${v/1000}k` : v} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  name={label('الإيرادات', 'Revenue')}
-                  stroke="var(--primary-500)"
-                  strokeWidth={2.5}
-                  fill="url(#revGrad)"
-                  dot={{ fill: 'var(--primary-500)', r: 4 }}
-                  activeDot={{ r: 6, fill: 'var(--primary-400)' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={270}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--primary-500, #4f46e5)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--primary-500, #4f46e5)" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: 'var(--text-muted)', fontFamily: 'Cairo' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => {
+                      if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`
+                      if (v >= 1000) return `${(v / 1000).toFixed(0)}k`
+                      return v
+                    }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    name={label('عائدات النظام', 'System Revenue')}
+                    stroke="var(--primary-500, #4f46e5)"
+                    strokeWidth={2.5}
+                    fill="url(#revGrad)"
+                    dot={{ fill: 'var(--primary-500, #4f46e5)', r: 4 }}
+                    activeDot={{ r: 6, fill: 'var(--primary-400, #818cf8)' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="p-32 text-center text-muted fs-sm">
+                {loading ? label('جاري تحميل الإحصاءات...', 'Loading stats...') : label('لا توجد بيانات عائدات مسجلة بعد', 'No revenue data recorded yet')}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Pie Chart */}
-        <div className="card">
+        {/* Laundry Status Pie Chart */}
+        <div className="card" style={{ borderRadius: '14px' }}>
           <div className="card-header">
-            <h3 className="fs-lg fw-bold">{label('حالات المغاسل', 'Laundry Status')}</h3>
+            <h3 className="fs-lg fw-bold">{label('حالات المغاسل الفعلية', 'Laundry Status Breakdown')}</h3>
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
+            {statusDistribution.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {statusDistribution.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v, n) => [v, n]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-col gap-8" style={{ width: '100%', marginTop: 8 }}>
+                  {statusDistribution.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-8">
+                        <div
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: s.color,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span className="fs-sm">{s.name}</span>
+                      </div>
+                      <span className="fw-bold fs-sm">{s.value}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip formatter={(v, n) => [v, n]} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-col gap-8" style={{ width: '100%', marginTop: 8 }}>
-              {statusDistribution.map((s, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-8">
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                    <span className="fs-sm">{s.name}</span>
-                  </div>
-                  <span className="fw-bold fs-sm">{s.value}</span>
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="p-32 text-center text-muted fs-sm">
+                {label('لا توجد مغاسل مسجلة بعد', 'No laundries found')}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+      {/* ─── Bottom Row: Recent Invoices & Subscriptions ───────────── */}
+      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
         {/* Recent Invoices */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="fs-lg fw-bold">{label('آخر الفواتير في النظام', 'Recent System Invoices')}</h3>
+        <div className="card" style={{ borderRadius: '14px' }}>
+          <div className="card-header flex items-center justify-between">
+            <h3 className="fs-lg fw-bold">{label('آخر فواتير المغاسل في النظام', 'Recent Laundry Invoices')}</h3>
+            <span className="fs-xs text-muted">
+              {label('بيانات مباشرة من سجلات الفواتير', 'Live invoice database')}
+            </span>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
             <table>
@@ -364,40 +627,72 @@ export default function DashboardPage() {
                   <tr key={i}>
                     <td className="fw-bold">#{inv.invoice_number}</td>
                     <td>{inv.laundry_name}</td>
-                    <td className="fw-semi text-success">{inv.total_amount} ريال</td>
+                    <td className="fw-bold" style={{ color: '#10B981' }}>
+                      {inv.amountFormatted}
+                    </td>
                     <td>
-                      <span className={`badge badge-neutral`}>{inv.status}</span>
+                      <span
+                        className={`badge ${
+                          inv.status === 'completed'
+                            ? 'badge-success'
+                            : inv.status === 'pending'
+                            ? 'badge-warning'
+                            : 'badge-neutral'
+                        }`}
+                        style={{ borderRadius: '6px', fontSize: '0.74rem' }}
+                      >
+                        {inv.status === 'completed'
+                          ? label('مكتملة', 'Completed')
+                          : inv.status === 'pending'
+                          ? label('معلقة', 'Pending')
+                          : label('قيد التنفيذ', 'In Progress')}
+                      </span>
                     </td>
                   </tr>
                 ))}
                 {recentInvoices.length === 0 && !loading && (
-                  <tr><td colSpan="4" className="text-center py-20 text-muted">{label('لا توجد فواتير اليوم', 'No invoices today')}</td></tr>
+                  <tr>
+                    <td colSpan="4" className="text-center py-24 text-muted">
+                      {label('لا توجد فواتير مسجلة في النظام حالياً', 'No invoices found in database')}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Subscriptions Bar */}
-        <div className="card">
+        {/* Subscriptions Bar Chart */}
+        <div className="card" style={{ borderRadius: '14px' }}>
           <div className="card-header">
-            <h3 className="fs-lg fw-bold">{label('الاشتراكات الجديدة', 'New Subscriptions')}</h3>
+            <h3 className="fs-lg fw-bold">{label('اشتراكات المغاسل بالباقات', 'Laundry Subscriptions')}</h3>
           </div>
           <div className="card-body">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'Cairo' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="subscriptions"
-                  name={label('الاشتراكات', 'Subscriptions')}
-                  fill="var(--primary-500)"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartData} barSize={26}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'Cairo' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="subscriptions"
+                    name={label('الاشتراكات النشطة', 'Subscriptions')}
+                    fill="var(--primary-500, #4f46e5)"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="p-32 text-center text-muted fs-sm">
+                {label('لا توجد اشتراكات مسجلة بعد', 'No subscriptions recorded')}
+              </div>
+            )}
           </div>
         </div>
       </div>

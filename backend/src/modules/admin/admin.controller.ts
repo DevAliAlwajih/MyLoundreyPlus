@@ -43,6 +43,12 @@ export class AdminController {
     return this.adminService.getOverview();
   }
 
+  @ApiOperation({ summary: 'Admin: Get dashboard stats with currency filter' })
+  @Get('dashboard-stats')
+  getDashboardStats(@Query('currency') currency?: string) {
+    return this.adminService.getDashboardStats(currency);
+  }
+
   @ApiOperation({ summary: 'Admin: Get revenue analytics' })
   @Get('analytics/revenue')
   getRevenueAnalytics() {

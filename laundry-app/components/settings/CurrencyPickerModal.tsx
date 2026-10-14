@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../stores/themeStore';
 import { useCurrencyStore, CURRENCIES, Currency } from '../../stores/currencyStore';
+import { useUpdateProfile } from '../../hooks/useLaundryProfile';
 
 interface CurrencyPickerModalProps {
   visible: boolean;
@@ -23,10 +24,16 @@ export const CurrencyPickerModal: React.FC<CurrencyPickerModalProps> = ({ visibl
   const { t, i18n } = useTranslation();
   const { colors } = useThemeStore();
   const { currency: selectedCurrency, setCurrency } = useCurrencyStore();
+  const updateProfile = useUpdateProfile();
   const isAr = i18n.language === 'ar';
 
   const handleSelect = async (item: Currency) => {
     await setCurrency(item);
+    try {
+      updateProfile.mutate({ currency: item.code });
+    } catch {
+      // ignore
+    }
     onClose();
   };
 

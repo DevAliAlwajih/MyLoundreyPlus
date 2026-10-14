@@ -33,6 +33,9 @@ let AdminController = class AdminController {
     getOverview() {
         return this.adminService.getOverview();
     }
+    getDashboardStats(currency) {
+        return this.adminService.getDashboardStats(currency);
+    }
     getRevenueAnalytics() {
         return this.adminService.getRevenueAnalytics();
     }
@@ -111,6 +114,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getOverview", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get dashboard stats with currency filter' }),
+    (0, common_1.Get)('dashboard-stats'),
+    __param(0, (0, common_1.Query)('currency')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getDashboardStats", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Get revenue analytics' }),
     (0, common_1.Get)('analytics/revenue'),

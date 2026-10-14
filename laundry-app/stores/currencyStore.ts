@@ -7,16 +7,18 @@ export interface Currency {
   nameEn: string;
   symbol: string;
   flag: string;
+  subUnitAr?: string;
+  subUnitEn?: string;
 }
 
 export const CURRENCIES: Currency[] = [
-  { code: 'SAR', nameAr: 'ريال سعودي',    nameEn: 'Saudi Riyal',        symbol: '﷼',    flag: '🇸🇦' },
-  { code: 'AED', nameAr: 'درهم إماراتي',  nameEn: 'UAE Dirham',         symbol: 'د.إ',  flag: '🇦🇪' },
-  { code: 'QAR', nameAr: 'ريال قطري',     nameEn: 'Qatari Riyal',       symbol: 'ر.ق',  flag: '🇶🇦' },
-  { code: 'KWD', nameAr: 'دينار كويتي',   nameEn: 'Kuwaiti Dinar',      symbol: 'د.ك',  flag: '🇰🇼' },
-  { code: 'OMR', nameAr: 'ريال عُماني',   nameEn: 'Omani Rial',         symbol: 'ر.ع',  flag: '🇴🇲' },
-  { code: 'BHD', nameAr: 'دينار بحريني',  nameEn: 'Bahraini Dinar',     symbol: 'د.ب',  flag: '🇧🇭' },
-  { code: 'YER', nameAr: 'ريال يمني',     nameEn: 'Yemeni Rial',        symbol: 'ر.ي',  flag: '🇾🇪' },
+  { code: 'SAR', nameAr: 'ريال سعودي',    nameEn: 'Saudi Riyal',        symbol: '﷼',    flag: '🇸🇦', subUnitAr: 'هللة', subUnitEn: 'Halala' },
+  { code: 'AED', nameAr: 'درهم إماراتي',  nameEn: 'UAE Dirham',         symbol: 'د.إ',  flag: '🇦🇪', subUnitAr: 'فلس',   subUnitEn: 'Fils' },
+  { code: 'QAR', nameAr: 'ريال قطري',     nameEn: 'Qatari Riyal',       symbol: 'ر.ق',  flag: '🇶🇦', subUnitAr: 'درهم',  subUnitEn: 'Dirham' },
+  { code: 'KWD', nameAr: 'دينار كويتي',   nameEn: 'Kuwaiti Dinar',      symbol: 'د.ك',  flag: '🇰🇼', subUnitAr: 'فلس',   subUnitEn: 'Fils' },
+  { code: 'OMR', nameAr: 'ريال عُماني',   nameEn: 'Omani Rial',         symbol: 'ر.ع',  flag: '🇴🇲', subUnitAr: 'بيسة',  subUnitEn: 'Baisa' },
+  { code: 'BHD', nameAr: 'دينار بحريني',  nameEn: 'Bahraini Dinar',     symbol: 'د.ب',  flag: '🇧🇭', subUnitAr: 'فلس',   subUnitEn: 'Fils' },
+  { code: 'YER', nameAr: 'ريال يمني',     nameEn: 'Yemeni Rial',        symbol: 'ر.ي',  flag: '🇾🇪', subUnitAr: 'فلس',   subUnitEn: 'Fils' },
 ];
 
 const SECURE_STORE_KEY = 'appCurrency';

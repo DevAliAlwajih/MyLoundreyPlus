@@ -46,6 +46,10 @@ export class QueryLaundryDto {
   country?: string;
 
   @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)

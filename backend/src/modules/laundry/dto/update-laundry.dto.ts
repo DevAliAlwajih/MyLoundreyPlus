@@ -58,6 +58,7 @@ export class UpdateLaundryDto {
   currency?: string;
 
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   latitude?: number;

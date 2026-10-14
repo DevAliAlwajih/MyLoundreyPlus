@@ -20,6 +20,20 @@ function TabIcon({
   return <Ionicons name={name} size={size} color={color} />;
 }
 
+function resetTabStackOnPress(navigation: any, e: any, routeName: string) {
+  const state = navigation.getState();
+  const currentRoute = state.routes.find((r: any) => r.key === e.target || r.name === routeName);
+  if (currentRoute?.state) {
+    const childState = currentRoute.state as any;
+    if (childState.key && childState.index > 0) {
+      navigation.dispatch({
+        ...StackActions.popToTop(),
+        target: childState.key,
+      });
+    }
+  }
+}
+
 export default function AppLayout() {
   const { t } = useTranslation();
   const { colors, themeMode } = useThemeStore();
@@ -75,11 +89,7 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            const state = navigation.getState();
-            const currentRoute = state.routes.find((r: any) => r.key === e.target);
-            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
-              navigation.dispatch(StackActions.popToTop());
-            }
+            resetTabStackOnPress(navigation, e, 'invoices');
           },
         })}
       />
@@ -95,11 +105,7 @@ export default function AppLayout() {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            const state = navigation.getState();
-            const currentRoute = state.routes.find((r: any) => r.key === e.target);
-            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
-              navigation.dispatch(StackActions.popToTop());
-            }
+            resetTabStackOnPress(navigation, e, 'conversations');
           },
         })}
       />
@@ -113,15 +119,6 @@ export default function AppLayout() {
             <TabIcon name="settings" color={color} size={size} />
           ),
         }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            const state = navigation.getState();
-            const currentRoute = state.routes.find((r: any) => r.key === e.target);
-            if (currentRoute && currentRoute.state && (currentRoute.state as any).index > 0) {
-              navigation.dispatch(StackActions.popToTop());
-            }
-          },
-        })}
       />
 
       {/* ── شاشات فرعية — مخفية من الـ Tab Bar ── */}

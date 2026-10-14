@@ -100,11 +100,27 @@ export const chatSupportApi = {
   },
 };
 
+// ─── Dashboard Stats API ─────────────────────────────────────────────────────
+export const dashboardApi = {
+  getStats: (params) => api.get('/admin/dashboard-stats', { params }),
+  getOverview: () => api.get('/admin/analytics/overview'),
+  getRevenueAnalytics: (params) => api.get('/admin/analytics/revenue', { params }),
+  getTopLaundries: () => api.get('/admin/analytics/laundries'),
+};
+
 // ─── Recharges & Payments API ──────────────────────────────────────────────
 export const rechargesApi = {
   getAll: (params) => api.get('/admin/recharges', { params }),
   recharge: (laundryId, data) => api.post(`/admin/laundries/${laundryId}/balance`, data),
   getLaundryHistory: (laundryId, params) => api.get(`/admin/laundries/${laundryId}/balance-history`, { params }),
+};
+
+// ─── Profile & Security API ─────────────────────────────────────────────────
+export const profileApi = {
+  getProfile: () => api.get('/profile'),
+  updateProfile: (data) => api.patch('/profile', data),
+  updatePassword: (data) => api.patch('/profile/password', data),
+  updateEmail: (data) => api.patch('/profile/email', data),
 };
 
 export default api;

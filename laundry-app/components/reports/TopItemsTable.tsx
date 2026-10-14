@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { TopItem } from '../../stores/reportStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface TopItemsTableProps {
   items: TopItem[];
@@ -11,6 +12,7 @@ interface TopItemsTableProps {
 export const TopItemsTable: React.FC<TopItemsTableProps> = ({ items }) => {
   const { t, i18n } = useTranslation();
   const { colors } = useThemeStore();
+  const currency = useCurrencyStore((s) => s.currency);
 
   if (!items || items.length === 0) {
     return <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('reports.noData')}</Text>;
@@ -34,7 +36,7 @@ export const TopItemsTable: React.FC<TopItemsTableProps> = ({ items }) => {
             <View style={styles.detailsCol}>
               <View style={styles.textRow}>
                 <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={1}>{name}</Text>
-                <Text style={[styles.revenue, { color: colors.primary }]}>{item.revenue.toFixed(2)} {t('reports.currency')}</Text>
+                <Text style={[styles.revenue, { color: colors.primary }]}>{item.revenue.toFixed(2)} {currency.symbol}</Text>
               </View>
               <Text style={[styles.quantity, { color: colors.textSecondary }]}>{item.quantity} {t('reports.quantity')}</Text>
               

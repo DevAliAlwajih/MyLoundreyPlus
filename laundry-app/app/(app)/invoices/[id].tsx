@@ -786,7 +786,16 @@ export default function InvoiceDetailScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Tabs.Screen options={{ tabBarStyle: { display: 'none' } }} />
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(app)/invoices');
+            }
+          }}
+        >
           <Ionicons name={I18nManager.isRTL ? "arrow-forward" : "arrow-back"} size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>{invoice.invoiceNumber} {invoice.isEdited && <Text style={{color: colors.primary, fontSize: 12}}>✏️ معدلة</Text>}</Text>

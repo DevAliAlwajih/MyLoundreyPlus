@@ -1,6 +1,7 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
 export declare class ProfileService {
     private readonly prisma;
     constructor(prisma: PrismaService);
@@ -8,15 +9,15 @@ export declare class ProfileService {
         success: boolean;
         data: {
             id: string;
-            fullName: string;
             phoneNumber: string;
             uniqueId: string;
+            email: string;
+            fullName: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
             createdAt: Date;
-            email: string;
             country: string;
             currency: string;
         };
@@ -25,15 +26,15 @@ export declare class ProfileService {
         success: boolean;
         data: {
             id: string;
-            fullName: string;
             phoneNumber: string;
             uniqueId: string;
+            email: string;
+            fullName: string;
             qrCode: string;
             avatarUrl: string;
             role: import(".prisma/client").$Enums.user_role;
             isVerified: boolean;
             createdAt: Date;
-            email: string;
             country: string;
             currency: string;
         };
@@ -41,6 +42,17 @@ export declare class ProfileService {
     updatePassword(userId: string, dto: UpdatePasswordDto): Promise<{
         success: boolean;
         message: string;
+    }>;
+    updateEmail(userId: string, dto: UpdateEmailDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            uniqueId: string;
+            email: string;
+            fullName: string;
+            role: import(".prisma/client").$Enums.user_role;
+        };
     }>;
     getDevices(userId: string): Promise<{
         success: boolean;

@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { useTheme } from '../App'
+import { useState, useEffect } from 'react'
+import { useTheme, useAuth } from '../App'
+import { profileApi } from '../services/api'
 import {
   Phone, Globe, Moon, Sun, Languages, Bell, Shield,
-  Save, Plus, Trash2, Edit, MessageSquare, Smartphone
+  Save, Plus, Trash2, Edit, MessageSquare, Smartphone,
+  Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, AlertTriangle, Loader2
 } from 'lucide-react'
 
 const CONTACT_NUMBERS = [
@@ -13,10 +15,148 @@ const CONTACT_NUMBERS = [
 
 export default function SettingsPage() {
   const { lang, toggleLang, theme, toggleTheme } = useTheme()
+  const { user, updateUser } = useAuth()
   const label = (ar, en) => lang === 'ar' ? ar : en
   const [tab, setTab] = useState('general')
   const [contacts, setContacts] = useState(CONTACT_NUMBERS)
   const [editingContact, setEditingContact] = useState(null)
+
+  // Security (Email & Password) State
+  const [email, setEmail] = useState(user?.email || '')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false)
+  const [showNewPwd, setShowNewPwd] = useState(false)
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false)
+  const [securityLoading, setSecurityLoading] = useState(false)
+  const [securityStatus, setSecurityStatus] = useState(null)
+
+  // Sync email when user state updates
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email)
+    }
+  }, [user?.email])
+
+  // Fetch latest profile info on mount
+  useEffect(() => {
+    let mounted = true
+    profileApi.getProfile()
+      .then(res => {
+        const data = res.data?.data || res.data
+        if (mounted && data?.email) {
+          setEmail(data.email)
+          updateUser(data)
+        }
+      })
+      .catch(() => {})
+    return () => { mounted = false }
+  }, [])
+
+  const handleSecuritySubmit = async (e) => {
+    e.preventDefault()
+    setSecurityStatus(null)
+
+    const trimmedEmail = email.trim()
+    const currentEmail = (user?.email || '').trim()
+    const emailChanged = trimmedEmail.toLowerCase() !== currentEmail.toLowerCase()
+    const passwordChanged = Boolean(newPassword)
+
+    if (!emailChanged && !passwordChanged) {
+      setSecurityStatus({
+        type: 'warning',
+        message: label('لم يتم إجراء أي تعديل على البريد أو كلمة المرور', 'No changes were made to email or password')
+      })
+      return
+    }
+
+    if (!currentPassword) {
+      setSecurityStatus({
+        type: 'danger',
+        message: label('يرجى إدخال كلمة المرور الحالية لتأكيد التعديل', 'Please enter your current password to confirm changes')
+      })
+      return
+    }
+
+    if (emailChanged) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+        setSecurityStatus({
+          type: 'danger',
+          message: label('يرجى إدخال بريد إلكتروني صحيح', 'Please enter a valid email address')
+        })
+        return
+      }
+    }
+
+    if (passwordChanged) {
+      if (newPassword.length < 8) {
+        setSecurityStatus({
+          type: 'danger',
+          message: label('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل', 'New password must be at least 8 characters')
+        })
+        return
+      }
+      const hasLetterAndNumber = /^(?=.*[A-Za-z])(?=.*\d)/.test(newPassword)
+      if (!hasLetterAndNumber) {
+        setSecurityStatus({
+          type: 'danger',
+          message: label('كلمة المرور يجب أن تحتوي على حروف وأرقام', 'Password must contain both letters and numbers')
+        })
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        setSecurityStatus({
+          type: 'danger',
+          message: label('كلمة المرور الجديدة وتأكيدها غير متطابقين', 'New password and confirmation do not match')
+        })
+        return
+      }
+    }
+
+    setSecurityLoading(true)
+
+    try {
+      if (emailChanged) {
+        await profileApi.updateEmail({
+          newEmail: trimmedEmail,
+          currentPassword,
+        })
+        updateUser({ email: trimmedEmail })
+      }
+
+      if (passwordChanged) {
+        await profileApi.updatePassword({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        })
+      }
+
+      let successMsg = ''
+      if (emailChanged && passwordChanged) {
+        successMsg = label('تم تحديث البريد الإلكتروني وكلمة المرور بنجاح', 'Email and password updated successfully')
+      } else if (emailChanged) {
+        successMsg = label('تم تحديث البريد الإلكتروني بنجاح', 'Email updated successfully')
+      } else {
+        successMsg = label('تم تحديث كلمة المرور بنجاح', 'Password updated successfully')
+      }
+
+      setSecurityStatus({ type: 'success', message: successMsg })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error?.message ||
+        label('حدث خطأ أثناء حفظ التعديلات', 'An error occurred while saving changes')
+      setSecurityStatus({ type: 'danger', message: errorMsg })
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
 
   return (
     <div className="animate-fade">
@@ -164,23 +304,186 @@ export default function SettingsPage() {
       {tab === 'security' && (
         <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           <div className="card">
-            <div className="card-header"><h3 className="fw-bold">{label('كلمة المرور', 'Password')}</h3></div>
-            <div className="card-body flex flex-col gap-4">
-              <div className="form-group">
-                <label className="form-label">{label('كلمة المرور الحالية', 'Current Password')}</label>
-                <input type="password" className="form-control ltr" dir="ltr" placeholder="••••••••" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">{label('كلمة المرور الجديدة', 'New Password')}</label>
-                <input type="password" className="form-control ltr" dir="ltr" placeholder="••••••••" />
-                <p className="form-hint">{label('8 أحرف على الأقل، تحتوي على أرقام وحروف', 'At least 8 chars with numbers and letters')}</p>
-              </div>
-              <div className="form-group">
-                <label className="form-label">{label('تأكيد كلمة المرور', 'Confirm Password')}</label>
-                <input type="password" className="form-control ltr" dir="ltr" placeholder="••••••••" />
-              </div>
-              <button className="btn btn-primary"><Save size={15} /> {label('حفظ', 'Save')}</button>
+            <div className="card-header">
+              <h3 className="fw-bold">{label('البريد الإلكتروني وكلمة المرور', 'Email & Password')}</h3>
             </div>
+            <form onSubmit={handleSecuritySubmit} className="card-body flex flex-col gap-16">
+              {securityStatus && (
+                <div className={`alert alert-${securityStatus.type} animate-fade flex items-center gap-8`}>
+                  {securityStatus.type === 'success' && <CheckCircle size={18} style={{ flexShrink: 0 }} />}
+                  {securityStatus.type === 'danger' && <AlertCircle size={18} style={{ flexShrink: 0 }} />}
+                  {securityStatus.type === 'warning' && <AlertTriangle size={18} style={{ flexShrink: 0 }} />}
+                  <span>{securityStatus.message}</span>
+                </div>
+              )}
+
+              {/* 1) البريد الإلكتروني (قبل كلمة المرور القديمة) */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label flex items-center gap-6">
+                  <Mail size={15} className="text-muted" />
+                  <span>{label('البريد الإلكتروني لتسجيل الدخول', 'Login Email')}</span>
+                </label>
+                <input
+                  type="email"
+                  className="form-control ltr"
+                  dir="ltr"
+                  placeholder="admin@mgsity.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+                <p className="form-hint">
+                  {label('البريد المستخدم للدخول إلى لوحة تحكم الإدارة', 'Email used to log into admin dashboard')}
+                </p>
+              </div>
+
+              {/* 2) كلمة المرور الحالية (القديمة) */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label flex items-center gap-6">
+                  <Lock size={15} className="text-muted" />
+                  <span>{label('كلمة المرور الحالية', 'Current Password')}</span>
+                  <span className="text-danger">*</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showCurrentPwd ? 'text' : 'password'}
+                    className="form-control ltr"
+                    dir="ltr"
+                    placeholder="••••••••"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    style={{ paddingInlineEnd: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPwd(!showCurrentPwd)}
+                    style={{
+                      position: 'absolute',
+                      [lang === 'ar' ? 'left' : 'right']: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 4
+                    }}
+                    title={showCurrentPwd ? label('إخفاء', 'Hide') : label('عرض', 'Show')}
+                  >
+                    {showCurrentPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <p className="form-hint">
+                  {label('مطلوبة لتأكيد هويتك لحفظ أي تعديل في البريد أو كلمة المرور', 'Required to verify your identity to save changes')}
+                </p>
+              </div>
+
+              {/* 3) كلمة المرور الجديدة */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label flex items-center gap-6">
+                  <Lock size={15} className="text-muted" />
+                  <span>{label('كلمة المرور الجديدة', 'New Password')}</span>
+                  <span className="text-muted fs-xs">({label('اختياري', 'Optional')})</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showNewPwd ? 'text' : 'password'}
+                    className="form-control ltr"
+                    dir="ltr"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    style={{ paddingInlineEnd: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPwd(!showNewPwd)}
+                    style={{
+                      position: 'absolute',
+                      [lang === 'ar' ? 'left' : 'right']: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 4
+                    }}
+                    title={showNewPwd ? label('إخفاء', 'Hide') : label('عرض', 'Show')}
+                  >
+                    {showNewPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <p className="form-hint">
+                  {label('اتركها فارغة إذا أردت تعديل البريد فقط (8 أحرف على الأقل تحتوي على حروف وأرقام)', 'Leave empty if only changing email (at least 8 chars with letters & numbers)')}
+                </p>
+              </div>
+
+              {/* 4) تأكيد كلمة المرور */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label flex items-center gap-6">
+                  <Lock size={15} className="text-muted" />
+                  <span>{label('تأكيد كلمة المرور', 'Confirm Password')}</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirmPwd ? 'text' : 'password'}
+                    className="form-control ltr"
+                    dir="ltr"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    style={{ paddingInlineEnd: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                    style={{
+                      position: 'absolute',
+                      [lang === 'ar' ? 'left' : 'right']: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 4
+                    }}
+                    title={showConfirmPwd ? label('إخفاء', 'Hide') : label('عرض', 'Show')}
+                  >
+                    {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={securityLoading}
+                style={{ marginTop: 8 }}
+              >
+                {securityLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>{label('جاري الحفظ...', 'Saving...')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span>{label('حفظ التعديلات', 'Save Changes')}</span>
+                  </>
+                )}
+              </button>
+            </form>
           </div>
 
           <div className="card">
@@ -208,3 +511,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+

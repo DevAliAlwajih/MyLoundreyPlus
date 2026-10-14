@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../../stores/themeStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface PaymentBreakdownRowProps {
   type: 'cash' | 'card' | 'deferred' | 'electronic';
@@ -13,6 +14,7 @@ interface PaymentBreakdownRowProps {
 export const PaymentBreakdownRow: React.FC<PaymentBreakdownRowProps> = ({ type, amount, count, totalAmount }) => {
   const { t } = useTranslation();
   const { colors } = useThemeStore();
+  const currency = useCurrencyStore((s) => s.currency);
 
   const getDetails = () => {
     switch (type) {
@@ -34,7 +36,7 @@ export const PaymentBreakdownRow: React.FC<PaymentBreakdownRowProps> = ({ type, 
           <Text style={styles.icon}>{details.icon}</Text>
           <Text style={[styles.label, { color: colors.text }]}>{details.label}</Text>
         </View>
-        <Text style={[styles.amount, { color: colors.text }]}>{amount.toFixed(2)} {t('reports.currency')}</Text>
+        <Text style={[styles.amount, { color: colors.text }]}>{amount.toFixed(2)} {currency.symbol}</Text>
         <Text style={[styles.count, { color: colors.textSecondary }]}>({count} {t('reports.invoices')})</Text>
       </View>
       

@@ -15,6 +15,10 @@ export class QueryAdminLaundriesDto {
   country?: string;
 
   @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @IsOptional()
   @Type(() => Number)
   page?: number = 1;
 

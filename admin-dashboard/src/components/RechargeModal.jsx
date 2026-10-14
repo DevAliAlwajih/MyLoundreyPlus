@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '../App'
 import { rechargesApi } from '../services/api'
+import { getCurrencyMeta } from '../constants/currencies'
 
 const PAYMENT_METHODS = [
   { id: 'cash', labelAr: 'نقدي (كاش)', labelEn: 'Cash', icon: Banknote, descAr: 'سند قبض نقدي', descEn: 'Cash receipt' },
@@ -29,8 +30,6 @@ const PAYMENT_METHODS = [
   { id: 'other', labelAr: 'أخرى / تسوية', labelEn: 'Other / Settlement', icon: HelpCircle, descAr: 'تسوية حسابية أو مقاصة', descEn: 'Accounting settlement' },
 ]
 
-const QUICK_AMOUNTS = [100, 250, 500, 1000, 2500]
-
 export default function RechargeModal({
   isOpen,
   onClose,
@@ -39,6 +38,10 @@ export default function RechargeModal({
 }) {
   const { lang } = useTheme()
   const label = (ar, en) => (lang === 'ar' ? ar : en)
+
+  const currMeta = getCurrencyMeta(laundry?.currency)
+  const currencySymbol = label(currMeta.symbolAr, currMeta.symbolEn)
+  const quickAmounts = currMeta.quickAmounts || [100, 250, 500, 1000, 2500]
 
   const [amount, setAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
@@ -238,8 +241,8 @@ export default function RechargeModal({
             </h3>
             <p className="text-muted fs-sm mb-20">
               {label(
-                `تم إيداع ${successData.amount.toLocaleString()} ر.س في محفظة المغسلة`,
-                `Deposited ${successData.amount.toLocaleString()} SAR into the laundry balance`
+                `تم إيداع ${successData.amount.toLocaleString()} ${currencySymbol} في محفظة المغسلة`,
+                `Deposited ${successData.amount.toLocaleString()} ${currMeta.symbolEn} into the laundry balance`
               )}
             </p>
             <div
@@ -254,12 +257,12 @@ export default function RechargeModal({
             >
               <div>
                 <span className="fs-xs text-muted block">{label('الرصيد السابق', 'Previous')}</span>
-                <span className="fw-bold fs-md">{successData.balanceBefore.toLocaleString()} ر.س</span>
+                <span className="fw-bold fs-md">{successData.balanceBefore.toLocaleString()} {currencySymbol}</span>
               </div>
               <ArrowRight size={18} className="text-muted" style={{ transform: lang === 'ar' ? 'rotate(180deg)' : 'none' }} />
               <div>
                 <span className="fs-xs text-muted block">{label('الرصيد الجديد الحالي', 'New Balance')}</span>
-                <span className="fw-black fs-lg text-success">+{successData.balanceAfter.toLocaleString()} ر.س</span>
+                <span className="fw-black fs-lg text-success">+{successData.balanceAfter.toLocaleString()} {currencySymbol}</span>
               </div>
             </div>
           </div>
@@ -331,7 +334,7 @@ export default function RechargeModal({
                       }`}
                     >
                       {currentBalance > 0 ? `+${currentBalance.toLocaleString()}` : currentBalance.toLocaleString()}{' '}
-                      <small className="fs-xs font-normal">ر.س</small>
+                      <small className="fs-xs font-normal">{currencySymbol}</small>
                     </span>
                     <div className="mt-4">
                       <span
@@ -367,7 +370,7 @@ export default function RechargeModal({
                     </span>
                     <span className="fw-black fs-md" style={{ color: 'var(--primary-600)' }}>
                       +{parsedAmount.toLocaleString()}{' '}
-                      <small className="fs-xs font-normal">ر.س</small>
+                      <small className="fs-xs font-normal">{currencySymbol}</small>
                     </span>
                     <div className="mt-4">
                       <span
@@ -407,7 +410,7 @@ export default function RechargeModal({
                       }`}
                     >
                       {expectedBalance > 0 ? `+${expectedBalance.toLocaleString()}` : expectedBalance.toLocaleString()}{' '}
-                      <small className="fs-xs font-normal">ر.س</small>
+                      <small className="fs-xs font-normal">{currencySymbol}</small>
                     </span>
                     <div className="mt-4">
                       <span
@@ -446,7 +449,7 @@ export default function RechargeModal({
                         height: 'auto',
                       }}
                     >
-                      ⚡ {label(`سداد كامل المديونية (${debtAmount} ر.س)`, `Clear full debt (${debtAmount} SAR)`)}
+                      ⚡ {label(`سداد كامل المديونية (${debtAmount.toLocaleString()} ${currencySymbol})`, `Clear full debt (${debtAmount.toLocaleString()} ${currMeta.symbolEn})`)}
                     </button>
                   )}
                 </div>
@@ -465,7 +468,7 @@ export default function RechargeModal({
                     style={{
                       fontSize: '1.25rem',
                       fontWeight: 800,
-                      paddingInlineEnd: 70,
+                      paddingInlineEnd: 90,
                       height: 48,
                       borderRadius: 12,
                       borderColor: parsedAmount > 0 ? 'var(--primary-500)' : undefined,
@@ -483,14 +486,14 @@ export default function RechargeModal({
                       pointerEvents: 'none',
                     }}
                   >
-                    ر.س / SAR
+                    {currMeta.flag} {currencySymbol}
                   </div>
                 </div>
 
                 {/* Quick Amount Preset Chips */}
                 <div className="flex items-center gap-6 mt-8 flex-wrap">
                   <span className="fs-xs text-muted fw-semi">{label('مبالغ سريعة:', 'Quick amounts:')}</span>
-                  {QUICK_AMOUNTS.map((val) => (
+                  {quickAmounts.map((val) => (
                     <button
                       key={val}
                       type="button"
@@ -505,7 +508,7 @@ export default function RechargeModal({
                         borderColor: parsedAmount === val ? 'var(--primary-500)' : undefined,
                       }}
                     >
-                      +{val} ر.س
+                      +{val.toLocaleString()} {currencySymbol}
                     </button>
                   ))}
                 </div>

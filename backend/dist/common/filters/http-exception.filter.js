@@ -36,8 +36,8 @@ let GlobalExceptionFilter = class GlobalExceptionFilter {
                     errorCode = 'VALIDATION_ERROR';
                 }
                 else {
-                    message = resObj.message ?? message;
-                    errorCode = resObj.errorCode ?? this.inferErrorCode(status);
+                    message = resObj.message ?? resObj.error?.message ?? message;
+                    errorCode = resObj.errorCode ?? resObj.error?.code ?? this.inferErrorCode(status);
                 }
             }
         }

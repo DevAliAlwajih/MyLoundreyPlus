@@ -5,6 +5,7 @@ export declare class QueryLaundryDto {
     sort?: 'distance' | 'rating' | 'price';
     city?: string;
     country?: string;
+    currency?: string;
     page?: number;
     limit?: number;
 }

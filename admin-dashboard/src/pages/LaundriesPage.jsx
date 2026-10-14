@@ -8,6 +8,7 @@ import {
   Smartphone, Tablet, Shield, Phone, Calendar, Wallet
 } from 'lucide-react'
 import RechargeModal from '../components/RechargeModal'
+import { SUPPORTED_CURRENCIES, getCurrencyMeta } from '../constants/currencies'
 
 import { io } from 'socket.io-client'
 
@@ -34,6 +35,7 @@ export default function LaundriesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterCurrency, setFilterCurrency] = useState('all')
   const [selectedLaundry, setSelectedLaundry] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDevicesModal, setShowDevicesModal] = useState(false)
@@ -61,16 +63,25 @@ export default function LaundriesPage() {
     return () => socket.disconnect()
   }, [])
 
-  const fetchLaundries = async () => {
+  const fetchLaundries = async (curr = filterCurrency) => {
     setLoading(true)
     try {
-      const res = await api.get('/admin/laundries')
+      const params = {}
+      if (curr && curr !== 'all') {
+        params.currency = curr
+      }
+      const res = await api.get('/admin/laundries', { params })
       setLaundries(res.data.data)
     } catch (err) {
       console.error('Failed to fetch laundries', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleFilterCurrency = (curr) => {
+    setFilterCurrency(curr)
+    fetchLaundries(curr)
   }
 
   const handleUpdateStatus = async (id, newStatus) => {
@@ -113,7 +124,8 @@ export default function LaundriesPage() {
                        l.city?.toLowerCase().includes(s) ||
                        l.phone_number?.includes(s)
     const matchStatus = filterStatus === 'all' || l.status === filterStatus
-    return matchSearch && matchStatus
+    const matchCurrency = filterCurrency === 'all' || (l.currency || 'SAR').toUpperCase() === filterCurrency.toUpperCase()
+    return matchSearch && matchStatus && matchCurrency
   })
 
   const openDevices = (l) => {
@@ -144,7 +156,7 @@ export default function LaundriesPage() {
       {/* Filters */}
       <div className="card mb-20">
         <div className="card-body" style={{ padding: '16px 20px' }}>
-          <div className="flex items-center gap-12 flex-wrap">
+          <div className="flex items-center gap-12 flex-wrap mb-14">
             <div className="search-bar flex-1" style={{ minWidth: 240 }}>
               <Search size={16} className="search-icon" />
               <input
@@ -153,7 +165,7 @@ export default function LaundriesPage() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               {['all', 'active', 'trial', 'pending', 'suspended', 'banned'].map(s => (
                 <button
                   key={s}
@@ -165,6 +177,40 @@ export default function LaundriesPage() {
               ))}
             </div>
           </div>
+
+          {/* Quick Currency Filter Tabs */}
+          <div className="flex items-center gap-6 flex-wrap pt-12" style={{ borderTop: '1px solid var(--border)' }}>
+            <span className="fs-xs text-muted fw-semi ml-4">{label('فلترة بالعملة والدولة:', 'Currency & Country:')}</span>
+            <button
+              className={`btn btn-sm ${filterCurrency === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ borderRadius: 20, padding: '4px 12px', fontSize: '0.8rem' }}
+              onClick={() => handleFilterCurrency('all')}
+            >
+              {label('الكل', 'All')}
+            </button>
+            {SUPPORTED_CURRENCIES.map((c) => {
+              const isSelected = filterCurrency === c.code
+              return (
+                <button
+                  key={c.code}
+                  className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    borderRadius: 20,
+                    padding: '4px 12px',
+                    fontSize: '0.8rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                  onClick={() => handleFilterCurrency(c.code)}
+                >
+                  <span>{c.flag}</span>
+                  <span className="fw-semi">{label(c.symbolAr, c.symbolEn)}</span>
+                  <span className="fs-xs opacity-75">({c.code})</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -174,7 +220,7 @@ export default function LaundriesPage() {
           <table>
             <thead>
               <tr>
-                <th>{label('المغسلة', 'Laundry')}</th>
+                <th>{label('المغسلة والعملة', 'Laundry & Currency')}</th>
                 <th>{label('المالك', 'Owner')}</th>
                 <th>{label('المدينة', 'City')}</th>
                 <th>{label('الحالة', 'Status')}</th>
@@ -190,7 +236,10 @@ export default function LaundriesPage() {
             <tbody>
               {loading ? (
                 <tr><td colSpan="11" className="text-center py-20">{label('جاري التحميل...', 'Loading...')}</td></tr>
-              ) : filtered.map(l => (
+              ) : filtered.map(l => {
+                const currMeta = getCurrencyMeta(l.currency)
+                const currSymbol = label(currMeta.symbolAr, currMeta.symbolEn)
+                return (
                 <tr key={l.id}>
                   <td>
                     <div className="flex items-center gap-10">
@@ -201,6 +250,24 @@ export default function LaundriesPage() {
                         <div className="fw-semi">{l.name}</div>
                         <div className="fs-xs text-muted flex items-center gap-4">
                           <Phone size={11} /> {l.phone_number}
+                        </div>
+                        <div className="flex items-center gap-4 mt-2">
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '1px 6px',
+                              background: 'var(--bg-page)',
+                              border: '1px solid var(--border)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <span>{currMeta.flag}</span>
+                            <span className="fw-semi">{currSymbol}</span>
+                            <span className="text-muted">({currMeta.code})</span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -228,7 +295,7 @@ export default function LaundriesPage() {
                         }`}
                         dir="ltr"
                       >
-                        {Number(l.balance || 0) > 0 ? `+${Number(l.balance).toLocaleString()}` : Number(l.balance || 0).toLocaleString()} {label('ر.س', 'SAR')}
+                        {Number(l.balance || 0) > 0 ? `+${Number(l.balance).toLocaleString()}` : Number(l.balance || 0).toLocaleString()} {currSymbol}
                       </span>
                     </div>
                   </td>
@@ -298,7 +365,7 @@ export default function LaundriesPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           {filtered.length === 0 && (

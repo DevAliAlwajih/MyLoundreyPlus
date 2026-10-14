@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Delete, Body, Param, Req, UseGuards, ParseUUIDP
 import { ProfileService } from './profile.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -25,6 +26,11 @@ export class ProfileController {
   @Patch('password')
   updatePassword(@Req() req: any, @Body() dto: UpdatePasswordDto) {
     return this.profileService.updatePassword(req.user.id, dto);
+  }
+
+  @Patch('email')
+  updateEmail(@Req() req: any, @Body() dto: UpdateEmailDto) {
+    return this.profileService.updateEmail(req.user.id, dto);
   }
 
   @Get('devices')

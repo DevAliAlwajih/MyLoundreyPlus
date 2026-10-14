@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react'
+import { SUPPORTED_CURRENCIES } from './constants/currencies'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
 import LoginPage from './pages/LoginPage'
@@ -28,6 +29,10 @@ function ProtectedRoute({ children }) {
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'ar')
+  const [currency, setCurrencyState] = useState(() => {
+    const saved = localStorage.getItem('adminCurrency')
+    return SUPPORTED_CURRENCIES.find(c => c.code === saved) || SUPPORTED_CURRENCIES.find(c => c.code === 'SAR')
+  })
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('adminUser')
     try {
@@ -58,6 +63,10 @@ export default function App() {
 
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light')
   const toggleLang = () => setLang(l => l === 'ar' ? 'en' : 'ar')
+  const setCurrency = (currencyObj) => {
+    localStorage.setItem('adminCurrency', currencyObj.code)
+    setCurrencyState(currencyObj)
+  }
 
   const login = (token, userData = null) => {
     localStorage.setItem('adminToken', token)
@@ -67,6 +76,14 @@ export default function App() {
     }
     setIsAuthenticated(true)
   }
+  const updateUser = (userData) => {
+    setUser(prev => {
+      const updated = { ...(prev || {}), ...userData }
+      localStorage.setItem('adminUser', JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const logout = () => {
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUser')
@@ -75,8 +92,8 @@ export default function App() {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, lang, toggleLang }}>
-      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, lang, toggleLang, currency, setCurrency }}>
+      <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser }}>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={

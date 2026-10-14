@@ -10,11 +10,13 @@ import { PaymentBreakdownRow } from '../../../components/reports/PaymentBreakdow
 import { TopItemsTable } from '../../../components/reports/TopItemsTable';
 import { RevenueChart } from '../../../components/reports/RevenueChart';
 import { useThemeStore } from '../../../stores/themeStore';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 export default function ReportsScreen() {
   const { t } = useTranslation();
   const { period } = useReportStore();
   const { colors } = useThemeStore();
+  const currency = useCurrencyStore((s) => s.currency);
   
   const { data: report, isLoading, isError, refetch } = useReports();
 
@@ -48,7 +50,7 @@ export default function ReportsScreen() {
           <View style={styles.kpiRow}>
             <KPICard 
               title={t('reports.totalRevenue')} 
-              value={`${report.totalRevenue.toFixed(2)} ${t('reports.currency')}`} 
+              value={`${report.totalRevenue.toFixed(2)} ${currency.symbol}`} 
               bgType="primary" 
             />
             <KPICard 
@@ -59,7 +61,7 @@ export default function ReportsScreen() {
           <View style={styles.kpiRow}>
             <KPICard 
               title={t('reports.outstandingDeferred')} 
-              value={`${report.outstandingDeferred.toFixed(2)} ${t('reports.currency')}`} 
+              value={`${report.outstandingDeferred.toFixed(2)} ${currency.symbol}`} 
               bgType={report.outstandingDeferred > 0 ? 'danger' : 'neutral'} 
             />
             <KPICard 

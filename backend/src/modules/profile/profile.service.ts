@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -36,8 +37,8 @@ export class ProfileService {
 
     if (!user) {
       throw new NotFoundException({
-        success: false,
-        error: { code: 'PROFILE_NOT_FOUND', message: 'المستخدم غير موجود' },
+        message: 'المستخدم غير موجود',
+        errorCode: 'PROFILE_NOT_FOUND',
       });
     }
 
@@ -52,8 +53,8 @@ export class ProfileService {
       });
       if (existing && existing.id !== userId) {
         throw new ConflictException({
-          success: false,
-          error: { code: 'PHONE_ALREADY_EXISTS', message: 'رقم الهاتف مستخدم مسبقاً' },
+          message: 'رقم الهاتف مستخدم مسبقاً',
+          errorCode: 'PHONE_ALREADY_EXISTS',
         });
       }
     }
@@ -91,8 +92,8 @@ export class ProfileService {
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
     if (dto.newPassword !== dto.confirmPassword) {
       throw new BadRequestException({
-        success: false,
-        error: { code: 'PASSWORD_MISMATCH', message: 'كلمة المرور الجديدة وتأكيدها غير متطابقَين' },
+        message: 'كلمة المرور الجديدة وتأكيدها غير متطابقَين',
+        errorCode: 'PASSWORD_MISMATCH',
       });
     }
 
@@ -103,23 +104,23 @@ export class ProfileService {
 
     if (!user) {
       throw new NotFoundException({
-        success: false,
-        error: { code: 'PROFILE_NOT_FOUND', message: 'المستخدم غير موجود' },
+        message: 'المستخدم غير موجود',
+        errorCode: 'PROFILE_NOT_FOUND',
       });
     }
 
     if (!user.password_hash) {
       throw new BadRequestException({
-        success: false,
-        error: { code: 'GOOGLE_ACCOUNT_NO_PASSWORD', message: 'حسابك مرتبط بـ Google — لا يوجد كلمة مرور' },
+        message: 'حسابك مرتبط بـ Google — لا يوجد كلمة مرور',
+        errorCode: 'GOOGLE_ACCOUNT_NO_PASSWORD',
       });
     }
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.password_hash);
     if (!isMatch) {
       throw new UnauthorizedException({
-        success: false,
-        error: { code: 'WRONG_CURRENT_PASSWORD', message: 'كلمة المرور الحالية غير صحيحة' },
+        message: 'كلمة المرور الحالية غير صحيحة',
+        errorCode: 'WRONG_CURRENT_PASSWORD',
       });
     }
 
@@ -130,6 +131,74 @@ export class ProfileService {
     });
 
     return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
+  }
+
+  // 3.1 تغيير البريد الإلكتروني
+  async updateEmail(userId: string, dto: UpdateEmailDto) {
+    const normalizedEmail = (dto.newEmail || '').toLowerCase().trim();
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, password_hash: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        message: 'المستخدم غير موجود',
+        errorCode: 'PROFILE_NOT_FOUND',
+      });
+    }
+
+    if (!user.password_hash) {
+      throw new BadRequestException({
+        message: 'حسابك مرتبط بـ Google — لا يوجد كلمة مرور',
+        errorCode: 'GOOGLE_ACCOUNT_NO_PASSWORD',
+      });
+    }
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new UnauthorizedException({
+        message: 'كلمة المرور الحالية غير صحيحة',
+        errorCode: 'WRONG_CURRENT_PASSWORD',
+      });
+    }
+
+    if (user.email && user.email.toLowerCase() === normalizedEmail) {
+      throw new BadRequestException({
+        message: 'البريد الإلكتروني الجديد مطابق للبريد الحالي',
+        errorCode: 'SAME_EMAIL',
+      });
+    }
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existing && existing.id !== userId) {
+      throw new ConflictException({
+        message: 'البريد الإلكتروني مستخدم مسبقاً من قبل حساب آخر',
+        errorCode: 'EMAIL_ALREADY_EXISTS',
+      });
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: normalizedEmail },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        uniqueId: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'تم تغيير البريد الإلكتروني بنجاح',
+      data: updated,
+    };
   }
 
   // 4. قائمة الأجهزة المسجلة

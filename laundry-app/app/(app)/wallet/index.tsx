@@ -25,7 +25,7 @@ import {
 } from '../../../hooks/useWallet';
 import { useThemeStore } from '../../../stores/themeStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
-import { useCurrencyStore } from '../../../stores/currencyStore';
+import { useCurrencyStore, CURRENCIES, Currency } from '../../../stores/currencyStore';
 
 const PRIMARY = '#1a5fa8';
 
@@ -93,10 +93,67 @@ function getPaymentMethodIcon(method?: string): keyof typeof Ionicons.glyphMap {
 }
 
 /**
- * دالة تحويل الأرقام إلى كلمات عربية رسمية (تفقيط) لسند القبض والاستلام
+ * حل مسميات العملة والوحدة الفرعية للتفقيط المالي وفقاً للـ 7 عملات المعتمدة
  */
-function numberToArabicWords(num: number): string {
+function resolveCurrencyInfo(
+  currencyInput?: { nameAr?: string; subUnitAr?: string; code?: string } | string
+): { nameAr: string; subUnitAr: string; code: string } {
+  let code = '';
+  let nameAr = '';
+  let subUnitAr = '';
+
+  if (typeof currencyInput === 'string') {
+    code = currencyInput.trim().toUpperCase();
+  } else if (currencyInput && typeof currencyInput === 'object') {
+    code = (currencyInput.code || '').trim().toUpperCase();
+    nameAr = currencyInput.nameAr || '';
+    subUnitAr = currencyInput.subUnitAr || '';
+  }
+
+  // جلب العملة النشطة للمغسلة من الـ Store كمصدر افتراضي دائماً
+  let activeCurrency: typeof CURRENCIES[0] | undefined;
+  try {
+    activeCurrency = useCurrencyStore.getState().currency;
+  } catch {
+    // ignore
+  }
+
+  // إذا لم يتم تحديد كود العملة، نستخدم العملة النشطة
+  if (!code && !nameAr) {
+    if (activeCurrency) {
+      code = activeCurrency.code;
+      nameAr = activeCurrency.nameAr;
+      subUnitAr = activeCurrency.subUnitAr || '';
+    }
+  }
+
+  const matched = CURRENCIES.find((c) => c.code.toUpperCase() === code);
+  if (matched) {
+    nameAr = nameAr || matched.nameAr;
+    subUnitAr = subUnitAr || matched.subUnitAr || 'فلس';
+    code = matched.code;
+  }
+
+  // الـ fallback النهائي: العملة النشطة في حال عدم التعرف على الكود
+  const fallbackCurrency = activeCurrency || CURRENCIES[0];
+  return {
+    code: code || fallbackCurrency.code,
+    nameAr: nameAr || fallbackCurrency.nameAr,
+    subUnitAr: subUnitAr || fallbackCurrency.subUnitAr || 'فلس',
+  };
+}
+
+/**
+ * دالة تحويل الأرقام إلى كلمات عربية رسمية (تفقيط) لسند القبض والاستلام مع مراعاة العملة المحددة وأجزائها
+ */
+function numberToArabicWords(
+  num: number,
+  currencyInfo?: { nameAr?: string; subUnitAr?: string; code?: string } | string
+): string {
   if (!num || isNaN(num)) return '';
+
+  const { nameAr: mainUnit, subUnitAr } = resolveCurrencyInfo(currencyInfo);
+
   const units = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
   const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
   const teens = [
@@ -125,7 +182,7 @@ function numberToArabicWords(num: number): string {
   ];
 
   const n = Math.floor(Math.abs(num));
-  if (n === 0) return 'صفر ريال سعودي';
+  if (n === 0) return `صفر ${mainUnit}`;
 
   function convert999(v: number): string {
     let res = '';
@@ -153,29 +210,39 @@ function numberToArabicWords(num: number): string {
     return res;
   }
 
-  let result = '';
-  const th = Math.floor(n / 1000);
-  const rem1000 = n % 1000;
+  const millions = Math.floor(n / 1000000);
+  const thousands = Math.floor((n % 1000000) / 1000);
+  const remainder = n % 1000;
 
-  if (th > 0) {
-    if (th === 1) result += 'ألف';
-    else if (th === 2) result += 'ألفان';
-    else if (th >= 3 && th <= 10) result += `${convert999(th)} آلاف`;
-    else result += `${convert999(th)} ألف`;
+  const parts: string[] = [];
+
+  if (millions > 0) {
+    if (millions === 1) parts.push('مليون');
+    else if (millions === 2) parts.push('مليونان');
+    else if (millions >= 3 && millions <= 10) parts.push(`${convert999(millions)} ملايين`);
+    else parts.push(`${convert999(millions)} مليون`);
   }
 
-  if (rem1000 > 0) {
-    if (result) result += ' و';
-    result += convert999(rem1000);
+  if (thousands > 0) {
+    if (thousands === 1) parts.push('ألف');
+    else if (thousands === 2) parts.push('ألفان');
+    else if (thousands >= 3 && thousands <= 10) parts.push(`${convert999(thousands)} آلاف`);
+    else parts.push(`${convert999(thousands)} ألف`);
   }
+
+  if (remainder > 0) {
+    parts.push(convert999(remainder));
+  }
+
+  const result = parts.join(' و');
 
   const fraction = Math.round((Math.abs(num) - n) * 100);
-  let halalaText = '';
+  let subText = '';
   if (fraction > 0) {
-    halalaText = ` و${convert999(fraction)} هللة`;
+    subText = ` و${convert999(fraction)} ${subUnitAr}`;
   }
 
-  return `${result} ريال سعودي${halalaText} فقط لا غير`;
+  return `${result} ${mainUnit}${subText} فقط لا غير`;
 }
 
 export default function WalletScreen() {
@@ -186,6 +253,7 @@ export default function WalletScreen() {
   const isAr = i18n.language === 'ar';
   const isDark = themeMode === 'dark';
   const fmtCurrency = useFmtCurrency();
+  const currency = useCurrencyStore((s) => s.currency);
 
   const laundryName = profile?.nameAr || profile?.name || 'مغسلتي';
 
@@ -262,7 +330,7 @@ export default function WalletScreen() {
   const handleShareReceipt = async (item: WalletTransaction) => {
     const voucherNum = item.referenceNumber || item.id.substring(0, 8).toUpperCase();
     const amountVal = Math.abs(Number(item.amount || 0));
-    const words = numberToArabicWords(amountVal);
+    const words = numberToArabicWords(amountVal, currency);
 
     const shareContent = `🧾 *سند استلام وقبض رسمي*
 --------------------------------
@@ -771,7 +839,7 @@ ${item.referenceNumber ? `• رقم المرجع: #${item.referenceNumber}\n` :
       selectedReceipt.referenceNumber ||
       selectedReceipt.id.substring(0, 8).toUpperCase();
     const amountVal = Math.abs(Number(selectedReceipt.amount || 0));
-    const arabicWords = numberToArabicWords(amountVal);
+    const arabicWords = numberToArabicWords(amountVal, currency);
 
     return (
       <Modal

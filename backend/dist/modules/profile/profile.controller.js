@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const profile_service_1 = require("./profile.service");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
 const update_password_dto_1 = require("./dto/update-password.dto");
+const update_email_dto_1 = require("./dto/update-email.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 let ProfileController = class ProfileController {
@@ -31,6 +32,9 @@ let ProfileController = class ProfileController {
     }
     updatePassword(req, dto) {
         return this.profileService.updatePassword(req.user.id, dto);
+    }
+    updateEmail(req, dto) {
+        return this.profileService.updateEmail(req.user.id, dto);
     }
     getDevices(req) {
         return this.profileService.getDevices(req.user.id);
@@ -72,6 +76,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, update_password_dto_1.UpdatePasswordDto]),
     __metadata("design:returntype", void 0)
 ], ProfileController.prototype, "updatePassword", null);
+__decorate([
+    (0, common_1.Patch)('email'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_email_dto_1.UpdateEmailDto]),
+    __metadata("design:returntype", void 0)
+], ProfileController.prototype, "updateEmail", null);
 __decorate([
     (0, common_1.Get)('devices'),
     __param(0, (0, common_1.Req)()),

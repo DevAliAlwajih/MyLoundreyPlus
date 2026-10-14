@@ -7,6 +7,7 @@ import { useLaundryStore } from '../../stores/laundryStore';
 import { useRemindCustomer, useUpdateCustomerProfile } from '../../hooks/useCRM';
 import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../stores/themeStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 interface CustomerSummaryProps {
   customer: CustomerDetail;
@@ -17,6 +18,7 @@ export const CustomerSummary: React.FC<CustomerSummaryProps> = ({ customer }) =>
   const { profile } = useLaundryStore();
   const router = useRouter();
   const { colors } = useThemeStore();
+  const currency = useCurrencyStore((s) => s.currency);
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState(customer.customerName || '');
@@ -69,6 +71,7 @@ export const CustomerSummary: React.FC<CustomerSummaryProps> = ({ customer }) =>
               const msg = t('crm.whatsappMessage', { 
                 name: customer.customerName, 
                 amount: customer.deferredBalance.toFixed(2),
+                currency: currency.symbol,
                 laundry: laundryName || ''
               });
               
@@ -139,13 +142,13 @@ export const CustomerSummary: React.FC<CustomerSummaryProps> = ({ customer }) =>
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.statBox}>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('crm.totalSpent')}</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>{customer.totalSpent?.toFixed(2) || '0.00'}</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{customer.totalSpent?.toFixed(2) || '0.00'} {currency.symbol}</Text>
         </View>
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.statBox}>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('crm.deferredBalance')}</Text>
           <Text style={[styles.statValue, customer.deferredBalance > 0 && styles.debtValue, !customer.deferredBalance && { color: colors.text }]}>
-            {(Number(customer.deferredBalance) || 0).toFixed(2)}
+            {(Number(customer.deferredBalance) || 0).toFixed(2)} {currency.symbol}
           </Text>
         </View>
       </View>

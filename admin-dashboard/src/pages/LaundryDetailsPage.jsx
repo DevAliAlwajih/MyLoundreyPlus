@@ -9,6 +9,12 @@ import {
 import { useTheme } from '../App'
 import api, { rechargesApi } from '../services/api'
 import RechargeModal from '../components/RechargeModal'
+import {
+  SUPPORTED_CURRENCIES,
+  COUNTRY_OPTIONS,
+  COUNTRY_TO_CURRENCY,
+  getCurrencyMeta,
+} from '../constants/currencies'
 
 const STATUS_MAP = {
   active: { labelAr: 'نشط', labelEn: 'Active' },
@@ -31,30 +37,14 @@ const PAYMENT_METHOD_BADGES = {
   other: { labelAr: 'أخرى', labelEn: 'Other', badge: 'neutral' },
 }
 
-const SUPPORTED_CURRENCIES = [
-  { code: 'SAR', flag: '🇸🇦', nameAr: 'ريال سعودي', nameEn: 'Saudi Riyal', symbolAr: 'ر.س', symbolEn: 'SAR' },
-  { code: 'YER', flag: '🇾🇪', nameAr: 'ريال يمني', nameEn: 'Yemeni Rial', symbolAr: 'ر.ي', symbolEn: 'YER' },
-  { code: 'AED', flag: '🇦🇪', nameAr: 'درهم إماراتي', nameEn: 'UAE Dirham', symbolAr: 'د.إ', symbolEn: 'AED' },
-  { code: 'QAR', flag: '🇶🇦', nameAr: 'ريال قطري', nameEn: 'Qatari Riyal', symbolAr: 'ر.ق', symbolEn: 'QAR' },
-  { code: 'KWD', flag: '🇰🇼', nameAr: 'دينار كويتي', nameEn: 'Kuwaiti Dinar', symbolAr: 'د.ك', symbolEn: 'KWD' },
-  { code: 'OMR', flag: '🇴🇲', nameAr: 'ريال عُماني', nameEn: 'Omani Rial', symbolAr: 'ر.ع', symbolEn: 'OMR' },
-  { code: 'BHD', flag: '🇧🇭', nameAr: 'دينار بحريني', nameEn: 'Bahraini Dinar', symbolAr: 'د.ب', symbolEn: 'BHD' },
-  { code: 'EGP', flag: '🇪🇬', nameAr: 'جنيه مصري', nameEn: 'Egyptian Pound', symbolAr: 'ج.م', symbolEn: 'EGP' },
-  { code: 'JOD', flag: '🇯🇴', nameAr: 'دينار أردني', nameEn: 'Jordanian Dinar', symbolAr: 'د.أ', symbolEn: 'JOD' },
-  { code: 'USD', flag: '🇺🇸', nameAr: 'دولار أمريكي', nameEn: 'US Dollar', symbolAr: '$', symbolEn: 'USD' },
-  { code: 'EUR', flag: '🇪🇺', nameAr: 'يورو', nameEn: 'Euro', symbolAr: '€', symbolEn: 'EUR' },
-  { code: 'GBP', flag: '🇬🇧', nameAr: 'جنيه إسترليني', nameEn: 'British Pound', symbolAr: '£', symbolEn: 'GBP' },
-]
-
 export default function LaundryDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { lang } = useTheme()
   const label = (ar, en) => lang === 'ar' ? ar : en
   const getCurrencySymbol = (code) => {
-    const c = SUPPORTED_CURRENCIES.find((item) => item.code === (code || laundry?.currency || 'SAR'))
-    if (!c) return code || (lang === 'ar' ? 'ر.س' : 'SAR')
-    return lang === 'ar' ? c.symbolAr : c.symbolEn
+    const meta = getCurrencyMeta(code || laundry?.currency || 'SAR')
+    return lang === 'ar' ? meta.symbolAr : meta.symbolEn
   }
 
   const [laundry, setLaundry] = useState(null)
@@ -352,7 +342,26 @@ export default function LaundryDetailsPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">{label('الدولة', 'Country')}</label>
-                  <input className="form-control" name="country" value={form.country || ''} onChange={handleChange} />
+                  <select
+                    className="form-control"
+                    name="country"
+                    value={form.country || 'SA'}
+                    onChange={(e) => {
+                      const newCountry = e.target.value
+                      const matchedCurrency = COUNTRY_TO_CURRENCY[newCountry] || form.currency || 'SAR'
+                      setForm(prev => ({
+                        ...prev,
+                        country: newCountry,
+                        currency: matchedCurrency,
+                      }))
+                    }}
+                  >
+                    {COUNTRY_OPTIONS.map((co) => (
+                      <option key={co.code} value={co.code}>
+                        {co.flag} {label(co.nameAr, co.nameEn)} ({co.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">{label('العملة المعتمدة', 'Currency')}</label>

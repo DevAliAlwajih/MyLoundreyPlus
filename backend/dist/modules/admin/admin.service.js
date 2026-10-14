@@ -26,6 +26,7 @@ let AdminService = class AdminService {
         const where = {
             ...(dto.status ? { status: dto.status } : {}),
             ...(dto.country ? { country: dto.country } : {}),
+            ...(dto.currency ? { currency: dto.currency } : {}),
             ...(dto.search
                 ? {
                     name: {
@@ -622,6 +623,169 @@ let AdminService = class AdminService {
             return { success: false, data: [], error: 'v_top_laundries view might not exist' };
         }
     }
+    async getDashboardStats(currency) {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const isFiltered = currency && currency !== 'all';
+            const laundryWhere = {};
+            const currencyFilter = {};
+            if (isFiltered) {
+                laundryWhere.currency = currency.toUpperCase();
+                currencyFilter.laundry = { currency: currency.toUpperCase() };
+            }
+            const [totalLaundries, activeLaundries, trialLaundries, pendingLaundries, appCustomersCount, laundryProfilesCount, todayInvoicesCount, totalInvoicesCount, commissionsAgg, subscriptionsAgg, expiringSoon, openTickets,] = await Promise.all([
+                this.prisma.laundry.count({ where: laundryWhere }),
+                this.prisma.laundry.count({ where: { ...laundryWhere, status: 'active' } }),
+                this.prisma.laundry.count({ where: { ...laundryWhere, status: 'trial' } }),
+                this.prisma.laundry.count({ where: { ...laundryWhere, status: 'pending' } }),
+                this.prisma.user.count({ where: { role: 'customer' } }),
+                this.prisma.laundryCustomerProfile.count({
+                    where: isFiltered ? { laundry: { currency: currency.toUpperCase() } } : {},
+                }),
+                this.prisma.invoice.count({
+                    where: {
+                        createdAt: { gte: today },
+                        ...(isFiltered ? { laundry: { currency: currency.toUpperCase() } } : {}),
+                    },
+                }),
+                this.prisma.invoice.count({
+                    where: isFiltered ? { laundry: { currency: currency.toUpperCase() } } : {},
+                }),
+                this.prisma.commissionTransaction.aggregate({
+                    where: {
+                        type: 'charge',
+                        ...currencyFilter,
+                    },
+                    _sum: { commission_amount: true },
+                }),
+                this.prisma.subscription.aggregate({
+                    where: {
+                        ...currencyFilter,
+                    },
+                    _sum: { amountPaid: true },
+                }),
+                this.prisma.subscription.count({
+                    where: {
+                        isActive: true,
+                        endDate: {
+                            gte: new Date(),
+                            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                        },
+                        ...currencyFilter,
+                    },
+                }),
+                this.prisma.supportTicket.count({
+                    where: { status: 'open' },
+                }),
+            ]);
+            const commissionRevenue = Number(commissionsAgg._sum.commission_amount ?? 0);
+            const subscriptionRevenue = Number(subscriptionsAgg._sum.amountPaid ?? 0);
+            const totalSystemRevenue = commissionRevenue + subscriptionRevenue;
+            const totalCustomers = appCustomersCount + laundryProfilesCount;
+            const currenciesBreakdownRaw = await this.prisma.laundry.groupBy({
+                by: ['currency', 'country'],
+                _count: { id: true },
+            });
+            const recentInvoicesRaw = await this.prisma.invoice.findMany({
+                where: isFiltered ? { laundry: { currency: currency.toUpperCase() } } : {},
+                orderBy: { createdAt: 'desc' },
+                take: 6,
+                include: {
+                    laundry: { select: { name: true, nameAr: true, currency: true } },
+                },
+            });
+            const recentInvoices = recentInvoicesRaw.map((inv) => ({
+                invoice_number: inv.invoiceNumber,
+                laundry_name: inv.laundry?.nameAr || inv.laundry?.name || 'مغسلة',
+                currency: inv.laundry?.currency || (isFiltered ? currency.toUpperCase() : 'SAR'),
+                total_amount: Number(inv.totalAmount),
+                status: inv.status,
+                created_at: inv.createdAt,
+            }));
+            const statusCounts = await this.prisma.laundry.groupBy({
+                by: ['status'],
+                where: laundryWhere,
+                _count: { id: true },
+            });
+            const laundryStatusDistribution = statusCounts.map((s) => ({
+                status: s.status,
+                count: s._count.id,
+            }));
+            const chartData = [];
+            const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+                const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+                const [monthComm, monthSub, monthSubsCount] = await Promise.all([
+                    this.prisma.commissionTransaction.aggregate({
+                        where: {
+                            type: 'charge',
+                            created_at: { gte: mStart, lte: mEnd },
+                            ...currencyFilter,
+                        },
+                        _sum: { commission_amount: true },
+                    }),
+                    this.prisma.subscription.aggregate({
+                        where: {
+                            createdAt: { gte: mStart, lte: mEnd },
+                            ...currencyFilter,
+                        },
+                        _sum: { amountPaid: true },
+                    }),
+                    this.prisma.subscription.count({
+                        where: {
+                            createdAt: { gte: mStart, lte: mEnd },
+                            ...currencyFilter,
+                        },
+                    }),
+                ]);
+                const mRevenue = Number(monthComm._sum.commission_amount ?? 0) + Number(monthSub._sum.amountPaid ?? 0);
+                chartData.push({
+                    month: monthNamesAr[d.getMonth()],
+                    revenue: mRevenue,
+                    subscriptions: monthSubsCount,
+                });
+            }
+            return {
+                success: true,
+                data: {
+                    revenue: totalSystemRevenue,
+                    commission_revenue: commissionRevenue,
+                    subscription_revenue: subscriptionRevenue,
+                    currency: isFiltered ? currency.toUpperCase() : 'SAR',
+                    counts: {
+                        total_laundries: totalLaundries,
+                        active_laundries: activeLaundries,
+                        trial_laundries: trialLaundries,
+                        pending_laundries: pendingLaundries,
+                        total_customers: totalCustomers,
+                        today_invoices: todayInvoicesCount,
+                        total_invoices: totalInvoicesCount,
+                    },
+                    laundryStatusDistribution,
+                    chartData,
+                    recentInvoices,
+                    currenciesBreakdown: currenciesBreakdownRaw.map((cb) => ({
+                        currency: cb.currency,
+                        country: cb.country,
+                        count: cb._count.id,
+                    })),
+                    alerts: {
+                        expiring_soon: expiringSoon,
+                        pending_laundries: pendingLaundries,
+                        open_tickets: openTickets,
+                    },
+                },
+            };
+        }
+        catch (error) {
+            console.error('Error in getDashboardStats:', error);
+            throw error;
+        }
+    }
     async getSettings() {
         const settings = await this.prisma.app_settings.findMany({
             orderBy: { key: 'asc' },
@@ -650,7 +814,7 @@ let AdminService = class AdminService {
         const result = await this.prisma.$transaction(async (tx) => {
             const laundry = await tx.laundry.findUnique({
                 where: { id: laundryId },
-                select: { id: true, name: true, nameAr: true, balance: true, ownerId: true },
+                select: { id: true, name: true, nameAr: true, balance: true, ownerId: true, currency: true },
             });
             if (!laundry) {
                 throw new common_1.NotFoundException({
@@ -676,6 +840,7 @@ let AdminService = class AdminService {
             return {
                 laundryId,
                 laundryName: laundry.nameAr || laundry.name,
+                currency: laundry.currency || 'SAR',
                 balanceBefore,
                 balanceAfter,
                 amount: dto.amount,
@@ -687,10 +852,12 @@ let AdminService = class AdminService {
         try {
             const laundry = await this.prisma.laundry.findUnique({
                 where: { id: laundryId },
-                select: { ownerId: true },
+                select: { ownerId: true, currency: true },
             });
             if (laundry?.ownerId) {
-                await this.notificationService.sendToUser(laundry.ownerId, 'تم شحن رصيدك 💰', `تم إضافة ${dto.amount} ريال إلى رصيد مغسلتك. الرصيد الحالي: ${result.balanceAfter} ريال`, { type: 'wallet_recharge', data: { amount: String(dto.amount) } });
+                const currCode = laundry.currency || 'SAR';
+                const currSymbol = currCode === 'YER' ? 'ر.ي' : (currCode === 'AED' ? 'د.إ' : (currCode === 'QAR' ? 'ر.ق' : (currCode === 'KWD' ? 'د.ك' : (currCode === 'OMR' ? 'ر.ع' : (currCode === 'BHD' ? 'د.ب' : 'ر.س')))));
+                await this.notificationService.sendToUser(laundry.ownerId, 'تم شحن رصيدك 💰', `تم إضافة ${dto.amount} ${currSymbol} إلى رصيد محفظتك. الرصيد الحالي: ${result.balanceAfter} ${currSymbol}`, { type: 'wallet_recharge', data: { amount: String(dto.amount), currency: currCode } });
             }
         }
         catch (e) {

@@ -51,13 +51,15 @@ let LaundryService = class LaundryService {
         this.notificationService = notificationService;
     }
     async findAll(query) {
-        const { lat, lng, radius = 10, sort = 'distance', city, country, page = 1, limit = 20, } = query;
+        const { lat, lng, radius = 10, sort = 'distance', city, country, currency, page = 1, limit = 20, } = query;
         const hasLocation = lat !== undefined && lng !== undefined;
         const where = { status: 'active' };
         if (city)
             where.city = { contains: city, mode: 'insensitive' };
         if (country)
             where.country = country;
+        if (currency)
+            where.currency = currency;
         const allLaundries = await this.prisma.laundry.findMany({
             where,
             select: LAUNDRY_PUBLIC_SELECT,
