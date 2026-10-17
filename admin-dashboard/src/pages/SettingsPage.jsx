@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useTheme, useAuth } from '../App'
-import { profileApi } from '../services/api'
+import { profileApi, notificationsApi } from '../services/api'
 import {
   Phone, Globe, Moon, Sun, Languages, Bell, Shield,
   Save, Plus, Trash2, Edit, MessageSquare, Smartphone,
-  Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, AlertTriangle, Loader2
+  Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, AlertTriangle, Loader2,
+  Store, FileEdit, CreditCard, SlidersHorizontal
 } from 'lucide-react'
 
 const CONTACT_NUMBERS = [
@@ -32,12 +33,81 @@ export default function SettingsPage() {
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityStatus, setSecurityStatus] = useState(null)
 
+  // Notification Settings State
+  const DEFAULT_NOTIF = {
+    notif_new_laundry      : true,
+    notif_support_ticket   : true,
+    notif_chat_message     : true,
+    notif_data_update      : true,
+    notif_debt_limit       : true,
+    notif_expiring_sub     : true,
+    notif_daily_summary    : false,
+  }
+  const [notifSettings, setNotifSettings] = useState(DEFAULT_NOTIF)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifSaving, setNotifSaving] = useState(false)
+  const [notifStatus, setNotifStatus] = useState(null)
+
   // Sync email when user state updates
   useEffect(() => {
     if (user?.email) {
       setEmail(user.email)
     }
   }, [user?.email])
+
+  // Load notification settings from backend (app_settings)
+  useEffect(() => {
+    if (tab !== 'notifications') return
+    setNotifLoading(true)
+    notificationsApi.getSettings()
+      .then(res => {
+        const data = res.data?.data || {}
+        const merged = { ...DEFAULT_NOTIF }
+        Object.keys(DEFAULT_NOTIF).forEach(key => {
+          if (key in data) merged[key] = data[key]?.value === 'true' || data[key]?.value === true
+        })
+        setNotifSettings(merged)
+      })
+      .catch(() => {
+        // fallback: load from localStorage
+        try {
+          const stored = JSON.parse(localStorage.getItem('adminNotifSettings') || '{}')
+          if (Object.keys(stored).length) setNotifSettings(s => ({ ...s, ...stored }))
+        } catch (_) {}
+      })
+      .finally(() => setNotifLoading(false))
+  }, [tab])
+
+  const handleToggleNotif = async (key) => {
+    const newValue = !notifSettings[key]
+    setNotifSettings(prev => ({ ...prev, [key]: newValue }))
+    // حفظ في localStorage فوراً
+    const updated = { ...notifSettings, [key]: newValue }
+    localStorage.setItem('adminNotifSettings', JSON.stringify(updated))
+    // حفظ في قاعدة البيانات
+    try {
+      await notificationsApi.updateSetting(key, String(newValue))
+    } catch (_) {}
+  }
+
+  const handleSaveAllNotif = async () => {
+    setNotifSaving(true)
+    setNotifStatus(null)
+    try {
+      await Promise.all(
+        Object.entries(notifSettings).map(([key, val]) =>
+          notificationsApi.updateSetting(key, String(val))
+        )
+      )
+      localStorage.setItem('adminNotifSettings', JSON.stringify(notifSettings))
+      setNotifStatus({ type: 'success', message: label('تم حفظ إعدادات الإشعارات بنجاح', 'Notification settings saved successfully') })
+    } catch (_) {
+      setNotifStatus({ type: 'danger', message: label('حدث خطأ أثناء الحفظ', 'Error saving settings') })
+    } finally {
+      setNotifSaving(false)
+      setTimeout(() => setNotifStatus(null), 3000)
+    }
+  }
 
   // Fetch latest profile info on mount
   useEffect(() => {
@@ -278,25 +348,187 @@ export default function SettingsPage() {
       )}
 
       {tab === 'notifications' && (
-        <div className="card">
-          <div className="card-header"><h3 className="fw-bold">{label('إعدادات الإشعارات', 'Notification Settings')}</h3></div>
-          <div className="card-body flex flex-col gap-16">
-            {[
-              [label('إشعار عند مغسلة جديدة بانتظار التفعيل', 'Alert when new laundry awaits activation'), true],
-              [label('إشعار عند انتهاء اشتراك خلال 7 أيام', 'Alert when subscription expires in 7 days'), true],
-              [label('إشعار عند تذكرة دعم جديدة', 'Alert on new support ticket'), true],
-              [label('إشعار عند تذكرة عاجلة', 'Alert on urgent ticket'), true],
-              [label('ملخص يومي للنظام', 'Daily system summary'), false],
-            ].map(([text, enabled], i) => (
-              <div key={i} className="flex items-center justify-between">
-                <span className="fs-sm">{text}</span>
-                <div
-                  style={{ width: 44, height: 24, borderRadius: 12, background: enabled ? 'var(--primary-500)' : 'var(--gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
-                >
-                  <div style={{ position: 'absolute', width: 18, height: 18, borderRadius: '50%', background: 'white', top: 3, transition: 'right 0.2s', right: enabled ? 23 : 3, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+        <div className="flex flex-col gap-20">
+          {/* القسم الأول: إشعارات العمليات */}
+          <div className="card">
+            <div className="card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-500)' }}>
+                  <SlidersHorizontal size={18} />
+                </div>
+                <div>
+                  <h3 className="fw-bold fs-sm" style={{ marginBottom: 2 }}>{label('إشعارات العمليات', 'Operational Notifications')}</h3>
+                  <p className="text-muted fs-xs">{label('تنبيهات فورية عند وقوع أحداث تستلزم تدخل الإدارة', 'Instant alerts for events requiring admin action')}</p>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="card-body flex flex-col gap-0">
+              {notifLoading ? (
+                <div style={{ padding: 24, textAlign: 'center' }}>
+                  <Loader2 size={20} className="animate-spin" style={{ color: 'var(--primary-500)', margin: '0 auto' }} />
+                </div>
+              ) : (
+                [
+                  {
+                    key: 'notif_new_laundry',
+                    icon: <Store size={18} />,
+                    iconBg: 'var(--primary-50)',
+                    iconColor: 'var(--primary-500)',
+                    ar: 'تسجيل مغسلة جديدة',
+                    en: 'New laundry registration',
+                    descAr: 'تنبيه فوري عند تسجيل مغسلة جديدة تنتظر مراجعة الإدارة والموافقة',
+                    descEn: 'Instant alert when a new laundry registers and awaits admin approval',
+                  },
+                  {
+                    key: 'notif_support_ticket',
+                    icon: <Bell size={18} />,
+                    iconBg: '#eff6ff',
+                    iconColor: '#3b82f6',
+                    ar: 'تذكرة دعم فني جديدة',
+                    en: 'New support ticket',
+                    descAr: 'تنبيه عند فتح تذكرة دعم جديدة من عميل أو مغسلة',
+                    descEn: 'Alert when a customer or laundry opens a new support ticket',
+                  },
+                  {
+                    key: 'notif_chat_message',
+                    icon: <MessageSquare size={18} />,
+                    iconBg: '#f0fdf4',
+                    iconColor: '#22c55e',
+                    ar: 'رسالة دردشة جديدة',
+                    en: 'New chat message',
+                    descAr: 'تنبيه عند وصول رسالة جديدة في نافذة الدردشة مع الدعم الفني',
+                    descEn: 'Alert when a new message arrives in the support chat window',
+                  },
+                  {
+                    key: 'notif_data_update',
+                    icon: <FileEdit size={18} />,
+                    iconBg: '#fffbeb',
+                    iconColor: '#f59e0b',
+                    ar: 'طلب تعديل بيانات حساسة',
+                    en: 'Sensitive data update request',
+                    descAr: 'تنبيه عند قيام مغسلة بتحديث بيانات السجل التجاري أو الحساب البنكي',
+                    descEn: 'Alert when a laundry updates commercial registration or bank account details',
+                  },
+                  {
+                    key: 'notif_debt_limit',
+                    icon: <CreditCard size={18} />,
+                    iconBg: '#fef2f2',
+                    iconColor: 'var(--danger)',
+                    ar: 'بلوغ سقف المديونية',
+                    en: 'Debt limit reached',
+                    descAr: 'تنبيه فوري عندما يبلغ رصيد أي مغسلة الحد الأقصى للمديونية (debt_limit)',
+                    descEn: 'Instant alert when any laundry\'s balance reaches the configured debt limit',
+                  },
+                  {
+                    key: 'notif_expiring_sub',
+                    icon: <Shield size={18} />,
+                    iconBg: '#f5f3ff',
+                    iconColor: '#7c3aed',
+                    ar: 'اشتراك ينتهي قريباً',
+                    en: 'Subscription expiring soon',
+                    descAr: 'تنبيه عند قرب انتهاء اشتراك مغسلة خلال 7 أيام',
+                    descEn: 'Alert when a laundry subscription expires within 7 days',
+                  },
+                  {
+                    key: 'notif_daily_summary',
+                    icon: <Globe size={18} />,
+                    iconBg: 'var(--bg-2)',
+                    iconColor: 'var(--text-muted)',
+                    ar: 'ملخص يومي للنظام',
+                    en: 'Daily system summary',
+                    descAr: 'تقرير يومي بإجمالي النشاط والإيرادات والإشعارات المهمة',
+                    descEn: 'Daily digest of system activity, revenue, and important alerts',
+                  },
+                ].map(({ key, icon, iconBg, iconColor, ar, en, descAr, descEn }) => (
+                  <div
+                    key={key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '14px 0',
+                      borderBottom: '1px solid var(--border)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: iconColor, flexShrink: 0 }}>
+                        {icon}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p className="fw-semi fs-sm" style={{ marginBottom: 2 }}>{label(ar, en)}</p>
+                        <p className="text-muted fs-xs" style={{ lineHeight: 1.4 }}>{label(descAr, descEn)}</p>
+                      </div>
+                    </div>
+                    {/* Toggle Switch */}
+                    <button
+                      id={`toggle-${key}`}
+                      role="switch"
+                      aria-checked={notifSettings[key]}
+                      onClick={() => handleToggleNotif(key)}
+                      style={{
+                        width: 48,
+                        height: 26,
+                        borderRadius: 13,
+                        background: notifSettings[key] ? 'var(--primary-500)' : 'var(--gray-300)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.25s',
+                        flexShrink: 0,
+                        padding: 0,
+                        outline: 'none',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          width: 20,
+                          height: 20,
+                          borderRadius: '50%',
+                          background: 'white',
+                          top: 3,
+                          transition: 'transform 0.25s',
+                          transform: notifSettings[key] ? 'translateX(24px)' : 'translateX(3px)',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer: Save all + status */}
+            <div className="card-body" style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+              {notifStatus && (
+                <div className={`alert alert-${notifStatus.type} animate-fade flex items-center gap-8`} style={{ marginBottom: 12 }}>
+                  {notifStatus.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+                  <span>{notifStatus.message}</span>
+                </div>
+              )}
+              <button
+                id="save-notif-settings-btn"
+                className="btn btn-primary"
+                onClick={handleSaveAllNotif}
+                disabled={notifSaving}
+              >
+                {notifSaving ? (
+                  <><Loader2 size={16} className="animate-spin" /><span>{label('جاري الحفظ...', 'Saving...')}</span></>
+                ) : (
+                  <><Save size={16} /><span>{label('حفظ إعدادات الإشعارات', 'Save notification settings')}</span></>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Info card */}
+          <div className="alert alert-info" style={{ margin: 0 }}>
+            <Bell size={16} />
+            {label(
+              'هذه الإعدادات تتحكم في الإشعارات التي تصلك داخل لوحة الإدارة. يمكن ربط النظام بـ Firebase FCM لإشعارات الجوال.',
+              'These settings control which notifications appear in the admin panel. Firebase FCM can be configured for mobile push notifications.',
+            )}
           </div>
         </div>
       )}

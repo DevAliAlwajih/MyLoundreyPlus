@@ -265,10 +265,15 @@ export default function LaundryDetailsPage() {
                 <Wallet size={24} />
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-between">
+            <div className="mt-8 flex items-center justify-between flex-wrap gap-2">
               <span className={`badge ${Number(laundry.balance ?? 0) < 0 ? 'badge-danger' : 'badge-success'}`}>
                 {Number(laundry.balance ?? 0) < 0 ? label('مديونية مستحقة', 'Outstanding Debt') : label('رصيد متاح', 'Available Balance')}
               </span>
+              {Number(laundry.balance ?? 0) <= -Number(laundry.debt_limit ?? 500) && (
+                <span className="badge badge-danger" style={{ backgroundColor: '#ef4444', color: '#fff', fontWeight: 'bold' }}>
+                  ⚠️ {label('تم بلوغ سقف الدين - الفوترة موقوفة', 'Debt limit reached - Invoicing suspended')}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => setShowRechargeModal(true)}

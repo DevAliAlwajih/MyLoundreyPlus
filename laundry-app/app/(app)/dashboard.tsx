@@ -12,6 +12,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -208,7 +209,22 @@ export default function DashboardScreen() {
     }, [refetchInvoices, queryClient])
   );
 
-  const navigate = (route: string) => router.push(route as any);
+  const { currency } = useCurrencyStore();
+
+  const navigate = (route: string) => {
+    if (route === '/(app)/invoices/new' && walletData?.isDebtLimitReached) {
+      Alert.alert(
+        'سقف المديونية 🔒',
+        `تم إيقاف إصدار الفواتير لبلوغ سقف المديونية المسموح به (${walletData?.outstandingDebt?.toFixed(2)} / ${walletData?.debtLimit} ${currency.symbol}). يرجى شحن المحفظة وسداد المديونية للمتابعة.`,
+        [
+          { text: 'الذهاب للمحفظة', onPress: () => router.push('/(app)/wallet') },
+          { text: 'إغلاق', style: 'cancel' }
+        ]
+      );
+      return;
+    }
+    router.push(route as any);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -308,6 +324,28 @@ export default function DashboardScreen() {
               <Text style={styles.trialBannerBadgeText}>
                 {isTrialActive ? 'مجاناً' : `${walletData.commissionRate ?? 1}%`}
               </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* ── Debt Limit Alert Banner ── */}
+        {!walletLoading && walletData?.isDebtLimitReached && (
+          <TouchableOpacity
+            style={styles.debtLimitAlertBanner}
+            onPress={() => router.push('/(app)/wallet')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.debtLimitIconWrap}>
+              <Ionicons name="lock-closed" size={20} color="#dc2626" />
+            </View>
+            <View style={{ flex: 1, marginHorizontal: 8 }}>
+              <Text style={styles.debtLimitAlertTitle}>إصدار الفواتير موقوف 🔒</Text>
+              <Text style={styles.debtLimitAlertSub}>
+                بلغت مديونية المغسلة الحد الأقصى ({walletData?.outstandingDebt?.toFixed(2)} / {walletData?.debtLimit} {currency.symbol}). يرجى شحن المحفظة وسداد المديونية لإعادة التفعيل.
+              </Text>
+            </View>
+            <View style={styles.debtLimitAlertBtn}>
+              <Text style={styles.debtLimitAlertBtnText}>سداد</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -563,6 +601,50 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#ffffff',
+  },
+
+  // Debt Limit Blocked Banner
+  debtLimitAlertBanner: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#f87171',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  debtLimitIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  debtLimitAlertTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#991b1b',
+    marginBottom: 2,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+  },
+  debtLimitAlertSub: {
+    fontSize: 11,
+    color: '#b91c1c',
+    lineHeight: 16,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+  },
+  debtLimitAlertBtn: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  debtLimitAlertBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 
   // Quick Access

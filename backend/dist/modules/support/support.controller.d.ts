@@ -9,12 +9,12 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;
@@ -25,10 +25,10 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
             subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             adminReply: string;
         }[];
         meta: {
@@ -41,12 +41,12 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;
@@ -63,12 +63,12 @@ export declare class SupportController {
             };
         } & {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;
@@ -90,12 +90,12 @@ export declare class SupportController {
             };
         } & {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;
@@ -106,12 +106,12 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;
@@ -122,12 +122,12 @@ export declare class SupportController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
+            status: import(".prisma/client").$Enums.ticket_status;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            subject: string;
-            status: import(".prisma/client").$Enums.ticket_status;
             message: string;
+            subject: string;
             userType: import(".prisma/client").$Enums.ticket_user_type;
             adminReply: string | null;
             resolvedAt: Date | null;

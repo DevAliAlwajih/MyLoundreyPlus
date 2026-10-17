@@ -1,4 +1,5 @@
 import { AdminService } from './admin.service';
+import { NotificationService } from '../notification/notification.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
@@ -8,7 +9,8 @@ import { UpdateSettingDto } from './dto/update-setting.dto';
 import { UpdateLaundryDto } from '../laundry/dto/update-laundry.dto';
 export declare class AdminController {
     private readonly adminService;
-    constructor(adminService: AdminService);
+    private readonly notificationService;
+    constructor(adminService: AdminService, notificationService: NotificationService);
     getOverview(): Promise<{
         success: boolean;
         data: {
@@ -72,6 +74,41 @@ export declare class AdminController {
             };
         };
     }>;
+    getAdminNotifications(req: any, page?: number, limit?: number, unreadOnly?: string): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            title: string;
+            body: string;
+            type: string;
+            actionUrl: string;
+            isRead: boolean;
+            createdAt: Date;
+        }[];
+        meta: {
+            page: number;
+            limit: number;
+            total: number;
+            unreadCount: number;
+        };
+    }>;
+    markAdminNotificationsRead(req: any): Promise<{
+        success: boolean;
+        message: string;
+        count: number;
+    }>;
+    markAdminNotificationRead(req: any, id: string): Promise<{
+        success: boolean;
+        error: {
+            code: string;
+            message: string;
+        };
+        message?: undefined;
+    } | {
+        success: boolean;
+        message: string;
+        error?: undefined;
+    }>;
     getRevenueAnalytics(): Promise<{
         success: boolean;
         data: any[];
@@ -115,14 +152,14 @@ export declare class AdminController {
                 id: string;
                 createdAt: Date;
                 isActive: boolean;
-                laundryId: string;
-                planId: string;
                 amountPaid: import("@prisma/client/runtime/library").Decimal;
+                laundryId: string;
+                notes: string | null;
+                planId: string;
                 paymentMethod: string | null;
                 promoCode: string | null;
                 startDate: Date;
                 endDate: Date;
-                notes: string | null;
                 createdBy: string | null;
             })[];
             _count: {
@@ -131,8 +168,9 @@ export declare class AdminController {
             };
         } & {
             id: string;
-            ownerId: string;
             name: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            ownerId: string;
             nameAr: string | null;
             phoneNumber: string;
             address: string | null;
@@ -143,7 +181,6 @@ export declare class AdminController {
             longitude: import("@prisma/client/runtime/library").Decimal | null;
             workingHours: import("@prisma/client/runtime/library").JsonValue | null;
             logoUrl: string | null;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
             ratingCount: number | null;
             createdAt: Date;
@@ -221,14 +258,14 @@ export declare class AdminController {
                 id: string;
                 createdAt: Date;
                 isActive: boolean;
-                laundryId: string;
-                planId: string;
                 amountPaid: import("@prisma/client/runtime/library").Decimal;
+                laundryId: string;
+                notes: string | null;
+                planId: string;
                 paymentMethod: string | null;
                 promoCode: string | null;
                 startDate: Date;
                 endDate: Date;
-                notes: string | null;
                 createdBy: string | null;
             })[];
             _count: {
@@ -237,8 +274,9 @@ export declare class AdminController {
                 ratings: number;
             };
             id: string;
-            ownerId: string;
             name: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            ownerId: string;
             nameAr: string | null;
             phoneNumber: string;
             address: string | null;
@@ -249,7 +287,6 @@ export declare class AdminController {
             longitude: import("@prisma/client/runtime/library").Decimal | null;
             workingHours: import("@prisma/client/runtime/library").JsonValue | null;
             logoUrl: string | null;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
             ratingCount: number | null;
             createdAt: Date;
@@ -322,14 +359,14 @@ export declare class AdminController {
                 id: string;
                 createdAt: Date;
                 isActive: boolean;
-                laundryId: string;
-                planId: string;
                 amountPaid: import("@prisma/client/runtime/library").Decimal;
+                laundryId: string;
+                notes: string | null;
+                planId: string;
                 paymentMethod: string | null;
                 promoCode: string | null;
                 startDate: Date;
                 endDate: Date;
-                notes: string | null;
                 createdBy: string | null;
             })[];
             _count: {
@@ -338,8 +375,9 @@ export declare class AdminController {
                 ratings: number;
             };
             id: string;
-            ownerId: string;
             name: string;
+            status: import(".prisma/client").$Enums.laundry_status;
+            ownerId: string;
             nameAr: string | null;
             phoneNumber: string;
             address: string | null;
@@ -350,7 +388,6 @@ export declare class AdminController {
             longitude: import("@prisma/client/runtime/library").Decimal | null;
             workingHours: import("@prisma/client/runtime/library").JsonValue | null;
             logoUrl: string | null;
-            status: import(".prisma/client").$Enums.laundry_status;
             ratingAvg: import("@prisma/client/runtime/library").Decimal | null;
             ratingCount: number | null;
             createdAt: Date;
@@ -410,11 +447,11 @@ export declare class AdminController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
             lastLoginAt: Date | null;
-            userId: string;
             deviceType: string | null;
             deviceOs: string | null;
             deviceModel: string | null;
@@ -439,15 +476,28 @@ export declare class AdminController {
         data: {
             id: string;
             phoneNumber: string;
+            country: string;
+            currency: string;
             createdAt: Date;
             _count: {
+                invoices: number;
                 userDevices: number;
             };
             fullName: string;
+            uniqueId: string;
             role: import(".prisma/client").$Enums.user_role;
             isActive: boolean;
             lastLoginAt: Date;
             email: string;
+            userDevices: {
+                id: string;
+                isActive: boolean;
+                lastLoginAt: Date;
+                deviceType: string;
+                deviceOs: string;
+                deviceModel: string;
+                isPrimary: boolean;
+            }[];
         }[];
         meta: {
             total: number;
@@ -491,11 +541,11 @@ export declare class AdminController {
         success: boolean;
         data: {
             id: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             isActive: boolean;
             lastLoginAt: Date | null;
-            userId: string;
             deviceType: string | null;
             deviceOs: string | null;
             deviceModel: string | null;
@@ -512,6 +562,50 @@ export declare class AdminController {
         };
     }>;
     deleteUser(id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getCustomers(dto: QueryAdminUsersDto): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            phoneNumber: string;
+            country: string;
+            currency: string;
+            createdAt: Date;
+            _count: {
+                invoices: number;
+                userDevices: number;
+            };
+            fullName: string;
+            uniqueId: string;
+            role: import(".prisma/client").$Enums.user_role;
+            isActive: boolean;
+            lastLoginAt: Date;
+            email: string;
+            userDevices: {
+                id: string;
+                isActive: boolean;
+                lastLoginAt: Date;
+                deviceType: string;
+                deviceOs: string;
+                deviceModel: string;
+                isPrimary: boolean;
+            }[];
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+        };
+    }>;
+    updateCustomerStatus(req: any, id: string, dto: any): Promise<{
+        success: boolean;
+        data: {
+            isActive: boolean;
+        };
+    }>;
+    deleteCustomer(id: string): Promise<{
         success: boolean;
         message: string;
     }>;

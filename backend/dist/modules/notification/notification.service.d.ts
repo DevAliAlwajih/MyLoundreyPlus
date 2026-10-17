@@ -11,44 +11,44 @@ export declare class NotificationService {
         data?: Record<string, string>;
     }): Promise<{
         id: string;
-        userId: string;
-        type: string | null;
         title: string;
         body: string;
+        type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     sendInvoiceStatusNotification(customerId: string | null, invoiceNumber: string, newStatus: string, invoiceId: string): Promise<{
         id: string;
-        userId: string;
-        type: string | null;
         title: string;
         body: string;
+        type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     sendToLaundryOwner(laundryId: string, title: string, body: string, options?: {
         type?: string;
         referenceId?: string;
     }): Promise<{
         id: string;
-        userId: string;
-        type: string | null;
         title: string;
         body: string;
+        type: string | null;
         referenceId: string | null;
         isRead: boolean;
         sentAt: Date;
+        userId: string;
     }>;
     getNotifications(userId: string, page?: number, limit?: number, unreadOnly?: boolean): Promise<{
         success: boolean;
         data: {
             id: string;
-            type: string;
             title: string;
             body: string;
+            type: string;
             referenceId: string;
             isRead: boolean;
             sentAt: Date;
@@ -83,4 +83,38 @@ export declare class NotificationService {
             count: number;
         };
     }>;
+    sendToAdmin(title: string, body: string, options?: {
+        type?: string;
+        referenceId?: string;
+        actionUrl?: string;
+        data?: Record<string, string>;
+    }): Promise<PromiseSettledResult<{
+        id: string;
+        title: string;
+        body: string;
+        type: string | null;
+        referenceId: string | null;
+        isRead: boolean;
+        sentAt: Date;
+        userId: string;
+    }>[]>;
+    getAdminNotifications(adminId: string, page?: number, limit?: number, unreadOnly?: boolean): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            title: string;
+            body: string;
+            type: string;
+            actionUrl: string;
+            isRead: boolean;
+            createdAt: Date;
+        }[];
+        meta: {
+            page: number;
+            limit: number;
+            total: number;
+            unreadCount: number;
+        };
+    }>;
+    private resolveActionUrl;
 }

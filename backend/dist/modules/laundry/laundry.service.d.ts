@@ -225,6 +225,9 @@ export declare class LaundryService {
             billingType: import(".prisma/client").$Enums.billing_type;
             commissionRate: number;
             trialCommissionEndsAt: Date;
+            debtLimit: number;
+            isDebtLimitReached: boolean;
+            outstandingDebt: number;
         };
     }>;
     getWalletTransactions(ownerId: string, page?: number, limit?: number, filter?: string): Promise<{

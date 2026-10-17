@@ -123,4 +123,13 @@ export const profileApi = {
   updateEmail: (data) => api.patch('/profile/email', data),
 };
 
+// ─── Admin Notifications API ─────────────────────────────────────────────────
+export const notificationsApi = {
+  getAll: (params) => api.get('/admin/notifications', { params }),
+  markRead: (id) => api.patch(`/admin/notifications/${id}/read`),
+  markAllRead: () => api.patch('/admin/notifications/read-all'),
+  getSettings: () => api.get('/admin/settings'),
+  updateSetting: (key, value) => api.patch(`/admin/settings/${key}`, { value }),
+};
+
 export default api;

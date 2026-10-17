@@ -6,6 +6,9 @@ export interface WalletData {
   billingType: string;
   commissionRate: number | null;
   trialCommissionEndsAt: string | null;
+  debtLimit?: number;
+  isDebtLimitReached?: boolean;
+  outstandingDebt?: number;
 }
 
 export function useWallet() {

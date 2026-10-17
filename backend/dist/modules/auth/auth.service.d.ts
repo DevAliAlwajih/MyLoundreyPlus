@@ -3,13 +3,15 @@ import { RedisService } from '../../common/redis/redis.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RegisterDto } from './dto/register.dto';
+import { NotificationService } from '../notification/notification.service';
 export declare class AuthService {
     private prisma;
     private redis;
     private jwtService;
     private configService;
+    private notificationService;
     private readonly logger;
-    constructor(prisma: PrismaService, redis: RedisService, jwtService: JwtService, configService: ConfigService);
+    constructor(prisma: PrismaService, redis: RedisService, jwtService: JwtService, configService: ConfigService, notificationService: NotificationService);
     register(dto: RegisterDto): Promise<{
         success: boolean;
         data: {

@@ -16,6 +16,7 @@ exports.AdminController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const admin_service_1 = require("./admin.service");
+const notification_service_1 = require("../notification/notification.service");
 const query_admin_dto_1 = require("./dto/query-admin.dto");
 const update_laundry_status_dto_1 = require("./dto/update-laundry-status.dto");
 const update_laundry_billing_dto_1 = require("./dto/update-laundry-billing.dto");
@@ -27,14 +28,24 @@ const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 let AdminController = class AdminController {
-    constructor(adminService) {
+    constructor(adminService, notificationService) {
         this.adminService = adminService;
+        this.notificationService = notificationService;
     }
     getOverview() {
         return this.adminService.getOverview();
     }
     getDashboardStats(currency) {
         return this.adminService.getDashboardStats(currency);
+    }
+    getAdminNotifications(req, page, limit, unreadOnly) {
+        return this.notificationService.getAdminNotifications(req.user.id, page ? Number(page) : 1, limit ? Number(limit) : 20, unreadOnly === 'true');
+    }
+    markAdminNotificationsRead(req) {
+        return this.notificationService.markAllAsRead(req.user.id);
+    }
+    markAdminNotificationRead(req, id) {
+        return this.notificationService.markAsRead(req.user.id, id);
     }
     getRevenueAnalytics() {
         return this.adminService.getRevenueAnalytics();
@@ -96,6 +107,16 @@ let AdminController = class AdminController {
     deleteUser(id) {
         return this.adminService.deleteUser(id);
     }
+    getCustomers(dto) {
+        return this.adminService.getUsers({ ...dto, role: 'customer' });
+    }
+    updateCustomerStatus(req, id, dto) {
+        const isActive = dto.isActive !== undefined ? dto.isActive : dto.is_active;
+        return this.adminService.updateUserStatus(id, req.user.id, { isActive, reason: dto.reason });
+    }
+    deleteCustomer(id) {
+        return this.adminService.deleteUser(id);
+    }
     addLaundryBalance(req, id, dto) {
         return this.adminService.addBalance(id, req.user.id, dto);
     }
@@ -122,6 +143,34 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getDashboardStats", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get admin notifications list' }),
+    (0, common_1.Get)('notifications'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('unreadOnly')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number, String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getAdminNotifications", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Mark all admin notifications as read' }),
+    (0, common_1.Patch)('notifications/read-all'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "markAdminNotificationsRead", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Mark single notification as read' }),
+    (0, common_1.Patch)('notifications/:id/read'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "markAdminNotificationRead", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Get revenue analytics' }),
     (0, common_1.Get)('analytics/revenue'),
@@ -296,6 +345,32 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "deleteUser", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Get all customers' }),
+    (0, common_1.Get)('customers'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [query_admin_dto_1.QueryAdminUsersDto]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getCustomers", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Update customer status' }),
+    (0, common_1.Patch)('customers/:id/status'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateCustomerStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Admin: Delete customer' }),
+    (0, common_1.Delete)('customers/:id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "deleteCustomer", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Recharge laundry balance (إضافة رصيد عند سداد المغسلة)' }),
     (0, common_1.Post)('laundries/:id/balance'),
     __param(0, (0, common_1.Req)()),
@@ -332,6 +407,7 @@ exports.AdminController = AdminController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('admin'),
     (0, common_1.Controller)('admin'),
-    __metadata("design:paramtypes", [admin_service_1.AdminService])
+    __metadata("design:paramtypes", [admin_service_1.AdminService,
+        notification_service_1.NotificationService])
 ], AdminController);
 //# sourceMappingURL=admin.controller.js.map

@@ -276,6 +276,9 @@ let LaundryService = class LaundryService {
                 urgency_fee: true,
             },
         });
+        if (dto.name || dto.nameAr || dto.phoneNumber || dto.address) {
+            this.notificationService.sendToAdmin('تحديث بيانات مغسلة 📝', `قامت مغسلة "${updated.nameAr || updated.name}" بتحديث بيانات أساسية`, { type: 'data_update_request', referenceId: laundry.id }).catch(() => { });
+        }
         return {
             success: true,
             data: {
@@ -617,6 +620,7 @@ let LaundryService = class LaundryService {
                 billing_type: true,
                 commission_rate: true,
                 trial_commission_ends_at: true,
+                debt_limit: true,
             },
         });
         if (!laundry) {
@@ -632,13 +636,30 @@ let LaundryService = class LaundryService {
             });
             actualCommissionRate = defaultRateSetting?.value ? Number(defaultRateSetting.value) : 1;
         }
+        let limitVal = laundry.debt_limit !== null && laundry.debt_limit !== undefined
+            ? Number(laundry.debt_limit)
+            : null;
+        if (limitVal === null && laundry.billing_type === 'commission') {
+            const defaultLimitSetting = await this.prisma.app_settings.findUnique({
+                where: { key: 'default_debt_limit' },
+            });
+            limitVal = defaultLimitSetting?.value ? Number(defaultLimitSetting.value) : 5000;
+        }
+        const currentBalance = Number(laundry.balance ?? 0);
+        const now = new Date();
+        const isTrialActive = laundry.trial_commission_ends_at && new Date(laundry.trial_commission_ends_at) > now;
+        const isDebtLimitReached = laundry.billing_type === 'commission' && !isTrialActive && limitVal !== null && currentBalance <= -limitVal;
+        const outstandingDebt = currentBalance < 0 ? Math.abs(currentBalance) : 0;
         return {
             success: true,
             data: {
-                balance: Number(laundry.balance),
+                balance: currentBalance,
                 billingType: laundry.billing_type,
                 commissionRate: actualCommissionRate,
                 trialCommissionEndsAt: laundry.trial_commission_ends_at,
+                debtLimit: limitVal,
+                isDebtLimitReached: !!isDebtLimitReached,
+                outstandingDebt,
             },
         };
     }

@@ -11,17 +11,17 @@ export declare class BookingService {
         success: boolean;
         data: {
             id: string;
+            status: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
-            status: string;
-            invoice_id: string;
-            created_at: Date;
             notes: string;
+            created_at: Date;
+            invoice_id: string;
             booking_date: Date;
             booking_time: Date;
         };
@@ -30,17 +30,17 @@ export declare class BookingService {
         success: boolean;
         data: {
             id: string;
+            status: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
-            status: string;
-            invoice_id: string;
-            created_at: Date;
             notes: string;
+            created_at: Date;
+            invoice_id: string;
             booking_date: Date;
             booking_time: Date;
         }[];
@@ -55,17 +55,17 @@ export declare class BookingService {
         success: boolean;
         data: {
             id: string;
+            status: string;
             laundries: {
                 id: string;
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 city: string;
                 logoUrl: string;
             };
-            status: string;
-            invoice_id: string;
-            created_at: Date;
             notes: string;
+            created_at: Date;
+            invoice_id: string;
             booking_date: Date;
             booking_time: Date;
         };
@@ -80,14 +80,14 @@ export declare class BookingService {
             id: string;
             users: {
                 id: string;
-                fullName: string;
                 phoneNumber: string;
+                fullName: string;
                 uniqueId: string;
             };
             status: string;
-            invoice_id: string;
-            created_at: Date;
             notes: string;
+            created_at: Date;
+            invoice_id: string;
             booking_date: Date;
             booking_time: Date;
         }[];
@@ -104,14 +104,14 @@ export declare class BookingService {
             id: string;
             users: {
                 id: string;
-                fullName: string;
                 phoneNumber: string;
+                fullName: string;
                 uniqueId: string;
             };
             status: string;
-            invoice_id: string;
-            created_at: Date;
             notes: string;
+            created_at: Date;
+            invoice_id: string;
             booking_date: Date;
             booking_time: Date;
         };

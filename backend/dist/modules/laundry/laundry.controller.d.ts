@@ -180,6 +180,9 @@ export declare class LaundryOwnerController {
             billingType: import(".prisma/client").$Enums.billing_type;
             commissionRate: number;
             trialCommissionEndsAt: Date;
+            debtLimit: number;
+            isDebtLimitReached: boolean;
+            outstandingDebt: number;
         };
     }>;
     getWalletTransactions(req: any, page?: string, limit?: string, filter?: string): Promise<{

@@ -8,6 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useInvoiceStore, PaymentType } from '../../../stores/invoiceStore';
 import { useLaundryStore } from '../../../stores/laundryStore';
 import { useCatalogMenu, useCreateInvoice, normalizeInvoice, CatalogItem, CatalogCategory } from '../../../hooks/useInvoices';
+import { useWallet } from '../../../hooks/useWallet';
 import { useCustomers } from '../../../hooks/useCRM';
 import { QRScannerModal } from '../../../components/invoices/QRScannerModal';
 import { UniqueIdModal } from '../../../components/invoices/UniqueIdModal';
@@ -25,6 +26,8 @@ export default function NewInvoiceScreen() {
   const store = useInvoiceStore();
   const laundryStore = useLaundryStore();
   const { currency } = useCurrencyStore();
+  const { data: walletData } = useWallet();
+  const isBlocked = !!walletData?.isDebtLimitReached;
   const { data: menuData, isLoading: loadingCatalog } = useCatalogMenu();
   const createMutation = useCreateInvoice();
 
@@ -138,6 +141,18 @@ export default function NewInvoiceScreen() {
   };
 
   const handleCreate = (status: 'draft' | 'received') => {
+    if (isBlocked) {
+      Alert.alert(
+        'سقف المديونية',
+        `تم إيقاف إصدار الفواتير لبلوغ سقف المديونية المسموح به (${walletData?.outstandingDebt?.toFixed(2)} / ${walletData?.debtLimit} ${currency.symbol}). يرجى شحن المحفظة وسداد المديونية للمتابعة.`,
+        [
+          { text: 'الذهاب للمحفظة', onPress: () => router.push('/(app)/wallet') },
+          { text: 'إغلاق', style: 'cancel' }
+        ]
+      );
+      return;
+    }
+
     if (status === 'received' && !validate()) return;
 
     const normalizedCustomerId = isValidUuid(store.customerId) ? store.customerId : undefined;
@@ -172,7 +187,15 @@ export default function NewInvoiceScreen() {
         setActionSheetVisible(true);
       },
       onError: (err: any) => {
-        Alert.alert(t('common.error', 'خطأ'), err.response?.data?.message || t('invoice.createFailed', 'فشل إنشاء الفاتورة'));
+        const errorData = err.response?.data?.error;
+        if (errorData?.code === 'DEBT_LIMIT_REACHED') {
+          Alert.alert('سقف المديونية', errorData.message, [
+            { text: 'الذهاب للمحفظة', onPress: () => router.push('/(app)/wallet') },
+            { text: 'إغلاق', style: 'cancel' }
+          ]);
+        } else {
+          Alert.alert(t('common.error', 'خطأ'), errorData?.message || err.response?.data?.message || t('invoice.createFailed', 'فشل إنشاء الفاتورة'));
+        }
       }
     });
   };
@@ -630,11 +653,25 @@ export default function NewInvoiceScreen() {
       </View>
 
       <View style={styles.actionButtonsRow}>
-        <TouchableOpacity style={styles.draftBtn} onPress={() => handleCreate('draft')} disabled={createMutation.isPending}>
-          <Text style={styles.draftBtnText}>💾 حفظ كمسودة</Text>
+        <TouchableOpacity
+          style={[styles.draftBtn, isBlocked && styles.btnDisabled]}
+          onPress={() => handleCreate('draft')}
+          disabled={createMutation.isPending || isBlocked}
+        >
+          <Text style={[styles.draftBtnText, isBlocked && styles.btnTextDisabled]}>💾 حفظ كمسودة</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.createBtn} onPress={() => handleCreate('received')} disabled={createMutation.isPending}>
-          {createMutation.isPending ? <ActivityIndicator color={colors.surface} /> : <Text style={styles.createBtnText}>✓ إنشاء + قيد التجهيز</Text>}
+        <TouchableOpacity
+          style={[styles.createBtn, isBlocked && styles.btnDisabled]}
+          onPress={() => handleCreate('received')}
+          disabled={createMutation.isPending || isBlocked}
+        >
+          {createMutation.isPending ? (
+            <ActivityIndicator color={colors.surface} />
+          ) : (
+            <Text style={[styles.createBtnText, isBlocked && styles.btnTextDisabled]}>
+              {isBlocked ? '🔒 موقوف لبلوغ سقف الدين' : '✓ إنشاء + قيد التجهيز'}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -661,6 +698,20 @@ export default function NewInvoiceScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {isBlocked && (
+            <View style={styles.debtBlockBanner}>
+              <Ionicons name="lock-closed" size={24} color="#dc2626" />
+              <View style={{ flex: 1, marginHorizontal: 10 }}>
+                <Text style={styles.debtBlockTitle}>تم إيقاف إنشاء الفواتير</Text>
+                <Text style={styles.debtBlockSub}>
+                  بلغت المغسلة سقف الدين ({walletData?.outstandingDebt?.toFixed(2)} / {walletData?.debtLimit} {currency.symbol}). يرجى شحن المحفظة وسداد المديونية لإعادة تفعيل إصدار الفواتير.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => router.push('/(app)/wallet')} style={styles.debtBlockBtn}>
+                <Text style={styles.debtBlockBtnText}>المحفظة</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           {renderPartA()}
           {renderPartB()}
           {renderPartC()}
@@ -925,4 +976,46 @@ const getStyles = (colors: any) => StyleSheet.create({
   draftBtnText: { color: colors.text, fontSize: 14, fontWeight: '600' },
   createBtn: { flex: 2, backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
   createBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  btnDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#9ca3af',
+    borderColor: '#9ca3af',
+  },
+  btnTextDisabled: {
+    color: '#f3f4f6',
+  },
+  debtBlockBanner: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#f87171',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  debtBlockTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#991b1b',
+    marginBottom: 4,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+  },
+  debtBlockSub: {
+    fontSize: 12,
+    color: '#b91c1c',
+    lineHeight: 18,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+  },
+  debtBlockBtn: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  debtBlockBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });

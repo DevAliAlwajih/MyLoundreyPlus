@@ -215,11 +215,9 @@ let ChatService = class ChatService {
             }
         }
         const msg = await this.prisma.chat_messages.create({ data });
-        if (admin) {
-            this.notificationService
-                .sendToUser(admin.id, 'رسالة دعم فني جديدة 🔔', dto.message ?? 'مرفق جديد', { type: 'support_message', referenceId: msg.id })
-                .catch((err) => console.error('Notification error:', err));
-        }
+        this.notificationService
+            .sendToAdmin('رسالة دعم فني جديدة 🔔', dto.message ?? 'مرفق جديد', { type: 'new_chat_message', referenceId: msg.id, actionUrl: '/dashboard/support' })
+            .catch((err) => console.error('Notification error:', err));
         return { success: true, data: msg };
     }
     async getLaundryConversations(laundryId) {

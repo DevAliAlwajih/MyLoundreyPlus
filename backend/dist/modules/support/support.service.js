@@ -29,13 +29,7 @@ let SupportService = class SupportService {
                 status: 'open',
             },
         });
-        const admin = await this.prisma.user.findFirst({
-            where: { role: 'admin' },
-            select: { id: true },
-        });
-        if (admin) {
-            await this.notificationService.sendToUser(admin.id, 'تذكرة دعم جديدة 🎫', `${dto.subject}`, { type: 'new_ticket', referenceId: ticket.id });
-        }
+        this.notificationService.sendToAdmin(`تذكرة دعم جديدة 🎫 — ${userType === 'laundry' ? 'مغسلة' : 'عميل'}`, dto.subject, { type: 'new_support_ticket', referenceId: ticket.id }).catch(() => { });
         return { success: true, data: ticket };
     }
     async getMyTickets(userId, dto) {

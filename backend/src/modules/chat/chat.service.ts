@@ -274,17 +274,14 @@ export class ChatService {
 
     const msg = await this.prisma.chat_messages.create({ data });
 
-    // إرسال إشعار للأدمن إذا وُجد
-    if (admin) {
-      this.notificationService
-        .sendToUser(
-          admin.id,
-          'رسالة دعم فني جديدة 🔔',
-          dto.message ?? 'مرفق جديد',
-          { type: 'support_message', referenceId: msg.id },
-        )
-        .catch((err) => console.error('Notification error:', err));
-    }
+    // إرسال إشعار لجميع الأدمن عبر sendToAdmin (يُنشئ سجلاً في جدول notification)
+    this.notificationService
+      .sendToAdmin(
+        'رسالة دعم فني جديدة 🔔',
+        dto.message ?? 'مرفق جديد',
+        { type: 'new_chat_message', referenceId: msg.id, actionUrl: '/dashboard/support' },
+      )
+      .catch((err) => console.error('Notification error:', err));
 
     return { success: true, data: msg };
   }

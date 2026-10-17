@@ -26,19 +26,12 @@ export class SupportService {
       },
     });
 
-    const admin = await this.prisma.user.findFirst({
-      where: { role: 'admin' },
-      select: { id: true },
-    });
-
-    if (admin) {
-      await this.notificationService.sendToUser(
-        admin.id,
-        'تذكرة دعم جديدة 🎫',
-        `${dto.subject}`,
-        { type: 'new_ticket', referenceId: ticket.id },
-      );
-    }
+    // 🔔 إشعار لجميع المديرين عبر sendToAdmin
+    this.notificationService.sendToAdmin(
+      `تذكرة دعم جديدة 🎫 — ${userType === 'laundry' ? 'مغسلة' : 'عميل'}`,
+      dto.subject,
+      { type: 'new_support_ticket', referenceId: ticket.id },
+    ).catch(() => {}); // non-blocking
 
     return { success: true, data: ticket };
   }

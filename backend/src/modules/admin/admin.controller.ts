@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
+import { NotificationService } from '../notification/notification.service';
 import { QueryAdminLaundriesDto, QueryAdminUsersDto } from './dto/query-admin.dto';
 import { UpdateLaundryStatusDto } from './dto/update-laundry-status.dto';
 import { UpdateLaundryBillingDto } from './dto/update-laundry-billing.dto';
@@ -31,7 +32,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Roles('admin')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   // ────────────────────────────────────────────────────
   // 📊 Analytics
@@ -47,6 +51,37 @@ export class AdminController {
   @Get('dashboard-stats')
   getDashboardStats(@Query('currency') currency?: string) {
     return this.adminService.getDashboardStats(currency);
+  }
+
+  @ApiOperation({ summary: 'Admin: Get admin notifications list' })
+  @Get('notifications')
+  getAdminNotifications(
+    @Req() req: any,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('unreadOnly') unreadOnly?: string,
+  ) {
+    return this.notificationService.getAdminNotifications(
+      req.user.id,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+      unreadOnly === 'true',
+    );
+  }
+
+  @ApiOperation({ summary: 'Admin: Mark all admin notifications as read' })
+  @Patch('notifications/read-all')
+  markAdminNotificationsRead(@Req() req: any) {
+    return this.notificationService.markAllAsRead(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Admin: Mark single notification as read' })
+  @Patch('notifications/:id/read')
+  markAdminNotificationRead(
+    @Req() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.notificationService.markAsRead(req.user.id, id);
   }
 
   @ApiOperation({ summary: 'Admin: Get revenue analytics' })

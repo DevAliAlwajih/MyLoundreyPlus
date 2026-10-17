@@ -7,9 +7,9 @@ export declare class NotificationController {
         success: boolean;
         data: {
             id: string;
-            type: string;
             title: string;
             body: string;
+            type: string;
             referenceId: string;
             isRead: boolean;
             sentAt: Date;

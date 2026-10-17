@@ -16,6 +16,7 @@ import * as nodemailer from 'nodemailer';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterDto } from './dto/register.dto';
 import { getCurrencyByCountry, getCountryIsoCode } from '../../common/country-currency.map';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,7 @@ export class AuthService {
     private redis: RedisService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private notificationService: NotificationService,
   ) {}
 
   // ─────────────────────────────────────────────────────
@@ -96,7 +98,7 @@ export class AuthService {
         const trialEndsAt = new Date();
         trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
 
-        await tx.laundry.create({
+        const newLaundry = await tx.laundry.create({
           data: {
             name                     : dto.laundryName,
             phoneNumber              : fullPhone,
@@ -111,6 +113,13 @@ export class AuthService {
             trial_commission_ends_at : trialEndsAt,
           },
         });
+
+        // 🔔 إشعار للإدارة: مغسلة جديدة تنتظر المراجعة
+        this.notificationService.sendToAdmin(
+          'مغسلة جديدة بانتظار التفعيل 🏪',
+          `تم تسجيل مغسلة جديدة "${dto.laundryName}" وتنتظر مراجعة وموافقة الإدارة`,
+          { type: 'new_laundry_registered', referenceId: newLaundry.id },
+        ).catch(() => {}); // non-blocking
 
         // إرسال OTP للتحقق من الإيميل
         try {

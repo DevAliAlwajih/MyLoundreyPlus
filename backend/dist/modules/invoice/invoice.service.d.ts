@@ -21,20 +21,20 @@ export declare class InvoiceService {
             paidAmount: number;
             dueAmount: number;
             id: string;
-            createdAt: Date;
-            customer: {
-                id: string;
-                fullName: string;
-                phoneNumber: string;
-                uniqueId: string;
-            };
-            status: import(".prisma/client").$Enums.invoice_status;
             invoiceNumber: string;
-            customerId: string;
+            status: import(".prisma/client").$Enums.invoice_status;
             paymentType: import(".prisma/client").$Enums.payment_type;
+            createdAt: Date;
             walk_in_name: string;
             walk_in_phone: string;
             is_edited: boolean;
+            customer: {
+                id: string;
+                phoneNumber: string;
+                uniqueId: string;
+                fullName: string;
+            };
+            customerId: string;
         }[];
         meta: {
             page: number;
@@ -65,15 +65,15 @@ export declare class InvoiceService {
             status: import(".prisma/client").$Enums.invoice_status;
             paymentType: import(".prisma/client").$Enums.payment_type;
             laundry: {
-                phoneNumber: string;
                 name: string;
+                phoneNumber: string;
                 address: string;
                 city: string;
             };
             customer: {
-                fullName: string;
                 phoneNumber: string;
                 uniqueId: string;
+                fullName: string;
             };
             walk_in_name: string;
             walk_in_phone: string;
@@ -108,10 +108,10 @@ export declare class InvoiceService {
                 logoUrl: string;
             };
             id: string;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.invoice_status;
             invoiceNumber: string;
+            status: import(".prisma/client").$Enums.invoice_status;
             paymentType: import(".prisma/client").$Enums.payment_type;
+            createdAt: Date;
             expected_delivery_at: Date;
         }[];
         meta: {

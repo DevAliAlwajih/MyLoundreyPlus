@@ -20,12 +20,14 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const uuid_1 = require("uuid");
 const country_currency_map_1 = require("../../common/country-currency.map");
+const notification_service_1 = require("../notification/notification.service");
 let AuthService = AuthService_1 = class AuthService {
-    constructor(prisma, redis, jwtService, configService) {
+    constructor(prisma, redis, jwtService, configService, notificationService) {
         this.prisma = prisma;
         this.redis = redis;
         this.jwtService = jwtService;
         this.configService = configService;
+        this.notificationService = notificationService;
         this.logger = new common_1.Logger(AuthService_1.name);
     }
     async register(dto) {
@@ -82,7 +84,7 @@ let AuthService = AuthService_1 = class AuthService {
                 const debtLimit = debtLimitRow ? Number(debtLimitRow.value) : 5000;
                 const trialEndsAt = new Date();
                 trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
-                await tx.laundry.create({
+                const newLaundry = await tx.laundry.create({
                     data: {
                         name: dto.laundryName,
                         phoneNumber: fullPhone,
@@ -97,6 +99,7 @@ let AuthService = AuthService_1 = class AuthService {
                         trial_commission_ends_at: trialEndsAt,
                     },
                 });
+                this.notificationService.sendToAdmin('مغسلة جديدة بانتظار التفعيل 🏪', `تم تسجيل مغسلة جديدة "${dto.laundryName}" وتنتظر مراجعة وموافقة الإدارة`, { type: 'new_laundry_registered', referenceId: newLaundry.id }).catch(() => { });
                 try {
                     await this.sendOTP(normalizedEmail);
                 }
@@ -516,6 +519,7 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         redis_service_1.RedisService,
         jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        notification_service_1.NotificationService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -136,12 +136,50 @@ let InvoiceService = class InvoiceService {
         const laundry = await this.prisma.laundry.findUnique({
             where: { id: laundryId },
             select: {
+                id: true,
+                name: true,
                 tax_enabled: true,
                 tax_rate: true,
                 urgency_enabled: true,
                 urgency_fee: true,
+                billing_type: true,
+                balance: true,
+                debt_limit: true,
+                trial_commission_ends_at: true,
             },
         });
+        if (!laundry) {
+            throw new common_1.NotFoundException({
+                success: false,
+                error: { code: 'LAUNDRY_NOT_FOUND', message: 'المغسلة غير موجودة' },
+            });
+        }
+        if (laundry.billing_type === 'commission') {
+            let limitVal = laundry.debt_limit !== null && laundry.debt_limit !== undefined
+                ? Number(laundry.debt_limit)
+                : null;
+            if (limitVal === null) {
+                const defaultSetting = await this.prisma.app_settings.findUnique({
+                    where: { key: 'default_debt_limit' },
+                });
+                limitVal = defaultSetting?.value ? Number(defaultSetting.value) : 5000;
+            }
+            const currentBalance = Number(laundry.balance ?? 0);
+            const now = new Date();
+            const isTrialActive = laundry.trial_commission_ends_at && new Date(laundry.trial_commission_ends_at) > now;
+            if (!isTrialActive && currentBalance <= -limitVal) {
+                throw new common_1.ForbiddenException({
+                    success: false,
+                    error: {
+                        code: 'DEBT_LIMIT_REACHED',
+                        message: `تم إيقاف إصدار الفواتير لبلوغ سقف المديونية المسموح به (${Math.abs(currentBalance).toFixed(2)} ر.س / الحد: ${limitVal.toFixed(2)} ر.س). يرجى سداد المديونية لإعادة التفعيل.`,
+                        debtLimit: limitVal,
+                        currentBalance: currentBalance,
+                        outstandingDebt: Math.abs(currentBalance),
+                    },
+                });
+            }
+        }
         const { lines, subtotal } = await this.buildItemLines(laundryId, dto.items);
         const discount = Number(dto.discount ?? 0);
         let urgencyFee = 0;
@@ -450,6 +488,43 @@ let InvoiceService = class InvoiceService {
                 },
             });
         }
+        if (invoice.status === 'draft' && dto.status !== 'draft') {
+            const laundry = await this.prisma.laundry.findUnique({
+                where: { id: laundryId },
+                select: {
+                    billing_type: true,
+                    balance: true,
+                    debt_limit: true,
+                    trial_commission_ends_at: true,
+                },
+            });
+            if (laundry && laundry.billing_type === 'commission') {
+                let limitVal = laundry.debt_limit !== null && laundry.debt_limit !== undefined
+                    ? Number(laundry.debt_limit)
+                    : null;
+                if (limitVal === null) {
+                    const defaultSetting = await this.prisma.app_settings.findUnique({
+                        where: { key: 'default_debt_limit' },
+                    });
+                    limitVal = defaultSetting?.value ? Number(defaultSetting.value) : 5000;
+                }
+                const currentBalance = Number(laundry.balance ?? 0);
+                const now = new Date();
+                const isTrialActive = laundry.trial_commission_ends_at && new Date(laundry.trial_commission_ends_at) > now;
+                if (!isTrialActive && currentBalance <= -limitVal) {
+                    throw new common_1.ForbiddenException({
+                        success: false,
+                        error: {
+                            code: 'DEBT_LIMIT_REACHED',
+                            message: `تم إيقاف تفعيل الفواتير لبلوغ سقف المديونية المسموح به (${Math.abs(currentBalance).toFixed(2)} ر.س / الحد: ${limitVal.toFixed(2)} ر.س). يرجى سداد المديونية لإعادة التفعيل.`,
+                            debtLimit: limitVal,
+                            currentBalance: currentBalance,
+                            outstandingDebt: Math.abs(currentBalance),
+                        },
+                    });
+                }
+            }
+        }
         const isCompleting = dto.status === 'completed';
         const updated = await this.prisma.$transaction(async (tx) => {
             const inv = await tx.invoice.update({
@@ -472,7 +547,7 @@ let InvoiceService = class InvoiceService {
             if (isCompleting) {
                 const laundry = await tx.laundry.findUnique({
                     where: { id: laundryId },
-                    select: { billing_type: true, trial_commission_ends_at: true, commission_rate: true },
+                    select: { name: true, billing_type: true, trial_commission_ends_at: true, commission_rate: true, debt_limit: true },
                 });
                 if (laundry && laundry.billing_type === 'commission') {
                     const now = new Date();
@@ -515,6 +590,11 @@ let InvoiceService = class InvoiceService {
                                         balance_after: balanceAfter,
                                     },
                                 });
+                                const limitVal = Number(laundry.debt_limit ?? 500);
+                                if (balanceAfter <= -limitVal) {
+                                    this.notificationService.sendToAdmin('بلوغ سقف المديونية 💳', `مغسلة "${laundry.name || 'المغسلة'}" بلغت سقف المديونية (${balanceAfter.toFixed(2)} ر.س / الحد: -${limitVal} ر.س) وتم تعليق إصدار الفواتير لها`, { type: 'debt_limit_reached', referenceId: laundryId }).catch(() => { });
+                                    this.notificationService.sendToLaundryOwner(laundryId, 'تم إيقاف إصدار الفواتير 🔒', `لقد بلغت مديونية المغسلة سقف الدين المسموح به (${balanceAfter.toFixed(2)} ر.س / الحد: -${limitVal} ر.س). تم إيقاف إنشاء الفواتير مؤقتاً لحين شحن المحفظة وسداد المديونية.`, { type: 'debt_limit_reached', referenceId: laundryId }).catch(() => { });
+                                }
                             }
                         }
                     }

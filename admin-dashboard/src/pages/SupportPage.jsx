@@ -75,7 +75,7 @@ export default function SupportPage() {
   useEffect(() => {
     if (tab === 'tickets') {
       fetchConversations()
-      const interval = setInterval(fetchConversations, 30000) // Poll every 30s
+      const interval = setInterval(fetchConversations, 5000) // Poll every 5s
       return () => clearInterval(interval)
     }
   }, [tab])
@@ -83,7 +83,7 @@ export default function SupportPage() {
   useEffect(() => {
     if (selectedConv) {
       fetchMessages(selectedConv)
-      const interval = setInterval(() => fetchMessages(selectedConv), 15000) // Poll messages
+      const interval = setInterval(() => fetchMessages(selectedConv), 5000) // Poll messages every 5s
       return () => clearInterval(interval)
     }
   }, [selectedConv])
